@@ -1,76 +1,94 @@
 # AI Team Framework
 
-A reusable, project-agnostic AI team framework for software development.
+A reusable, project-agnostic framework for coordinating specialized AI roles during software development.
 
-It coordinates specialized AI roles to help analyze, plan, implement, review, and track work across new and existing software projects.
-
-## AI Team
-
-* **Coordinator** — user-facing coordination
-* **Project Manager** — requirements and project planning
-* **Technical Lead** — project analysis and technical planning
-* **Implementer** — focused implementation
-* **Senior Reviewer** — implementation and quality review
-
-## Role Selection
-
-Roles can be selected through:
-
-* CLI commands
-* Natural-language prompts
-* Optional slash commands
-
-Example:
-
-```text
-/technical-lead
-```
-
-or:
-
-```bash
-ai-team run --role technical-lead
-```
-
-## Project Support
-
-The framework is designed to work with different technology stacks.
-
-It does not impose a specific architecture or development pattern on the target project.
-
-Before implementation, the team discovers and analyzes the existing project.
-
-## Integrations
-
-The framework is designed to support:
-
-* OpenCode
-* Spec Kit
-* GitHub Issues
-* delegate-skills (optional)
-
-Optional integrations must not be required for the core framework to work.
-
-## Project Workspace
-
-Framework-specific configuration and state are isolated under:
-
-```text
-.ai-team/
-```
+It is designed to work with new and existing projects — whatever their language, framework, architecture, or tooling — without imposing any technology of its own on the target project.
 
 ## Status
 
-M0 — Discovery and Specification is complete.
+M0 (Discovery & Specification) is complete. M1 (Repository Foundation) is in progress.
 
-M1 — Repository Foundation is starting. No framework functionality is implemented yet.
+### Implemented today
 
-Target release:
+- Repository foundation (`package.json`, strict TypeScript configuration, `.gitignore`).
+- Build, test, and lint tooling (`npm run build`, `npm test`, `npm run lint`).
+- A minimal CLI entry point supporting `ai-team --help` and `ai-team --version`; anything else returns a concise usage error.
+- Node.js built-in test runner with TypeScript compilation, plus smoke and CLI tests.
 
-```text
-0.1.0
+### Planned (designed, not yet implemented)
+
+- The five role contracts in code, role selection, and the `ai-team run` command.
+- Workflow engine and ticket state management.
+- `.ai-team/` workspace initialization in target projects.
+- Provider integrations (OpenCode, Spec Kit, GitHub Issues, delegate-skills).
+
+No role orchestration is implemented yet. Nothing listed under "Planned" should be treated as available.
+
+## The five roles (design)
+
+- **Coordinator** — default user-facing role; routes requests and orchestrates the other roles. Does not replace the Technical Lead.
+- **Project Manager** — owns requirements, scope, and business acceptance.
+- **Technical Lead** — owns project discovery, technical planning, ticket breakdown, and review outcomes.
+- **Implementer** — implements one assigned ticket at a time, with validation; optional specialties such as backend, frontend, or testing.
+- **Senior Reviewer** — reviews implementation and tests without modifying code; produces advisory findings.
+
+These are framework design roles, not implemented code yet. Full contracts: `docs/specification/roles.md`.
+
+## Project-agnostic by design
+
+The framework does not assume Laravel, React, Vue, Spring, Docker, GitHub, REST, a specific database, or a specific architecture. It discovers and analyzes the target project before planning anything, then adapts to that project's own conventions.
+
+## Framework workspace
+
+Framework-specific configuration and state are intended to live under `.ai-team/` inside a target project (configuration, roles, workflows, state, specs, plans, reviews, reports, logs). That directory is created by future initialization work — this repository does not create it yet.
+
+## Integrations (planned)
+
+- **OpenCode** — required first-class execution provider.
+- **Spec Kit** — optional specification/planning integration.
+- **GitHub Issues** — optional tracking provider; local-only tracking is the default.
+- **delegate-skills** — optional delegation provider; never required.
+
+None of these integrations is implemented yet, and optional integrations will never become core dependencies. Details: `docs/specification/providers.md`.
+
+## CLI
+
+Only this is implemented today:
+
+```bash
+ai-team --help
+ai-team --version
 ```
+
+Running `ai-team` with no arguments prints the help text. Any other command prints a short error pointing at `--help` and exits non-zero. Role invocation commands do not exist yet.
+
+To try it locally after building (see below):
+
+```bash
+node dist/index.js --help
+```
+
+## Development
+
+Prerequisites: Node.js 18+ and npm.
+
+```bash
+npm install
+npm run build   # compile TypeScript into dist/
+npm test        # compile src/ and tests/, then run the Node.js built-in test runner
+npm run lint    # lint src/ and tests/ with ESLint
+```
+
+## Testing
+
+Tests are TypeScript files under `tests/`, compiled with `tsc` and executed with the Node.js built-in test runner (`node:test` with `node:assert`). No separate test framework is used, and no future test architecture is assumed.
+
+## Further reading
+
+- `docs/specification/` — detailed product and system specification.
+- `CONTRIBUTING.md` — how to contribute.
+- `AGENTS.md` — persistent instructions for AI agents working in this repository.
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).
