@@ -1,0 +1,23 @@
+{
+  "name": "ai-team-framework",
+  "version": "0.1.0",
+  "description": "A reusable, project-agnostic AI team framework for software development.",
+  "license": "MIT",
+  "private": true,
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "bin": {
+    "ai-team": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "devDependencies": {
+    "typescript": "^4.8.4",
+    "@types/node": "^18.18.0"
+  }
+}
