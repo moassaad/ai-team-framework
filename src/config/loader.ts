@@ -1,7 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parse as parseYaml } from "yaml";
-import { FrameworkConfig } from "./schema";
 
 /**
  * Resolve the framework configuration file for a target project.
@@ -26,15 +25,16 @@ function errorMessage(error: unknown): string {
 
 /**
  * Load `.ai-team/config.yaml` from a target project root and return the
- * parsed document as a `FrameworkConfig`.
+ * parsed document as raw, unvalidated data.
  *
  * This is loading only: read the file, parse the YAML, return the data
- * as-is. Missing optional sections are NOT filled with defaults here and
- * nothing is validated — defaults and semantic rules belong to C-003.
- * The only rejections are fundamental load failures: the file is
- * missing, unreadable, empty, or not valid YAML.
+ * as-is. The result is typed `unknown` on purpose — only `validateConfig`
+ * (C-003) can establish that it satisfies `FrameworkConfig`. Missing
+ * optional sections are NOT filled with defaults here and nothing is
+ * validated. The only rejections are fundamental load failures: the file
+ * is missing, unreadable, empty, or not valid YAML.
  */
-export function loadConfig(projectRoot: string): FrameworkConfig {
+export function loadConfig(projectRoot: string): unknown {
   const configPath = resolveConfigPath(projectRoot);
 
   let raw: string;
@@ -66,5 +66,5 @@ export function loadConfig(projectRoot: string): FrameworkConfig {
     throw new Error(`Configuration file is empty: ${configPath}`);
   }
 
-  return parsed as FrameworkConfig;
+  return parsed;
 }
