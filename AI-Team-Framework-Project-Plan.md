@@ -1,8 +1,10 @@
 # AI Team Framework — Project Plan
 
 > **Document status:** Approved baseline plan  
-> **Current phase:** Discovery and Specification  
-> **Implementation started:** No  
+> **Current phase:** M2 — Configuration and Workspace (next)  
+> **M0:** COMPLETE  
+> **M1:** COMPLETE  
+> **Implementation started:** Yes  
 > **Target:** First usable release (MVP / `0.1.0`)
 
 ## 1. Project Goal
@@ -617,7 +619,7 @@ This structure is an implementation baseline, not a license to create every dire
 
 ## M0 — Discovery and Specification
 
-Status: **IN PROGRESS**
+Status: **COMPLETE**
 
 ```text
 M0-001 Product Scope
@@ -631,7 +633,7 @@ M0-007 Release 0.1.0 Definition of Done
 
 ## M1 — Repository Foundation
 
-Status: **PENDING**
+Status: **COMPLETE**
 
 ```text
 F-001 Initialize repository
@@ -644,7 +646,7 @@ F-006 Add license
 
 ## M2 — Configuration and Workspace
 
-Status: **PENDING**
+Status: **NEXT**
 
 ```text
 C-001 Define configuration schema
@@ -984,9 +986,9 @@ Before finishing, report:
 
 | Milestone | Status | Notes |
 |---|---|---|
-| M0 Discovery & Specification | **IN PROGRESS** | Baseline plan approved; specifications still need to be finalized as implementation contracts |
-| M1 Repository Foundation | PENDING | Not started |
-| M2 Configuration & Workspace | PENDING | Not started |
+| M0 Discovery & Specification | **COMPLETE** | Specifications accepted; M0 closed |
+| M1 Repository Foundation | **COMPLETE** | F-001 through F-006 accepted |
+| M2 Configuration & Workspace | **NEXT** | Next milestone; starts with C-001 (not started) |
 | M3 Role Contracts | PENDING | Not started |
 | M4 Workflow Engine | PENDING | Not started |
 | M5 CLI & Role Invocation | PENDING | Includes CLI, prompt, and optional slash-command selection |
@@ -1003,7 +1005,9 @@ Before finishing, report:
 
 # 20. Next Steps
 
-The next work item is **M0 — Discovery and Specification**.
+The next work item is **M2 — Configuration and Workspace**.
+
+M0 is complete and M1 is complete (F-001 through F-006 accepted).
 
 ### M0 checklist
 
@@ -1018,18 +1022,18 @@ The next work item is **M0 — Discovery and Specification**.
 [done] Approve optional slash-command role selection
 [done] Approve manual approval as default
 [done] Approve optional providers
-[pending] Finalize Product Scope specification
-[pending] Finalize Role Contract specification
-[pending] Finalize Workflow specification
-[pending] Finalize Configuration specification
-[pending] Finalize Provider boundaries
-[pending] Finalize 0.1.0 Definition of Done
+[done] Finalize Product Scope specification
+[done] Finalize Role Contract specification
+[done] Finalize Workflow specification
+[done] Finalize Configuration specification
+[done] Finalize Provider boundaries
+[done] Finalize 0.1.0 Definition of Done
 ```
 
-After M0 is finalized, implementation begins with:
+M2 begins with (not started yet):
 
 ```text
-F-001 Initialize repository
+C-001 Define configuration schema
 ```
 
 ---

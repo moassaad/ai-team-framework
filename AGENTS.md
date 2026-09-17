@@ -27,18 +27,20 @@ Do not invent requirements that are not present in the approved plan, specificat
 ## Current Phase
 
 ```text
-M0 — Discovery and Specification
+M0 — Discovery and Specification: COMPLETE
+M1 — Repository Foundation: COMPLETE
+M2 — Configuration and Workspace: NEXT
 ```
 
-Implementation has not started unless an explicit coding ticket is assigned.
+M0 and M1 are complete. F-001 through F-006 are accepted.
 
-First coding ticket:
+Next implementation ticket:
 
 ```text
-F-001 Initialize repository
+C-001 Define configuration schema
 ```
 
-Do not start F-001 while M0 is still active unless explicitly assigned.
+Do not start C-001 unless explicitly assigned.
 
 ## Role Selection
 
