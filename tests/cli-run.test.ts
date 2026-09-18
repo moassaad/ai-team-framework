@@ -188,3 +188,40 @@ describe("cli run --role implementer --specialty", () => {
     );
   });
 });
+
+describe("cli run prompt selection", () => {
+  it("resolves an approved prompt keyword through the role contract", () => {
+    const result = run(["run", "talk to the tech lead about this"], "0.1.0");
+    assert.equal(result.exitCode, 0);
+    assert.equal(result.stderr, "");
+    assert.ok(result.stdout.includes(TECHNICAL_LEAD_ROLE.name));
+    assert.ok(result.stdout.includes(TECHNICAL_LEAD_ROLE.id));
+    assert.ok(result.stdout.includes(TECHNICAL_LEAD_ROLE.purpose));
+  });
+
+  it("rejects unresolvable prompt input without Coordinator fallback", () => {
+    for (const prompt of [
+      "please review my code",
+      "handle the backend task",
+      "ask the project manager and tech lead",
+    ]) {
+      const result = run(["run", prompt], "0.1.0");
+      assert.equal(result.exitCode, 1, `prompt: ${prompt}`);
+      assert.equal(result.stdout, "");
+      assert.match(result.stderr, /unknown command/);
+    }
+  });
+
+  it("does not treat flag-like input as prompt text", () => {
+    const result = run(["run", "--pm"], "0.1.0");
+    assert.equal(result.exitCode, 1);
+    assert.equal(result.stdout, "");
+  });
+
+  it("behaves deterministically for prompt selection", () => {
+    assert.deepEqual(
+      run(["run", "Act as the Project Manager and create a feature plan."], "0.1.0"),
+      run(["run", "Act as the Project Manager and create a feature plan."], "0.1.0"),
+    );
+  });
+});
