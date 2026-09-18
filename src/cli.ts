@@ -5,6 +5,7 @@ import { SENIOR_REVIEWER_ROLE } from "./roles/senior-reviewer";
 import { TECHNICAL_LEAD_ROLE } from "./roles/technical-lead";
 import { RoleContract, RoleId, ImplementerSpecialty } from "./roles/contract";
 import { resolveImplementerSpecialty, resolveRole } from "./roles/selection";
+import { resolveSlashCommand } from "./roles/slash";
 import { resolvePromptRole } from "./roles/prompt";
 
 export interface CliResult {
@@ -114,11 +115,21 @@ export function run(argv: string[], version: string): CliResult {
       }
     }
     if (argv.length === 2 && !argv[1].startsWith("-")) {
-      const role = resolvePromptRole(argv[1]);
-      if (role !== undefined) {
-        const contract = findContract(role);
-        if (contract !== undefined) {
-          return presentRole(contract);
+      if (argv[1].startsWith("/")) {
+        const slash = resolveSlashCommand(argv[1]);
+        if (slash !== undefined) {
+          const contract = findContract(slash.role);
+          if (contract !== undefined) {
+            return presentRole(contract, slash.specialty);
+          }
+        }
+      } else {
+        const role = resolvePromptRole(argv[1]);
+        if (role !== undefined) {
+          const contract = findContract(role);
+          if (contract !== undefined) {
+            return presentRole(contract);
+          }
         }
       }
     }

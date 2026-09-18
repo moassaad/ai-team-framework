@@ -225,3 +225,57 @@ describe("cli run prompt selection", () => {
     );
   });
 });
+
+describe("cli run slash commands", () => {
+  it("resolves documented slash commands through role contracts", () => {
+    const cases: Array<[string, string, string]> = [
+      ["/coordinator", "Coordinator", "coordinator"],
+      ["/project-manager", "Project Manager", "project-manager"],
+      ["/technical-lead", "Technical Lead", "technical-lead"],
+      ["/implementer", "Implementer", "implementer"],
+      ["/senior-reviewer", "Senior Reviewer", "senior-reviewer"],
+    ];
+    for (const [input, name, id] of cases) {
+      const result = run(["run", input], "0.1.0");
+      assert.equal(result.exitCode, 0, `input: ${input}`);
+      assert.equal(result.stderr, "");
+      assert.ok(result.stdout.includes(name));
+      assert.ok(result.stdout.includes(`(${id})`));
+    }
+  });
+
+  it("resolves the implementer specialty slash form", () => {
+    const result = run(["run", "/implementer backend"], "0.1.0");
+    assert.equal(result.exitCode, 0);
+    assert.ok(result.stdout.includes("Implementer (implementer)"));
+    assert.ok(result.stdout.includes("Specialty: backend"));
+  });
+
+  it("rejects invalid slash commands as ordinary CLI errors", () => {
+    for (const input of ["/pm", "/unknown", "//technical-lead", "/implementer unknown", "/coordinator backend"]) {
+      const result = run(["run", input], "0.1.0");
+      assert.equal(result.exitCode, 1, `input: ${input}`);
+      assert.equal(result.stdout, "");
+      assert.match(result.stderr, /unknown command/);
+    }
+  });
+
+  it("leaves prior interfaces and precedence unchanged", () => {
+    assert.equal(run(["run"], "0.1.0").stdout.includes("Coordinator"), true);
+    assert.equal(run(["run", "--role", "tl"], "0.1.0").stdout.includes("Technical Lead"), true);
+    assert.equal(
+      run(["run", "--role", "implementer", "--specialty", "backend"], "0.1.0").stdout.includes("Specialty: backend"),
+      true,
+    );
+    assert.equal(
+      run(["run", "talk to the tech lead"], "0.1.0").stdout.includes("Technical Lead"),
+      true,
+    );
+    assert.match(run(["run", "/technical-lead", "--help"], "0.1.0").stdout, /Usage:/);
+    assert.equal(run(["run", "/technical-lead", "--version"], "9.9.9-test").stdout, "9.9.9-test\n");
+  });
+
+  it("behaves deterministically for slash commands", () => {
+    assert.deepEqual(run(["run", "/technical-lead"], "0.1.0"), run(["run", "/technical-lead"], "0.1.0"));
+  });
+});
