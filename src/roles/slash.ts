@@ -1,5 +1,4 @@
-import { ImplementerSpecialty, RoleId, isRoleId } from "./contract";
-import { IMPLEMENTER_ROLE } from "./implementer";
+import { ImplementerSpecialty, RoleId } from "./contract";
 import { resolveImplementerSpecialty, resolveRole } from "./selection";
 
 /**
@@ -56,28 +55,36 @@ export function findSlashAlias(command: string): SlashAlias | undefined {
 
 /**
  * Parse a slash command into a role selection, or `undefined` when the
- * input is not a documented slash form. The specialty form is accepted
- * only for Implementer; anything else with a second word is rejected.
+ * input is not a documented slash form (official CLI-006 host behavior).
+ *
+ * Every rule comes from the CLI-005 contract above: the command word must
+ * match a `SLASH_ALIASES` entry, and a second word is accepted only when
+ * that entry's `specialtyAllowed` flag permits it. No implicit lists, no
+ * fuzzy matching, no inference.
  */
 export function resolveSlashCommand(input: string): SlashSelection | undefined {
   if (typeof input !== "string" || !input.startsWith("/") || input.startsWith("//")) {
     return undefined;
   }
   const parts = input.slice(1).split(" ");
+  if (parts.length !== 1 && parts.length !== 2) {
+    return undefined;
+  }
+  const alias = findSlashAlias(`/${parts[0]}`);
+  if (alias === undefined) {
+    return undefined;
+  }
   if (parts.length === 1) {
-    if (!isRoleId(parts[0])) {
-      return undefined;
-    }
-    const selection = resolveRole(parts[0]);
+    const selection = resolveRole(alias.role);
     return selection === undefined ? undefined : { role: selection.role };
   }
-  if (parts.length === 2 && parts[0] === IMPLEMENTER_ROLE.id) {
-    const specialty = resolveImplementerSpecialty(parts[1]);
-    if (specialty === undefined) {
-      return undefined;
-    }
-    const selection = resolveRole(parts[0]);
-    return selection === undefined ? undefined : { role: selection.role, specialty };
+  if (!alias.specialtyAllowed) {
+    return undefined;
   }
-  return undefined;
+  const specialty = resolveImplementerSpecialty(parts[1]);
+  if (specialty === undefined) {
+    return undefined;
+  }
+  const selection = resolveRole(alias.role);
+  return selection === undefined ? undefined : { role: selection.role, specialty };
 }
