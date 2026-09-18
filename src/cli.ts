@@ -19,10 +19,33 @@ Minimal command-line entry point. Framework orchestration is not implemented yet
 
 Usage:
   ai-team [options]
+  ai-team run
+  ai-team run --role <role>
+  ai-team run --role implementer --specialty <specialty>
+  ai-team run "<prompt text>"
+  ai-team run "/<slash command>"
+
+Commands:
+  run                  Select the Coordinator (default).
 
 Options:
-  -h, --help       Show this help message and exit.
-  -V, --version    Show the CLI version and exit.
+  -h, --help           Show this help message and exit.
+  -V, --version        Show the CLI version and exit.
+  --role <role>        Select a role: coordinator, project-manager,
+                       technical-lead, implementer, senior-reviewer.
+                       Aliases: pm, tl, reviewer, sr.
+  --specialty <name>   Implementer specialty, only with --role implementer:
+                       backend, frontend, integration, database,
+                       testing, documentation.
+
+Prompt text:
+  A single positional text matched against approved role keywords
+  (for example: "talk to the tech lead"). Unmatched text is rejected.
+
+Slash commands:
+  /coordinator, /project-manager, /technical-lead, /implementer,
+  /senior-reviewer, /implementer <specialty>
+  (for example: ai-team run "/technical-lead").
 `;
 
 function isHelpFlag(arg: string): boolean {
