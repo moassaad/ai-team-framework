@@ -31,7 +31,7 @@ describe("cli", () => {
   });
 
   it("rejects unknown commands with a non-zero exit and no stack trace", () => {
-    for (const argv of [["run"], ["--role"], ["--unknown-flag"]]) {
+    for (const argv of [["--role"], ["--unknown-flag"], ["frobnicate"]]) {
       const result = run(argv, "0.1.0");
       assert.equal(result.exitCode, 1);
       assert.equal(result.stdout, "");
