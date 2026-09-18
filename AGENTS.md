@@ -29,18 +29,21 @@ Do not invent requirements that are not present in the approved plan, specificat
 ```text
 M0 — Discovery and Specification: COMPLETE
 M1 — Repository Foundation: COMPLETE
-M2 — Configuration and Workspace: NEXT
+M2 — Configuration and Workspace: COMPLETE
+M3 — Role Contracts: COMPLETE
+M4 — Workflow Engine: COMPLETE
+M5 — CLI & Role Invocation: NEXT
 ```
 
-M0 and M1 are complete. F-001 through F-006 are accepted.
+M0, M1, M2, M3, and M4 are complete. F-001 through F-006, C-001 through C-006, R-001 through R-007, and W-001 through W-008 are accepted.
 
 Next implementation ticket:
 
 ```text
-C-001 Define configuration schema
+CLI-001 Implement default Coordinator command
 ```
 
-Do not start C-001 unless explicitly assigned.
+Do not start CLI-001 unless explicitly assigned.
 
 ## Role Selection
 

@@ -1,9 +1,11 @@
 # AI Team Framework — Project Plan
 
 > **Document status:** Approved baseline plan  
-> **Current phase:** M2 — Configuration and Workspace (next)  
+> **Current phase:** M5 — CLI & Role Invocation (next)  
 > **M0:** COMPLETE  
 > **M1:** COMPLETE  
+> **M2:** COMPLETE  
+> **M3:** COMPLETE  
 > **Implementation started:** Yes  
 > **Target:** First usable release (MVP / `0.1.0`)
 
@@ -646,7 +648,7 @@ F-006 Add license
 
 ## M2 — Configuration and Workspace
 
-Status: **NEXT**
+Status: **COMPLETE**
 
 ```text
 C-001 Define configuration schema
@@ -659,7 +661,7 @@ C-006 Add configuration documentation
 
 ## M3 — Role Contracts
 
-Status: **PENDING**
+Status: **COMPLETE**
 
 ```text
 R-001 Define role contract format
@@ -673,7 +675,7 @@ R-007 Define role selection rules
 
 ## M4 — Workflow Engine
 
-Status: **PENDING**
+Status: **COMPLETE**
 
 ```text
 W-001 Define state machine
@@ -988,10 +990,10 @@ Before finishing, report:
 |---|---|---|
 | M0 Discovery & Specification | **COMPLETE** | Specifications accepted; M0 closed |
 | M1 Repository Foundation | **COMPLETE** | F-001 through F-006 accepted |
-| M2 Configuration & Workspace | **NEXT** | Next milestone; starts with C-001 (not started) |
-| M3 Role Contracts | PENDING | Not started |
-| M4 Workflow Engine | PENDING | Not started |
-| M5 CLI & Role Invocation | PENDING | Includes CLI, prompt, and optional slash-command selection |
+| M2 Configuration & Workspace | **COMPLETE** | C-001 through C-006 accepted |
+| M3 Role Contracts | **COMPLETE** | R-001 through R-007 accepted |
+| M4 Workflow Engine | **COMPLETE** | W-001 through W-008 accepted |
+| M5 CLI & Role Invocation | PENDING | Next milestone; not started |
 | M6 Project Discovery | PENDING | Not started |
 | M7 OpenCode Provider | PENDING | Not started |
 | M8 Planning & Ticket Generation | PENDING | Not started |
@@ -1005,9 +1007,9 @@ Before finishing, report:
 
 # 20. Next Steps
 
-The next work item is **M2 — Configuration and Workspace**.
+The next work item is **M5 — CLI & Role Invocation**.
 
-M0 is complete and M1 is complete (F-001 through F-006 accepted).
+M0, M1, M2, M3, and M4 are complete (F-001 through F-006, C-001 through C-006, R-001 through R-007, and W-001 through W-008 accepted).
 
 ### M0 checklist
 
@@ -1030,10 +1032,10 @@ M0 is complete and M1 is complete (F-001 through F-006 accepted).
 [done] Finalize 0.1.0 Definition of Done
 ```
 
-M2 begins with (not started yet):
+M5 begins with (not started yet):
 
 ```text
-C-001 Define configuration schema
+CLI-001 Implement default Coordinator command
 ```
 
 ---
