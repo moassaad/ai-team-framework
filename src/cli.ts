@@ -3,8 +3,8 @@ import { IMPLEMENTER_ROLE } from "./roles/implementer";
 import { PROJECT_MANAGER_ROLE } from "./roles/project-manager";
 import { SENIOR_REVIEWER_ROLE } from "./roles/senior-reviewer";
 import { TECHNICAL_LEAD_ROLE } from "./roles/technical-lead";
-import { RoleContract, RoleId } from "./roles/contract";
-import { resolveRole } from "./roles/selection";
+import { RoleContract, RoleId, ImplementerSpecialty } from "./roles/contract";
+import { resolveImplementerSpecialty, resolveRole } from "./roles/selection";
 
 export interface CliResult {
   exitCode: number;
@@ -49,14 +49,17 @@ function findContract(id: RoleId): RoleContract | undefined {
 
 /**
  * Present a resolved role contract. Shared by the default Coordinator
- * entry point and explicit `--role` selection; role execution remains
- * unimplemented in both cases.
+ * entry point, explicit `--role` selection, and Implementer specialty
+ * selection; role execution remains unimplemented in all cases. The
+ * specialty line appears only when a specialty was explicitly selected.
  */
-function presentRole(contract: RoleContract): CliResult {
+function presentRole(contract: RoleContract, specialty?: ImplementerSpecialty): CliResult {
+  const specialtyLine = specialty === undefined ? "" : `Specialty: ${specialty}\n`;
   return {
     exitCode: 0,
     stdout:
       `${contract.name} (${contract.id})\n` +
+      specialtyLine +
       `${contract.purpose}\n` +
       `Role execution is not implemented yet.\n`,
     stderr: "",
@@ -67,8 +70,7 @@ function presentRole(contract: RoleContract): CliResult {
  * Default Coordinator entry point (`ai-team run`). A bare `run` selects
  * the Coordinator per the role-selection contract (omitting `--role`
  * always selects `coordinator`); role identity and purpose come from the
- * existing contract, and execution remains unimplemented. Extra arguments
- * such as `--role` belong to later CLI tickets and are rejected here.
+ * existing contract, and execution remains unimplemented.
  */
 function runCoordinator(): CliResult {
   return presentRole(COORDINATOR_ROLE);
@@ -91,6 +93,22 @@ export function run(argv: string[], version: string): CliResult {
         const contract = findContract(selection.role);
         if (contract !== undefined) {
           return presentRole(contract);
+        }
+      }
+    }
+    if (
+      argv.length === 5 &&
+      argv[1] === "--role" &&
+      argv[3] === "--specialty"
+    ) {
+      const selection = resolveRole(argv[2]);
+      if (selection !== undefined && selection.role === IMPLEMENTER_ROLE.id) {
+        const specialty = resolveImplementerSpecialty(argv[4]);
+        if (specialty !== undefined) {
+          const contract = findContract(selection.role);
+          if (contract !== undefined) {
+            return presentRole(contract, specialty);
+          }
         }
       }
     }

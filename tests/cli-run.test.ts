@@ -126,3 +126,65 @@ describe("cli run --role selection", () => {
     );
   });
 });
+
+describe("cli run --role implementer --specialty", () => {
+  it("resolves all six specialties through the Implementer contract", () => {
+    for (const specialty of [
+      "backend",
+      "frontend",
+      "integration",
+      "database",
+      "testing",
+      "documentation",
+    ]) {
+      const result = run(["run", "--role", "implementer", "--specialty", specialty], "0.1.0");
+      assert.equal(result.exitCode, 0);
+      assert.equal(result.stderr, "");
+      assert.ok(result.stdout.includes(IMPLEMENTER_ROLE.name));
+      assert.ok(result.stdout.includes(IMPLEMENTER_ROLE.id));
+      assert.ok(result.stdout.includes(IMPLEMENTER_ROLE.purpose));
+      assert.ok(result.stdout.includes(`Specialty: ${specialty}`));
+    }
+  });
+
+  it("rejects --specialty without implementer and unknown specialties", () => {
+    for (const argv of [
+      ["run", "--specialty", "backend"],
+      ["run", "--role", "coordinator", "--specialty", "backend"],
+      ["run", "--role", "project-manager", "--specialty", "backend"],
+      ["run", "--role", "pm", "--specialty", "backend"],
+      ["run", "--role", "technical-lead", "--specialty", "backend"],
+      ["run", "--role", "tl", "--specialty", "backend"],
+      ["run", "--role", "senior-reviewer", "--specialty", "backend"],
+      ["run", "--role", "reviewer", "--specialty", "backend"],
+      ["run", "--role", "sr", "--specialty", "backend"],
+      ["run", "--role", "implementer", "--specialty", "unknown"],
+      ["run", "--role", "implementer", "--specialty"],
+      ["run", "--role", "implementer", "--specialty", "backend", "extra"],
+    ]) {
+      const result = run(argv, "0.1.0");
+      assert.equal(result.exitCode, 1, `must reject ${JSON.stringify(argv)}`);
+      assert.equal(result.stdout, "");
+      assert.match(result.stderr, /unknown command/);
+    }
+  });
+
+  it("infers no default specialty and preserves prior behavior", () => {
+    const plain = run(["run", "--role", "implementer"], "0.1.0");
+    assert.equal(plain.exitCode, 0);
+    assert.equal(plain.stdout.includes("Specialty:"), false);
+    assert.deepEqual(run(["run"], "0.1.0").stdout.includes("Coordinator"), true);
+    assert.match(run(["run", "--role", "implementer", "--specialty", "backend", "--help"], "0.1.0").stdout, /Usage:/);
+    assert.equal(
+      run(["run", "--role", "implementer", "--specialty", "backend", "--version"], "9.9.9-test").stdout,
+      "9.9.9-test\n",
+    );
+  });
+
+  it("behaves deterministically for specialty selection", () => {
+    assert.deepEqual(
+      run(["run", "--role", "implementer", "--specialty", "testing"], "0.1.0"),
+      run(["run", "--role", "implementer", "--specialty", "testing"], "0.1.0"),
+    );
+  });
+});
