@@ -1,7 +1,7 @@
 # AI Team Framework — Project Plan
 
 > **Document status:** Approved baseline plan  
-> **Current phase:** M9 — Implementation and Review Flow (next)  
+> **Current phase:** M10 — GitHub Issues (next)  
 > **M0:** COMPLETE  
 > **M1:** COMPLETE  
 > **M2:** COMPLETE  
@@ -11,6 +11,7 @@
 > **M6:** COMPLETE  
 > **M7:** COMPLETE  
 > **M8:** COMPLETE  
+> **M9:** COMPLETE  
 > **Implementation started:** Yes  
 > **Target:** First usable release (MVP / `0.1.0`)
 
@@ -757,15 +758,17 @@ P-006 Document Spec Kit usage
 
 ## M9 — Implementation and Review Flow
 
-Status: **PENDING**
+Status: **COMPLETE**
+
+M9 provides Implementer execution, Senior Reviewer execution, the changes-requested loop, technical approval, PM review, and completion reporting over the W-002 and W-008 contracts.
 
 ```text
-IR-001 Implementer execution flow
-IR-002 Senior Reviewer execution flow
-IR-003 Changes-requested loop
-IR-004 Technical approval flow
-IR-005 PM review flow
-IR-006 Completion reporting
+IR-001 Implementer execution flow ✅
+IR-002 Senior Reviewer execution flow ✅
+IR-003 Changes-requested loop ✅
+IR-004 Technical approval flow ✅
+IR-005 PM review flow ✅
+IR-006 Completion reporting ✅
 ```
 
 ## M10 — GitHub Issues
@@ -1008,8 +1011,8 @@ Before finishing, report:
 | M6 Project Discovery | **COMPLETE** | A-001 through A-009 accepted |
 | M7 OpenCode Provider | **COMPLETE** | O-001 through O-006 accepted |
 | M8 Planning & Ticket Generation | **COMPLETE** | P-001 through P-005 accepted |
-| M9 Implementation & Review | PENDING | Next milestone; not started |
-| M10 GitHub Issues | PENDING | Optional integration |
+| M9 Implementation & Review | **COMPLETE** | IR-001 through IR-006 accepted |
+| M10 GitHub Issues | PENDING | Next milestone; not started |
 | M11 delegate-skills | PENDING | Optional integration |
 | M12 Testing & Safety | PENDING | Not started |
 | M13 Documentation & Release | PENDING | Target release: `0.1.0` |
@@ -1018,9 +1021,9 @@ Before finishing, report:
 
 # 20. Next Steps
 
-The next work item is **M9 — Implementation and Review Flow**.
+The next work item is **M10 — GitHub Issues**.
 
-M0, M1, M2, M3, M4, M5, M6, M7, and M8 are complete (F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, O-001 through O-006, and P-001 through P-005 accepted).
+M0, M1, M2, M3, M4, M5, M6, M7, M8, and M9 are complete (F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, O-001 through O-006, P-001 through P-005, and IR-001 through IR-006 accepted).
 
 ### M0 checklist
 
@@ -1043,10 +1046,10 @@ M0, M1, M2, M3, M4, M5, M6, M7, and M8 are complete (F-001 through F-006, C-001 
 [done] Finalize 0.1.0 Definition of Done
 ```
 
-M9 begins with (not started yet):
+M10 begins with (not started yet):
 
 ```text
-IR-001 Implementer execution flow
+G-001 Define issue provider interface
 ```
 
 ---
