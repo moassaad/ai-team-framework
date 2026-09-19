@@ -91,7 +91,11 @@ describe("github issues adapter", () => {
       { owner: "o", repo: "r" },
     ]) {
       assert.throws(
-        () => createGitHubIssueProvider(options as Parameters<typeof createGitHubIssueProvider>[0]),
+        () =>
+          createGitHubIssueProvider({
+            ...(typeof options === "object" && options !== null ? options : {}),
+            transport: countingTransport,
+          } as Parameters<typeof createGitHubIssueProvider>[0]),
         /github provider: invalid options/,
       );
     }
