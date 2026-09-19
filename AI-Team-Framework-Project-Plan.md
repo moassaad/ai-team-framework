@@ -1,7 +1,7 @@
 # AI Team Framework — Project Plan
 
 > **Document status:** Approved baseline plan  
-> **Current phase:** M7 — OpenCode Provider (next)  
+> **Current phase:** M8 — Planning and Ticket Generation (next)  
 > **M0:** COMPLETE  
 > **M1:** COMPLETE  
 > **M2:** COMPLETE  
@@ -9,6 +9,7 @@
 > **M4:** COMPLETE  
 > **M5:** COMPLETE  
 > **M6:** COMPLETE  
+> **M7:** COMPLETE  
 > **Implementation started:** Yes  
 > **Target:** First usable release (MVP / `0.1.0`)
 
@@ -725,15 +726,17 @@ A-009 Handle unknown stack safely ✅
 
 ## M7 — OpenCode Provider
 
-Status: **PENDING**
+Status: **COMPLETE**
+
+M7 provides a generic agent provider interface, an isolated OpenCode provider, role prompt rendering, a shared execution result format, timeout/failure handling, and OpenCode usage documentation.
 
 ```text
-O-001 Define agent provider interface
-O-002 Add OpenCode provider
-O-003 Add role prompt rendering
-O-004 Add execution result format
-O-005 Add timeout/failure handling
-O-006 Document OpenCode usage
+O-001 Define agent provider interface ✅
+O-002 Add OpenCode provider ✅
+O-003 Add role prompt rendering ✅
+O-004 Add execution result format ✅
+O-005 Add timeout/failure handling ✅
+O-006 Document OpenCode usage ✅
 ```
 
 ## M8 — Planning and Ticket Generation
@@ -1000,8 +1003,8 @@ Before finishing, report:
 | M4 Workflow Engine | **COMPLETE** | W-001 through W-008 accepted |
 | M5 CLI & Role Invocation | **COMPLETE** | CLI-001 through CLI-007 accepted |
 | M6 Project Discovery | **COMPLETE** | A-001 through A-009 accepted |
-| M7 OpenCode Provider | PENDING | Next milestone; not started |
-| M8 Planning & Ticket Generation | PENDING | Not started |
+| M7 OpenCode Provider | **COMPLETE** | O-001 through O-006 accepted |
+| M8 Planning & Ticket Generation | PENDING | Next milestone; not started |
 | M9 Implementation & Review | PENDING | Not started |
 | M10 GitHub Issues | PENDING | Optional integration |
 | M11 delegate-skills | PENDING | Optional integration |
@@ -1012,9 +1015,9 @@ Before finishing, report:
 
 # 20. Next Steps
 
-The next work item is **M7 — OpenCode Provider**.
+The next work item is **M8 — Planning and Ticket Generation**.
 
-M0, M1, M2, M3, M4, M5, and M6 are complete (F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, and A-001 through A-009 accepted).
+M0, M1, M2, M3, M4, M5, M6, and M7 are complete (F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, and O-001 through O-006 accepted).
 
 ### M0 checklist
 
@@ -1037,10 +1040,10 @@ M0, M1, M2, M3, M4, M5, and M6 are complete (F-001 through F-006, C-001 through 
 [done] Finalize 0.1.0 Definition of Done
 ```
 
-M7 begins with (not started yet):
+M8 begins with (not started yet):
 
 ```text
-O-001 Define agent provider interface
+P-001 Define specification provider interface
 ```
 
 ---
