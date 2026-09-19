@@ -1,7 +1,7 @@
 # AI Team Framework — Project Plan
 
 > **Document status:** Approved baseline plan  
-> **Current phase:** M8 — Planning and Ticket Generation (next)  
+> **Current phase:** M9 — Implementation and Review Flow (next)  
 > **M0:** COMPLETE  
 > **M1:** COMPLETE  
 > **M2:** COMPLETE  
@@ -10,6 +10,7 @@
 > **M5:** COMPLETE  
 > **M6:** COMPLETE  
 > **M7:** COMPLETE  
+> **M8:** COMPLETE  
 > **Implementation started:** Yes  
 > **Target:** First usable release (MVP / `0.1.0`)
 
@@ -741,14 +742,16 @@ O-006 Document OpenCode usage ✅
 
 ## M8 — Planning and Ticket Generation
 
-Status: **PENDING**
+Status: **COMPLETE**
+
+M8 provides a generic specification provider interface, a Spec Kit adapter, a fallback provider, requirements-to-plan mapping, and plan-to-ticket decomposition.
 
 ```text
-P-001 Define specification provider interface
-P-002 Add Spec Kit adapter
-P-003 Map requirements to plans
-P-004 Map plans to tickets
-P-005 Add fallback when Spec Kit is unavailable
+P-001 Define specification provider interface ✅
+P-002 Add Spec Kit adapter ✅
+P-003 Map requirements to plans ✅
+P-004 Map plans to tickets ✅
+P-005 Add fallback when Spec Kit is unavailable ✅
 P-006 Document Spec Kit usage
 ```
 
@@ -1004,8 +1007,8 @@ Before finishing, report:
 | M5 CLI & Role Invocation | **COMPLETE** | CLI-001 through CLI-007 accepted |
 | M6 Project Discovery | **COMPLETE** | A-001 through A-009 accepted |
 | M7 OpenCode Provider | **COMPLETE** | O-001 through O-006 accepted |
-| M8 Planning & Ticket Generation | PENDING | Next milestone; not started |
-| M9 Implementation & Review | PENDING | Not started |
+| M8 Planning & Ticket Generation | **COMPLETE** | P-001 through P-005 accepted |
+| M9 Implementation & Review | PENDING | Next milestone; not started |
 | M10 GitHub Issues | PENDING | Optional integration |
 | M11 delegate-skills | PENDING | Optional integration |
 | M12 Testing & Safety | PENDING | Not started |
@@ -1015,9 +1018,9 @@ Before finishing, report:
 
 # 20. Next Steps
 
-The next work item is **M8 — Planning and Ticket Generation**.
+The next work item is **M9 — Implementation and Review Flow**.
 
-M0, M1, M2, M3, M4, M5, M6, and M7 are complete (F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, and O-001 through O-006 accepted).
+M0, M1, M2, M3, M4, M5, M6, M7, and M8 are complete (F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, O-001 through O-006, and P-001 through P-005 accepted).
 
 ### M0 checklist
 
@@ -1040,10 +1043,10 @@ M0, M1, M2, M3, M4, M5, M6, and M7 are complete (F-001 through F-006, C-001 thro
 [done] Finalize 0.1.0 Definition of Done
 ```
 
-M8 begins with (not started yet):
+M9 begins with (not started yet):
 
 ```text
-P-001 Define specification provider interface
+IR-001 Implementer execution flow
 ```
 
 ---

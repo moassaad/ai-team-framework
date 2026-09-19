@@ -35,18 +35,19 @@ M4 — Workflow Engine: COMPLETE
 M5 — CLI & Role Invocation: COMPLETE
 M6 — Project Discovery: COMPLETE
 M7 — OpenCode Provider: COMPLETE
-M8 — Planning and Ticket Generation: NEXT
+M8 — Planning and Ticket Generation: COMPLETE
+M9 — Implementation and Review Flow: NEXT
 ```
 
-M0, M1, M2, M3, M4, M5, M6, and M7 are complete. F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, and O-001 through O-006 are accepted.
+M0, M1, M2, M3, M4, M5, M6, M7, and M8 are complete. F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, O-001 through O-006, and P-001 through P-005 are accepted.
 
 Next implementation ticket:
 
 ```text
-P-001 Define specification provider interface
+IR-001 Implementer execution flow
 ```
 
-Do not start P-001 unless explicitly assigned.
+Do not start IR-001 unless explicitly assigned.
 
 ## Role Selection
 
