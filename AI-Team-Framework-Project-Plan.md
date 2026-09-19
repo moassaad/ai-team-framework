@@ -1,11 +1,13 @@
 # AI Team Framework — Project Plan
 
 > **Document status:** Approved baseline plan  
-> **Current phase:** M5 — CLI & Role Invocation (next)  
+> **Current phase:** M6 — Project Discovery (next)  
 > **M0:** COMPLETE  
 > **M1:** COMPLETE  
 > **M2:** COMPLETE  
 > **M3:** COMPLETE  
+> **M4:** COMPLETE  
+> **M5:** COMPLETE  
 > **Implementation started:** Yes  
 > **Target:** First usable release (MVP / `0.1.0`)
 
@@ -690,7 +692,7 @@ W-008 Add ticket completion rules
 
 ## M5 — CLI and Role Invocation
 
-Status: **PENDING**
+Status: **COMPLETE**
 
 ```text
 CLI-001 Implement default Coordinator command
@@ -993,8 +995,8 @@ Before finishing, report:
 | M2 Configuration & Workspace | **COMPLETE** | C-001 through C-006 accepted |
 | M3 Role Contracts | **COMPLETE** | R-001 through R-007 accepted |
 | M4 Workflow Engine | **COMPLETE** | W-001 through W-008 accepted |
-| M5 CLI & Role Invocation | PENDING | Next milestone; not started |
-| M6 Project Discovery | PENDING | Not started |
+| M5 CLI & Role Invocation | **COMPLETE** | CLI-001 through CLI-007 accepted |
+| M6 Project Discovery | PENDING | Next milestone; not started |
 | M7 OpenCode Provider | PENDING | Not started |
 | M8 Planning & Ticket Generation | PENDING | Not started |
 | M9 Implementation & Review | PENDING | Not started |
@@ -1007,9 +1009,9 @@ Before finishing, report:
 
 # 20. Next Steps
 
-The next work item is **M5 — CLI & Role Invocation**.
+The next work item is **M6 — Project Discovery**.
 
-M0, M1, M2, M3, and M4 are complete (F-001 through F-006, C-001 through C-006, R-001 through R-007, and W-001 through W-008 accepted).
+M0, M1, M2, M3, M4, and M5 are complete (F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, and CLI-001 through CLI-007 accepted).
 
 ### M0 checklist
 
@@ -1032,10 +1034,10 @@ M0, M1, M2, M3, and M4 are complete (F-001 through F-006, C-001 through C-006, R
 [done] Finalize 0.1.0 Definition of Done
 ```
 
-M5 begins with (not started yet):
+M6 begins with (not started yet):
 
 ```text
-CLI-001 Implement default Coordinator command
+A-001 Define discovery contract
 ```
 
 ---
