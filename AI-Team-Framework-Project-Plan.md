@@ -1,13 +1,14 @@
 # AI Team Framework — Project Plan
 
 > **Document status:** Approved baseline plan  
-> **Current phase:** M6 — Project Discovery (next)  
+> **Current phase:** M7 — OpenCode Provider (next)  
 > **M0:** COMPLETE  
 > **M1:** COMPLETE  
 > **M2:** COMPLETE  
 > **M3:** COMPLETE  
 > **M4:** COMPLETE  
 > **M5:** COMPLETE  
+> **M6:** COMPLETE  
 > **Implementation started:** Yes  
 > **Target:** First usable release (MVP / `0.1.0`)
 
@@ -706,18 +707,20 @@ CLI-007 Add help and discoverability
 
 ## M6 — Project Discovery
 
-Status: **PENDING**
+Status: **COMPLETE**
+
+M6 provides discovery contracts, stack detection, package/build detection, testing detection, project conventions detection, an aggregated analysis report, Laravel and React examples, and safe unknown-stack behavior.
 
 ```text
-A-001 Define discovery contract
-A-002 Detect project stack
-A-003 Detect package/build tools
-A-004 Detect testing tools
-A-005 Detect project conventions
-A-006 Generate analysis report
-A-007 Laravel analysis example
-A-008 React analysis example
-A-009 Handle unknown stack safely
+A-001 Define discovery contract ✅
+A-002 Detect project stack ✅
+A-003 Detect package/build tools ✅
+A-004 Detect testing tools ✅
+A-005 Detect project conventions ✅
+A-006 Generate analysis report ✅
+A-007 Laravel analysis example ✅
+A-008 React analysis example ✅
+A-009 Handle unknown stack safely ✅
 ```
 
 ## M7 — OpenCode Provider
@@ -996,8 +999,8 @@ Before finishing, report:
 | M3 Role Contracts | **COMPLETE** | R-001 through R-007 accepted |
 | M4 Workflow Engine | **COMPLETE** | W-001 through W-008 accepted |
 | M5 CLI & Role Invocation | **COMPLETE** | CLI-001 through CLI-007 accepted |
-| M6 Project Discovery | PENDING | Next milestone; not started |
-| M7 OpenCode Provider | PENDING | Not started |
+| M6 Project Discovery | **COMPLETE** | A-001 through A-009 accepted |
+| M7 OpenCode Provider | PENDING | Next milestone; not started |
 | M8 Planning & Ticket Generation | PENDING | Not started |
 | M9 Implementation & Review | PENDING | Not started |
 | M10 GitHub Issues | PENDING | Optional integration |
@@ -1009,9 +1012,9 @@ Before finishing, report:
 
 # 20. Next Steps
 
-The next work item is **M6 — Project Discovery**.
+The next work item is **M7 — OpenCode Provider**.
 
-M0, M1, M2, M3, M4, and M5 are complete (F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, and CLI-001 through CLI-007 accepted).
+M0, M1, M2, M3, M4, M5, and M6 are complete (F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, and A-001 through A-009 accepted).
 
 ### M0 checklist
 
@@ -1034,10 +1037,10 @@ M0, M1, M2, M3, M4, and M5 are complete (F-001 through F-006, C-001 through C-00
 [done] Finalize 0.1.0 Definition of Done
 ```
 
-M6 begins with (not started yet):
+M7 begins with (not started yet):
 
 ```text
-A-001 Define discovery contract
+O-001 Define agent provider interface
 ```
 
 ---

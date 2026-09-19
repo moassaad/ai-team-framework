@@ -33,18 +33,19 @@ M2 — Configuration and Workspace: COMPLETE
 M3 — Role Contracts: COMPLETE
 M4 — Workflow Engine: COMPLETE
 M5 — CLI & Role Invocation: COMPLETE
-M6 — Project Discovery: NEXT
+M6 — Project Discovery: COMPLETE
+M7 — OpenCode Provider: NEXT
 ```
 
-M0, M1, M2, M3, M4, and M5 are complete. F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, and CLI-001 through CLI-007 are accepted.
+M0, M1, M2, M3, M4, M5, and M6 are complete. F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, and A-001 through A-009 are accepted.
 
 Next implementation ticket:
 
 ```text
-A-001 Define discovery contract
+O-001 Define agent provider interface
 ```
 
-Do not start A-001 unless explicitly assigned.
+Do not start O-001 unless explicitly assigned.
 
 ## Role Selection
 
