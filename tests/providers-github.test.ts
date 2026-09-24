@@ -299,6 +299,111 @@ describe("github issues adapter", () => {
     assert.equal(calls.length, 2);
   });
 
+  it("exposes completion on the provider without changing creation or update", async () => {
+    const provider = createGitHubIssueProvider({ owner: "o", repo: "r", token: "t" });
+    assert.equal(typeof provider.complete, "function");
+    assert.equal(typeof provider.update, "function");
+    assert.equal(isIssueProvider(provider), true);
+  });
+
+  it("maps completion into one PATCH request closing the issue", async () => {
+    const calls: HttpRequest[] = [];
+    const provider = createGitHubIssueProvider({
+      owner: "example",
+      repo: "shop",
+      token: "secret-token",
+      transport: fakeTransport(calls, async () => ({ status: 200, body: { number: 7 } })),
+    });
+    const complete = provider.complete ?? assert.fail("complete missing");
+    const reference = await complete({ id: "7" });
+    assert.deepEqual(reference, { id: "7" });
+    assert.equal(calls.length, 1);
+    assert.deepEqual(calls[0], {
+      url: "https://api.github.com/repos/example/shop/issues/7",
+      method: "PATCH",
+      headers: {
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        Authorization: "Bearer secret-token",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ state: "closed" }),
+    });
+  });
+
+  it("rejects bad completion references without calling", async () => {
+    let launched = 0;
+    const countingTransport = async (): Promise<HttpResponse> => {
+      launched += 1;
+      return { status: 200, body: { number: 7 } };
+    };
+    const provider = createGitHubIssueProvider({
+      owner: "o",
+      repo: "r",
+      token: "t",
+      transport: countingTransport,
+    });
+    const complete = provider.complete ?? assert.fail("complete missing");
+    await assert.rejects(complete({ id: "abc" }), /invalid reference/);
+    await assert.rejects(complete({ id: "" }), /invalid input/);
+    assert.equal(launched, 0);
+  });
+
+  it("rejects completion failures safely with sanitized errors", async () => {
+    const provider = createGitHubIssueProvider({
+      owner: "o",
+      repo: "r",
+      token: "secret-token",
+      transport: fakeTransport([], async () => ({ status: 404, body: { message: "Not Found" } })),
+    });
+    const complete = provider.complete ?? assert.fail("complete missing");
+    const missing = await complete({ id: "7" }).then(
+      () => assert.fail("must reject"),
+      (error: unknown) => error as Error,
+    );
+    assert.equal(missing.message, "github provider: request failed with status 404");
+    assert.ok(!missing.message.includes("secret-token"));
+    assert.ok(!missing.message.includes("Not Found"));
+
+    const offline = createGitHubIssueProvider({
+      owner: "o",
+      repo: "r",
+      token: "t",
+      transport: async () => {
+        throw new TypeError("fetch failed");
+      },
+    });
+    const offlineComplete = offline.complete ?? assert.fail("complete missing");
+    const offlineError = await offlineComplete({ id: "7" }).then(
+      () => assert.fail("must reject"),
+      (error: unknown) => error as Error,
+    );
+    assert.equal(offlineError.message, "github provider: request failed");
+
+    const broken = createGitHubIssueProvider({
+      owner: "o",
+      repo: "r",
+      token: "t",
+      transport: fakeTransport([], async () => ({ status: 200, body: { url: "x" } })),
+    });
+    const brokenComplete = broken.complete ?? assert.fail("complete missing");
+    await assert.rejects(brokenComplete({ id: "7" }), /unexpected response/);
+  });
+
+  it("performs exactly one completion per call", async () => {
+    const calls: HttpRequest[] = [];
+    const provider = createGitHubIssueProvider({
+      owner: "o",
+      repo: "r",
+      token: "t",
+      transport: fakeTransport(calls, async () => ({ status: 200, body: { number: 9 } })),
+    });
+    const complete = provider.complete ?? assert.fail("complete missing");
+    await complete({ id: "9" });
+    await complete({ id: "9" });
+    assert.equal(calls.length, 2);
+  });
+
   it("keeps the public API minimal", async () => {
     const module = await import("../src/providers/github");
     assert.deepEqual(Object.keys(module).sort(), ["GITHUB_PROVIDER_NAME", "createGitHubIssueProvider"]);
@@ -312,6 +417,6 @@ describe("github issues adapter", () => {
     assert.ok(!/label|milestone|assignee|project/i.test(code), "no tracker extras");
     assert.ok(!/workflow|approval|cli|regist/i.test(code), "no surrounding integration");
     assert.ok(!/synchroniz|poll|webhook/i.test(code), "no synchronization");
-    assert.ok(!/close|reopen/i.test(code), "no close/reopen lifecycle");
+    assert.ok(!/reopen|\bclose\b/i.test(code), "no close/reopen lifecycle beyond the closed value");
   });
 });

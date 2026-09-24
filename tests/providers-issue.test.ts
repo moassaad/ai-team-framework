@@ -124,6 +124,27 @@ describe("issue provider contract", () => {
     assert.equal(createOnly.update, undefined);
   });
 
+  it("supports an optional completion operation without breaking creation", async () => {
+    const seen: IssueReference[] = [];
+    const fake: IssueProvider = {
+      name: "fake",
+      create: async (request) => validateIssueReference({ id: `issue-for-${request.title}` }),
+      complete: async (reference) => {
+        seen.push(reference);
+        return validateIssueReference(reference);
+      },
+    };
+    assert.equal(isIssueProvider(fake), true);
+    assert.deepEqual(await fake.complete?.({ id: "7" }), { id: "7" });
+    assert.deepEqual(seen, [{ id: "7" }]);
+    const createOnly: IssueProvider = {
+      name: "create-only",
+      create: async () => validateIssueReference({ id: "x" }),
+    };
+    assert.equal(isIssueProvider(createOnly), true);
+    assert.equal(createOnly.complete, undefined);
+  });
+
   it("keeps the public API minimal", async () => {
     const module = await import("../src/providers/issue");
     assert.deepEqual(Object.keys(module).sort(), [

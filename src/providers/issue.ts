@@ -1,5 +1,5 @@
 /**
- * Generic issue provider contract (G-001, extended by G-005).
+ * Generic issue provider contract (G-001, extended by G-005 and G-006).
  *
  * The stable seam between the core framework and any issue-tracking
  * provider. Core code depends only on this module; every concrete
@@ -9,7 +9,9 @@
  *
  * G-005 adds one optional member: providers able to revise an
  * existing entry expose `update`, providers without it simply omit
- * the member. Creation behavior is unchanged.
+ * the member. G-006 adds one further optional member: providers able
+ * to finish an existing entry expose `complete`, providers without it
+ * simply omit the member. Creation behavior is unchanged.
  *
  * This module performs no I/O, runs nothing, contacts nothing, keeps
  * no registry, and names no external tracker, API, or host.
@@ -145,11 +147,15 @@ export function validateIssueUpdate(data: unknown): IssueUpdate {
  * Providers able to revise an existing entry additionally expose
  * `update`, which revises the entry named by the reference and
  * returns its reference; providers without revision support omit it.
+ * Providers able to finish an existing entry additionally expose
+ * `complete`, which finishes the entry named by the reference and
+ * returns its reference; providers without finishing support omit it.
  */
 export interface IssueProvider {
   readonly name: string;
   create(request: IssueRequest): Promise<IssueReference>;
   readonly update?: (reference: IssueReference, update: IssueUpdate) => Promise<IssueReference>;
+  readonly complete?: (reference: IssueReference) => Promise<IssueReference>;
 }
 
 /** True for values shaped like an issue provider. */

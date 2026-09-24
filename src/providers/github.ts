@@ -1,13 +1,15 @@
 /**
- * GitHub Issues adapter (G-002, extended by G-005).
+ * GitHub Issues adapter (G-002, extended by G-005 and G-006).
  *
  * The first concrete `IssueProvider`: creates one GitHub issue per
- * call through the REST issues endpoint using an injected token, and
+ * call through the REST issues endpoint using an injected token,
  * revises one existing issue per update call through the issue
- * endpoint. All GitHub specifics (endpoints, headers, payloads,
- * response mapping) live in this module; the generic contract stays
- * provider-neutral. One call performs exactly one tracker operation
- * and nothing more: one attempt per call, no surrounding machinery.
+ * endpoint, and finishes one existing issue per completion call
+ * through the same endpoint. All GitHub specifics (endpoints,
+ * headers, payloads, response mapping) live in this module; the
+ * generic contract stays provider-neutral. One call performs exactly
+ * one tracker operation and nothing more: one attempt per call, no
+ * surrounding machinery.
  */
 
 import {
@@ -105,6 +107,14 @@ function responseIdentifier(body: unknown): string {
   return String(numeral);
 }
 
+function referenceIdentifier(reference: IssueReference): string {
+  const target = validateIssueReference(reference);
+  if (!/^\d+$/.test(target.id)) {
+    throw new Error("github provider: invalid reference (expected digits)");
+  }
+  return target.id;
+}
+
 function revisionPayload(change: IssueUpdate): Record<string, string> {
   const payload: Record<string, string> = {};
   if (change.title !== undefined) {
@@ -159,18 +169,33 @@ export function createGitHubIssueProvider(options: GitHubProviderOptions): Issue
       return validateIssueReference({ id: responseIdentifier(response.body) });
     },
     update: async (reference: IssueReference, update: IssueUpdate): Promise<IssueReference> => {
-      const target = validateIssueReference(reference);
+      const identifier = referenceIdentifier(reference);
       const change = validateIssueUpdate(update);
-      if (!/^\d+$/.test(target.id)) {
-        throw new Error("github provider: invalid reference (expected digits)");
-      }
       let response: HttpResponse;
       try {
         response = await transport({
-          url: `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${encodeURIComponent(target.id)}`,
+          url: `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${encodeURIComponent(identifier)}`,
           method: "PATCH",
           headers: providerHeaders(token),
           body: JSON.stringify(revisionPayload(change)),
+        });
+      } catch {
+        throw new Error("github provider: request failed");
+      }
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error(`github provider: request failed with status ${response.status}`);
+      }
+      return validateIssueReference({ id: responseIdentifier(response.body) });
+    },
+    complete: async (reference: IssueReference): Promise<IssueReference> => {
+      const identifier = referenceIdentifier(reference);
+      let response: HttpResponse;
+      try {
+        response = await transport({
+          url: `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${encodeURIComponent(identifier)}`,
+          method: "PATCH",
+          headers: providerHeaders(token),
+          body: JSON.stringify({ state: "closed" }),
         });
       } catch {
         throw new Error("github provider: request failed");
