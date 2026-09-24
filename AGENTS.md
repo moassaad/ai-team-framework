@@ -37,18 +37,19 @@ M6 — Project Discovery: COMPLETE
 M7 — OpenCode Provider: COMPLETE
 M8 — Planning and Ticket Generation: COMPLETE
 M9 — Implementation and Review Flow: COMPLETE
-M10 — GitHub Issues: NEXT
+M10 — GitHub Issues: COMPLETE
+M11 — Optional delegate-skills Integration: NEXT
 ```
 
-M0, M1, M2, M3, M4, M5, M6, M7, M8, and M9 are complete. F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, O-001 through O-006, P-001 through P-005, and IR-001 through IR-006 are accepted. M10 has G-001 through G-006 accepted; G-007 is pending.
+M0, M1, M2, M3, M4, M5, M6, M7, M8, M9, and M10 are complete. F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, O-001 through O-006, P-001 through P-005, IR-001 through IR-006, and G-001 through G-007 are accepted.
 
 Next implementation ticket:
 
 ```text
-G-007 Add local-only fallback
+D-001 Define delegate provider contract
 ```
 
-Do not start G-007 unless explicitly assigned.
+Do not start D-001 unless explicitly assigned.
 
 ## Role Selection
 

@@ -1,7 +1,7 @@
 # AI Team Framework — Project Plan
 
 > **Document status:** Approved baseline plan  
-> **Current phase:** M10 — GitHub Issues (next)  
+> **Current phase:** M11 — Optional delegate-skills Integration (next)
 > **M0:** COMPLETE  
 > **M1:** COMPLETE  
 > **M2:** COMPLETE  
@@ -12,6 +12,7 @@
 > **M7:** COMPLETE  
 > **M8:** COMPLETE  
 > **M9:** COMPLETE  
+> **M10:** COMPLETE
 > **Implementation started:** Yes  
 > **Target:** First usable release (MVP / `0.1.0`)
 
@@ -773,7 +774,9 @@ IR-006 Completion reporting ✅
 
 ## M10 — GitHub Issues
 
-Status: **PENDING**
+Status: **COMPLETE**
+
+M10 provides a generic issue provider interface, a GitHub Issues adapter with creation, update, and completion operations, ticket-state mapping, issue metadata extraction, and a local-only fallback provider.
 
 ```text
 G-001 Define issue provider interface ✅
@@ -782,7 +785,7 @@ G-003 Map ticket states ✅
 G-004 Add issue creation ✅
 G-005 Add issue update ✅
 G-006 Add issue completion ✅
-G-007 Add local-only fallback
+G-007 Add local-only fallback ✅
 ```
 
 ## M11 — Optional delegate-skills Integration
@@ -1012,8 +1015,8 @@ Before finishing, report:
 | M7 OpenCode Provider | **COMPLETE** | O-001 through O-006 accepted |
 | M8 Planning & Ticket Generation | **COMPLETE** | P-001 through P-005 accepted |
 | M9 Implementation & Review | **COMPLETE** | IR-001 through IR-006 accepted |
-| M10 GitHub Issues | PENDING | G-001 through G-006 accepted; G-007 pending |
-| M11 delegate-skills | PENDING | Optional integration |
+| M10 GitHub Issues | **COMPLETE** | G-001 through G-007 accepted |
+| M11 delegate-skills | PENDING | Next milestone; not started |
 | M12 Testing & Safety | PENDING | Not started |
 | M13 Documentation & Release | PENDING | Target release: `0.1.0` |
 
@@ -1021,9 +1024,9 @@ Before finishing, report:
 
 # 20. Next Steps
 
-The next work item is **G-007 — Add local-only fallback** (M10, pending).
+The next work item is **M11 — Optional delegate-skills Integration**.
 
-M0, M1, M2, M3, M4, M5, M6, M7, M8, and M9 are complete (F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, O-001 through O-006, P-001 through P-005, and IR-001 through IR-006 accepted). M10 has G-001 through G-006 accepted; G-007 is pending.
+M0, M1, M2, M3, M4, M5, M6, M7, M8, M9, and M10 are complete (F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, O-001 through O-006, P-001 through P-005, IR-001 through IR-006, and G-001 through G-007 accepted).
 
 ### M0 checklist
 
@@ -1046,10 +1049,10 @@ M0, M1, M2, M3, M4, M5, M6, M7, M8, and M9 are complete (F-001 through F-006, C-
 [done] Finalize 0.1.0 Definition of Done
 ```
 
-M10 continues with (not started yet):
+M11 begins with (not started yet):
 
 ```text
-G-007 Add local-only fallback
+D-001 Define delegate provider contract
 ```
 
 ---
