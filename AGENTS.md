@@ -40,15 +40,15 @@ M9 — Implementation and Review Flow: COMPLETE
 M10 — GitHub Issues: NEXT
 ```
 
-M0, M1, M2, M3, M4, M5, M6, M7, M8, and M9 are complete. F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, O-001 through O-006, P-001 through P-005, and IR-001 through IR-006 are accepted.
+M0, M1, M2, M3, M4, M5, M6, M7, M8, and M9 are complete. F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, O-001 through O-006, P-001 through P-005, and IR-001 through IR-006 are accepted. M10 has G-001 through G-006 accepted; G-007 is pending.
 
 Next implementation ticket:
 
 ```text
-G-001 Define issue provider interface
+G-007 Add local-only fallback
 ```
 
-Do not start G-001 unless explicitly assigned.
+Do not start G-007 unless explicitly assigned.
 
 ## Role Selection
 

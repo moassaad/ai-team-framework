@@ -776,12 +776,12 @@ IR-006 Completion reporting ✅
 Status: **PENDING**
 
 ```text
-G-001 Define issue provider interface
-G-002 Add GitHub Issues provider
-G-003 Map ticket states
-G-004 Add issue creation
-G-005 Add issue update
-G-006 Add issue completion
+G-001 Define issue provider interface ✅
+G-002 Add GitHub Issues provider ✅
+G-003 Map ticket states ✅
+G-004 Add issue creation ✅
+G-005 Add issue update ✅
+G-006 Add issue completion ✅
 G-007 Add local-only fallback
 ```
 
@@ -1012,7 +1012,7 @@ Before finishing, report:
 | M7 OpenCode Provider | **COMPLETE** | O-001 through O-006 accepted |
 | M8 Planning & Ticket Generation | **COMPLETE** | P-001 through P-005 accepted |
 | M9 Implementation & Review | **COMPLETE** | IR-001 through IR-006 accepted |
-| M10 GitHub Issues | PENDING | Next milestone; not started |
+| M10 GitHub Issues | PENDING | G-001 through G-006 accepted; G-007 pending |
 | M11 delegate-skills | PENDING | Optional integration |
 | M12 Testing & Safety | PENDING | Not started |
 | M13 Documentation & Release | PENDING | Target release: `0.1.0` |
@@ -1021,9 +1021,9 @@ Before finishing, report:
 
 # 20. Next Steps
 
-The next work item is **M10 — GitHub Issues**.
+The next work item is **G-007 — Add local-only fallback** (M10, pending).
 
-M0, M1, M2, M3, M4, M5, M6, M7, M8, and M9 are complete (F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, O-001 through O-006, P-001 through P-005, and IR-001 through IR-006 accepted).
+M0, M1, M2, M3, M4, M5, M6, M7, M8, and M9 are complete (F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, O-001 through O-006, P-001 through P-005, and IR-001 through IR-006 accepted). M10 has G-001 through G-006 accepted; G-007 is pending.
 
 ### M0 checklist
 
@@ -1046,10 +1046,10 @@ M0, M1, M2, M3, M4, M5, M6, M7, M8, and M9 are complete (F-001 through F-006, C-
 [done] Finalize 0.1.0 Definition of Done
 ```
 
-M10 begins with (not started yet):
+M10 continues with (not started yet):
 
 ```text
-G-001 Define issue provider interface
+G-007 Add local-only fallback
 ```
 
 ---
