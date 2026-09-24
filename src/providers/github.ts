@@ -1,15 +1,24 @@
 /**
- * GitHub Issues adapter (G-002).
+ * GitHub Issues adapter (G-002, extended by G-005).
  *
  * The first concrete `IssueProvider`: creates one GitHub issue per
- * call through the REST issues endpoint using an injected token.
- * All GitHub specifics (endpoint, headers, payload, response mapping)
- * live in this module; the generic contract stays provider-neutral.
- * One call creates exactly one issue and nothing more: no edits,
- * no state changes, no synchronization, no second attempts.
+ * call through the REST issues endpoint using an injected token, and
+ * revises one existing issue per update call through the issue
+ * endpoint. All GitHub specifics (endpoints, headers, payloads,
+ * response mapping) live in this module; the generic contract stays
+ * provider-neutral. One call performs exactly one tracker operation
+ * and nothing more: one attempt per call, no surrounding machinery.
  */
 
-import { IssueProvider, IssueReference, IssueRequest, validateIssueReference, validateIssueRequest } from "./issue";
+import {
+  IssueProvider,
+  IssueReference,
+  IssueRequest,
+  IssueUpdate,
+  validateIssueReference,
+  validateIssueRequest,
+  validateIssueUpdate,
+} from "./issue";
 
 /** Stable adapter identity, local to this concrete module. */
 export const GITHUB_PROVIDER_NAME = "github" as const;
@@ -78,6 +87,42 @@ function requestBody(request: IssueRequest): string {
   return `${request.description}\n\n## Requirements\n\n${request.requirements}`;
 }
 
+function providerHeaders(token: string): Record<string, string> {
+  return {
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": GITHUB_API_VERSION,
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
+  };
+}
+
+function responseIdentifier(body: unknown): string {
+  const numeral =
+    typeof body === "object" && body !== null ? (body as Record<string, unknown>).number : undefined;
+  if (typeof numeral !== "number" || !Number.isFinite(numeral)) {
+    throw new Error("github provider: unexpected response");
+  }
+  return String(numeral);
+}
+
+function revisionPayload(change: IssueUpdate): Record<string, string> {
+  const payload: Record<string, string> = {};
+  if (change.title !== undefined) {
+    payload.title = change.title;
+  }
+  const sections: string[] = [];
+  if (change.description !== undefined) {
+    sections.push(change.description);
+  }
+  if (change.requirements !== undefined) {
+    sections.push(`## Requirements\n\n${change.requirements}`);
+  }
+  if (sections.length > 0) {
+    payload.body = sections.join("\n\n");
+  }
+  return payload;
+}
+
 /**
  * Build a GitHub Issues provider. Validates owner, repo, and token up
  * front; rejects ambiguous targets instead of guessing them.
@@ -102,12 +147,7 @@ export function createGitHubIssueProvider(options: GitHubProviderOptions): Issue
         response = await transport({
           url: `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues`,
           method: "POST",
-          headers: {
-            Accept: "application/vnd.github+json",
-            "X-GitHub-Api-Version": GITHUB_API_VERSION,
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+          headers: providerHeaders(token),
           body: JSON.stringify({ title: invocation.title, body: requestBody(invocation) }),
         });
       } catch {
@@ -116,14 +156,29 @@ export function createGitHubIssueProvider(options: GitHubProviderOptions): Issue
       if (response.status < 200 || response.status >= 300) {
         throw new Error(`github provider: request failed with status ${response.status}`);
       }
-      const number =
-        typeof response.body === "object" && response.body !== null
-          ? (response.body as Record<string, unknown>).number
-          : undefined;
-      if (typeof number !== "number" || !Number.isFinite(number)) {
-        throw new Error("github provider: unexpected response");
+      return validateIssueReference({ id: responseIdentifier(response.body) });
+    },
+    update: async (reference: IssueReference, update: IssueUpdate): Promise<IssueReference> => {
+      const target = validateIssueReference(reference);
+      const change = validateIssueUpdate(update);
+      if (!/^\d+$/.test(target.id)) {
+        throw new Error("github provider: invalid reference (expected digits)");
       }
-      return validateIssueReference({ id: String(number) });
+      let response: HttpResponse;
+      try {
+        response = await transport({
+          url: `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${encodeURIComponent(target.id)}`,
+          method: "PATCH",
+          headers: providerHeaders(token),
+          body: JSON.stringify(revisionPayload(change)),
+        });
+      } catch {
+        throw new Error("github provider: request failed");
+      }
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error(`github provider: request failed with status ${response.status}`);
+      }
+      return validateIssueReference({ id: responseIdentifier(response.body) });
     },
   };
 }

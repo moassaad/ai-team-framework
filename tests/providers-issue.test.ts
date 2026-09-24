@@ -8,6 +8,7 @@ import {
   isIssueProvider,
   validateIssueReference,
   validateIssueRequest,
+  validateIssueUpdate,
 } from "../src/providers/issue";
 
 // Issue-provider tests: contract shape only, no tracker.
@@ -76,12 +77,60 @@ describe("issue provider contract", () => {
     assert.deepEqual(JSON.parse(JSON.stringify(validateIssueReference({ id: "x" }))), { id: "x" });
   });
 
+  it("validates partial updates and freezes them", () => {
+    assert.deepEqual(validateIssueUpdate({ title: "T", description: "D", requirements: "R" }), {
+      title: "T",
+      description: "D",
+      requirements: "R",
+    });
+    assert.deepEqual(validateIssueUpdate({ title: "T" }), { title: "T" });
+    assert.deepEqual(validateIssueUpdate({ requirements: "R" }), { requirements: "R" });
+    assert.equal(Object.isFrozen(validateIssueUpdate({ title: "T" })), true);
+    assert.deepEqual(JSON.parse(JSON.stringify(validateIssueUpdate({ title: "T" }))), { title: "T" });
+    for (const data of [
+      null,
+      "x",
+      [],
+      {},
+      { title: "" },
+      { description: "" },
+      { requirements: "" },
+      { title: 7 },
+      { description: "D", requirements: 7 },
+      { state: "open" },
+    ]) {
+      assert.throws(() => validateIssueUpdate(data), /issue provider: invalid input/);
+    }
+  });
+
+  it("supports an optional update operation without breaking creation", async () => {
+    const seen: Array<{ reference: IssueReference; update: unknown }> = [];
+    const fake: IssueProvider = {
+      name: "fake",
+      create: async (request) => validateIssueReference({ id: `issue-for-${request.title}` }),
+      update: async (reference, update) => {
+        seen.push({ reference, update });
+        return validateIssueReference(reference);
+      },
+    };
+    assert.equal(isIssueProvider(fake), true);
+    assert.deepEqual(await fake.update?.({ id: "7" }, { title: "T2" }), { id: "7" });
+    assert.deepEqual(seen, [{ reference: { id: "7" }, update: { title: "T2" } }]);
+    const createOnly: IssueProvider = {
+      name: "create-only",
+      create: async () => validateIssueReference({ id: "x" }),
+    };
+    assert.equal(isIssueProvider(createOnly), true);
+    assert.equal(createOnly.update, undefined);
+  });
+
   it("keeps the public API minimal", async () => {
     const module = await import("../src/providers/issue");
     assert.deepEqual(Object.keys(module).sort(), [
       "isIssueProvider",
       "validateIssueReference",
       "validateIssueRequest",
+      "validateIssueUpdate",
     ]);
   });
 
@@ -98,5 +147,13 @@ describe("issue provider contract", () => {
     const fs = await import("node:fs/promises");
     const code = await fs.readFile(join(__dirname, "..", "..", "src", "providers", "issue.ts"), "utf8");
     assert.ok(!/url|number|state|label|milestone|timestamp|uuid/i.test(code), "no tracker fields");
+  });
+
+  it("adds no sync, comment, close, retry, or lifecycle vocabulary", async () => {
+    const fs = await import("node:fs/promises");
+    const code = await fs.readFile(join(__dirname, "..", "..", "src", "providers", "issue.ts"), "utf8");
+    assert.ok(!/sync|poll|webhook/i.test(code), "no synchronization");
+    assert.ok(!/comment|close|reopen|delete/i.test(code), "no lifecycle operations");
+    assert.ok(!/retry|backoff/i.test(code), "no retry");
   });
 });
