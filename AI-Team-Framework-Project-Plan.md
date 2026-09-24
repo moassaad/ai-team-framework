@@ -1,7 +1,7 @@
 # AI Team Framework — Project Plan
 
 > **Document status:** Approved baseline plan  
-> **Current phase:** M12 — Testing and Safety (next)
+> **Current phase:** M13 — Documentation and Release (next)
 > **M0:** COMPLETE  
 > **M1:** COMPLETE  
 > **M2:** COMPLETE  
@@ -14,6 +14,7 @@
 > **M9:** COMPLETE  
 > **M10:** COMPLETE
 > **M11:** COMPLETE
+> **M12:** COMPLETE
 > **Implementation started:** Yes  
 > **Target:** First usable release (MVP / `0.1.0`)
 
@@ -807,19 +808,23 @@ D-007 Document optional installation ✅
 
 ## M12 — Testing and Safety
 
-Status: **PENDING**
+Status: **COMPLETE**
+
+M12 adds test-only coverage over the approved contracts: a shared isolation helper, workflow transition, configuration validation, role selection, provider failure, discovery robustness, execution safety, an end-to-end sample project, and installation verification. No production behavior changed.
 
 ```text
-T-001 Unit test foundation
-T-002 Workflow transition tests
-T-003 Configuration validation tests
-T-004 Role selection tests
-T-005 Provider failure tests
-T-006 Project discovery tests
-T-007 Safe execution tests
-T-008 End-to-end sample project
-T-009 Installation verification
+T-001 Unit test foundation ✅
+T-002 Workflow transition tests ✅
+T-003 Configuration validation tests ✅
+T-004 Role selection tests ✅
+T-005 Provider failure tests ✅
+T-006 Project discovery tests ✅
+T-007 Safe execution tests ✅
+T-008 End-to-end sample project ✅
+T-009 Installation verification ✅
 ```
+
+M12 closeout (2026-09-24): 581/581 tests passing; build, lint, and diff-check clean.
 
 ## M13 — Documentation and Release
 
@@ -1020,16 +1025,16 @@ Before finishing, report:
 | M9 Implementation & Review | **COMPLETE** | IR-001 through IR-006 accepted |
 | M10 GitHub Issues | **COMPLETE** | G-001 through G-007 accepted |
 | M11 delegate-skills | **COMPLETE** | D-001 through D-007 accepted |
-| M12 Testing & Safety | PENDING | Next milestone; not started |
-| M13 Documentation & Release | PENDING | Target release: `0.1.0` |
+| M12 Testing & Safety | **COMPLETE** | T-001 through T-009 accepted; 581/581 tests passing |
+| M13 Documentation & Release | PENDING | Next milestone; not started |
 
 ---
 
 # 20. Next Steps
 
-The next work item is **M12 — Testing and Safety**.
+The next work item is **M13 — Documentation and Release**.
 
-M0, M1, M2, M3, M4, M5, M6, M7, M8, M9, M10, and M11 are complete (F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, O-001 through O-006, P-001 through P-005, IR-001 through IR-006, G-001 through G-007, and D-001 through D-007 accepted).
+M0, M1, M2, M3, M4, M5, M6, M7, M8, M9, M10, M11, and M12 are complete (F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, O-001 through O-006, P-001 through P-005, IR-001 through IR-006, G-001 through G-007, D-001 through D-007, and T-001 through T-009 accepted).
 
 ### M0 checklist
 
@@ -1052,10 +1057,10 @@ M0, M1, M2, M3, M4, M5, M6, M7, M8, M9, M10, and M11 are complete (F-001 through
 [done] Finalize 0.1.0 Definition of Done
 ```
 
-M12 begins with (not started yet):
+M13 begins with (not started yet):
 
 ```text
-T-001 Unit test foundation
+REL-001 Quick start
 ```
 
 ---
