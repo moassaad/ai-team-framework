@@ -40,3 +40,25 @@ export function withTempProject(
 export function withEmptyTempProject(fn: (root: string) => void): void {
   withTempProject({}, fn);
 }
+
+/**
+ * Async variant of `withTempProject` for flows that await framework
+ * calls inside the body. Cleanup still runs even when the body
+ * rejects; the caller must await the returned promise.
+ */
+export async function withTempProjectAsync(
+  files: Record<string, string>,
+  fn: (root: string) => Promise<void>,
+): Promise<void> {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "ai-team-test-"));
+  try {
+    for (const [rel, content] of Object.entries(files)) {
+      const full = path.join(root, rel);
+      fs.mkdirSync(path.dirname(full), { recursive: true });
+      fs.writeFileSync(full, content, "utf8");
+    }
+    await fn(root);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
