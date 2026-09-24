@@ -86,6 +86,7 @@ Tests are TypeScript files under `tests/`, compiled with `tsc` and executed with
 ## Further reading
 
 - `docs/specification/` — detailed product and system specification.
+- `docs/quick-start.md` — beginner first-use path.
 - `CONTRIBUTING.md` — how to contribute.
 - `AGENTS.md` — persistent instructions for AI agents working in this repository.
 
