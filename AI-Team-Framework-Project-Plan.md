@@ -1,7 +1,7 @@
 # AI Team Framework — Project Plan
 
 > **Document status:** Approved baseline plan  
-> **Current phase:** M11 — Optional delegate-skills Integration (next)
+> **Current phase:** M12 — Testing and Safety (next)
 > **M0:** COMPLETE  
 > **M1:** COMPLETE  
 > **M2:** COMPLETE  
@@ -13,6 +13,7 @@
 > **M8:** COMPLETE  
 > **M9:** COMPLETE  
 > **M10:** COMPLETE
+> **M11:** COMPLETE
 > **Implementation started:** Yes  
 > **Target:** First usable release (MVP / `0.1.0`)
 
@@ -790,16 +791,18 @@ G-007 Add local-only fallback ✅
 
 ## M11 — Optional delegate-skills Integration
 
-Status: **PENDING**
+Status: **COMPLETE**
+
+M11 provides a generic delegation provider contract, isolated availability detection, an optional delegate-skills adapter, an explicit opt-in configuration setting, a safety-confirmation seam, a failure-fallback boundary, and installation documentation. See the documented adapter-protocol limitation in `docs/providers-delegate-skills.md`.
 
 ```text
-D-001 Define delegate provider contract
-D-002 Detect delegate-skills availability
-D-003 Add optional delegate adapter
-D-004 Add explicit enablement setting
-D-005 Add safety confirmation
-D-006 Add delegate failure fallback
-D-007 Document optional installation
+D-001 Define delegate provider contract ✅
+D-002 Detect delegate-skills availability ✅
+D-003 Add optional delegate adapter ✅
+D-004 Add explicit enablement setting ✅
+D-005 Add safety confirmation ✅
+D-006 Add delegate failure fallback ✅
+D-007 Document optional installation ✅
 ```
 
 ## M12 — Testing and Safety
@@ -1016,17 +1019,17 @@ Before finishing, report:
 | M8 Planning & Ticket Generation | **COMPLETE** | P-001 through P-005 accepted |
 | M9 Implementation & Review | **COMPLETE** | IR-001 through IR-006 accepted |
 | M10 GitHub Issues | **COMPLETE** | G-001 through G-007 accepted |
-| M11 delegate-skills | PENDING | Next milestone; not started |
-| M12 Testing & Safety | PENDING | Not started |
+| M11 delegate-skills | **COMPLETE** | D-001 through D-007 accepted |
+| M12 Testing & Safety | PENDING | Next milestone; not started |
 | M13 Documentation & Release | PENDING | Target release: `0.1.0` |
 
 ---
 
 # 20. Next Steps
 
-The next work item is **M11 — Optional delegate-skills Integration**.
+The next work item is **M12 — Testing and Safety**.
 
-M0, M1, M2, M3, M4, M5, M6, M7, M8, M9, and M10 are complete (F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, O-001 through O-006, P-001 through P-005, IR-001 through IR-006, and G-001 through G-007 accepted).
+M0, M1, M2, M3, M4, M5, M6, M7, M8, M9, M10, and M11 are complete (F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, O-001 through O-006, P-001 through P-005, IR-001 through IR-006, G-001 through G-007, and D-001 through D-007 accepted).
 
 ### M0 checklist
 
@@ -1049,10 +1052,10 @@ M0, M1, M2, M3, M4, M5, M6, M7, M8, M9, and M10 are complete (F-001 through F-00
 [done] Finalize 0.1.0 Definition of Done
 ```
 
-M11 begins with (not started yet):
+M12 begins with (not started yet):
 
 ```text
-D-001 Define delegate provider contract
+T-001 Unit test foundation
 ```
 
 ---
