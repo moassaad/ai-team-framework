@@ -276,3 +276,43 @@ are fenced into §21, not the adapter.
    explicit confirmation-scope decision before D-104.
 4. Lane/fleet mapping home (M18 selection vs adapter option) and
    whether session resume ever crosses ticket boundaries.
+
+## 22. M16 resolution (D-102–D-107)
+
+D-101's classifications are now implemented; nothing above is
+rewritten by this section, it only records what replaced what:
+
+- D-002 **replaced** by `src/providers/delegate-detection.ts`:
+  bounded skill-root detection (`SKILL.md` + `relay.mjs` +
+  implementer `--version` + `git --version`), fresh every call,
+  no PATH probe, no auth probing.
+- D-003 **replaced** by `src/providers/delegate-relay.ts`: one
+  `node <skill>/scripts/relay.mjs --brief … --cd … --out-dir …`
+  call per request, fixed argv, no shell, temp dir outside the
+  repo with best-effort cleanup, commit/push/merge/branching
+  forbidden in the brief.
+- D-103 installation via the Skills CLI (`npx skills add
+  amElnagdy/delegate-skills --skill <skill> [--agent] [--global]
+  -y`, project scope default, Node `>= 22.20.0` checked, never
+  upgraded), Detect → Install → Verify with fresh verification
+  authoritative. `delegate-setup` never invoked.
+- D-105 result mapping (`src/providers/delegate-result.ts`):
+  final report → `outcome`; terminal statuses → bounded
+  failures; `touchedFiles`/`sessionId` tolerated, never
+  exposed; exit/signal diagnostic only. Contract unchanged.
+- D-006 **adapted** by `src/providers/delegate-generation.ts`
+  (`generateDelegateResult`): disabled → fallback unprobed;
+  enabled + unavailable/detection-failed → fallback (optional) /
+  bounded failure (required, keeping the two distinct);
+  attempted + failed → one fallback (optional) / original
+  rejection (required). Detection once, delegate at most once,
+  fallback at most once; no retries, no installs, no repair.
+  The historical `delegate-fallback.ts` (`not_delegated`) is
+  superseded, not deleted.
+- D-001, D-004, D-005 **kept** unchanged, as classified.
+- D-007 **updated**: `docs/providers-delegate-skills.md` is now
+  the M16 integration guide; the executable-model statements it
+  used to carry are obsolete.
+- Open questions §21: (1) answered — bounded caller-supplied
+  skill roots, no home-tree walk. (2)–(4) stand and belong to
+  M17/M18 runtime wiring, not to M16.

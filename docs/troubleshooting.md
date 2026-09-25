@@ -80,12 +80,15 @@ They surface differently per provider, always explicitly:
 - GitHub: `github provider: request failed`, `... with status
   <N>`, or `unexpected response`. No token or response body is
   included. Exactly one tracker operation per call.
-- Delegation gates in order: not enabled → not confirmed →
-  unavailable → attempt failed once. Any outcome returns control
-  to the normal flow (`not_delegated` with a reason), never a
-  fabricated delegated result. The upstream executable-protocol
-  limitation is documented, not solved
-  (`docs/providers-delegate-skills.md`).
+- Delegation (modern Skills/relay integration): disabled →
+  fallback without probing; enabled but unavailable or detection
+  failed → fallback for optional delegation, bounded failure for
+  explicitly required delegation; a failed attempt falls back
+  once (optional) or propagates unchanged (required). One
+  detection, one delegation attempt, one fallback — never a
+  retry, never an automatic install. Details and symptom table:
+  `docs/providers-delegate-skills.md` (§Troubleshooting
+  pointers) and §delegate-skills integration symptoms below.
 - Spec Kit unavailable/disabled → local fallback artifact; this is
   the designed path, not an error. Enabled-but-unavailable never
   pretends readiness, and explicitly Spec-Kit-required operations
@@ -108,6 +111,43 @@ They surface differently per provider, always explicitly:
   nothing is bootstrapped for you.
 - **Verification failure** → exit 0 is not success; re-run
   detection. Full table: `docs/providers-speckit.md`.
+
+## delegate-skills integration symptoms
+
+- **Skill not detected** (`... not installed (searched N
+  locations)`, `... installed but relay missing`,
+  `implementer "..." not installed`, `git prerequisite not
+  installed`) → check that the requested skill is installed, that
+  `<skill>/SKILL.md` and `<skill>/scripts/relay.mjs` exist under
+  one of the configured skill roots, that the implementer CLI
+  answers `--version`, that `git` answers `--version`, and that
+  the skill root is correct. Detection never searches the whole
+  filesystem, so a wrong root reads as absent.
+- **Skills CLI / Node incompatibility** (`Skills CLI requires
+  Node >= 22.20.0 (current runtime ...)`) → upgrade Node
+  yourself outside the framework; the framework never upgrades
+  runtimes, installs system packages, or uses `sudo`. Until the
+  runtime satisfies the requirement, installation fails safely
+  and nothing is modified.
+- **Relay result missing** (`result.json unavailable (relay exit
+  ...)`) → the relay did not leave its result artifact (exit 2
+  is the upstream usage-error case; a null exit with a timeout
+  note means the bound was exceeded or the process was killed).
+  Bounded execution failure — re-run detection, then retry the
+  delegation explicitly; nothing auto-recovers.
+- **Relay reports failure / timeout / aborted** (`relay
+  reported "<status>" (exit N[, signal S])`) → delegation
+  failure. Optional delegation falls back once; explicitly
+  required delegation propagates the message unchanged.
+- **Required delegate unavailable** (`delegate is explicitly
+  required but unavailable (...)`, `... but detection failed
+  (...)`, `... but disabled ...`) → read which case the message
+  names: enable the integration, install the skill, or fix the
+  probe — the message distinguishes them on purpose.
+- **No fallback available** → D-106 intentionally requires the
+  caller to supply the fallback provider; there is no default to
+  silence the problem with. Wiring the real non-delegate path is
+  M17 work.
 
 ## Execution problems
 
