@@ -65,7 +65,7 @@ export interface DelegateCommandRunner {
   (
     command: string,
     args: readonly string[],
-    options: { readonly cwd: string },
+    options: { readonly cwd: string; readonly timeoutMs?: number },
   ): DelegateCommandResult | Promise<DelegateCommandResult>;
 }
 
@@ -117,16 +117,17 @@ function isMissingError(error: unknown): boolean {
   );
 }
 
-function defaultRunCommand(
+/** Default command runner: `spawnSync` with no shell. Shared with D-103. */
+export function defaultRunCommand(
   command: string,
   args: readonly string[],
-  options: { readonly cwd: string },
+  options: { readonly cwd: string; readonly timeoutMs?: number },
 ): DelegateCommandResult {
   const completed = spawnSync(command, [...args], {
     cwd: options.cwd,
     shell: false,
     encoding: "utf8",
-    timeout: COMMAND_TIMEOUT_MS,
+    timeout: options.timeoutMs ?? COMMAND_TIMEOUT_MS,
   });
   if (completed.error !== undefined) {
     throw completed.error;

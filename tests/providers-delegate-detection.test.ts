@@ -406,6 +406,7 @@ describe("delegate-skill detection", () => {
     assert.deepEqual(Object.keys(module).sort(), [
       "DELEGATE_SKILLS_INTEGRATION_NAME",
       "createDelegateSkillIntegration",
+      "defaultRunCommand",
     ]);
     const { integration } = harness({ files: {} });
     assert.deepEqual(Object.keys(integration).sort(), ["capabilities", "detect", "name"]);
