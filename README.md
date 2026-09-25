@@ -65,8 +65,10 @@ node dist/index.js run "/technical-lead"
 
 `ai-team status` reports integration state read-only (desired
 state vs fresh detection; never installs or changes anything).
-It runs from a project directory containing
-`.ai-team/config.yaml`.
+`ai-team setup <integration> [--yes]` explains, asks, then
+installs/configures once and verifies (delegate skill selection
+is not yet implemented). Both run from a project directory
+containing `.ai-team/config.yaml`.
 
 First-use walkthrough: `docs/quick-start.md`.
 
