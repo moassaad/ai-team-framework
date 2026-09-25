@@ -63,6 +63,11 @@ node dist/index.js run "talk to the tech lead"
 node dist/index.js run "/technical-lead"
 ```
 
+`ai-team status` reports integration state read-only (desired
+state vs fresh detection; never installs or changes anything).
+It runs from a project directory containing
+`.ai-team/config.yaml`.
+
 First-use walkthrough: `docs/quick-start.md`.
 
 ## Roles

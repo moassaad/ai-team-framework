@@ -351,7 +351,7 @@ describe("integration runtime state", () => {
       assert.ok(!/integration-status|IntegrationState/i.test(foundation), `${file} unchanged`);
     }
     const cli = readFileSync(join(__dirname, "..", "..", "src", "cli.ts"), "utf8");
-    assert.ok(!/status/i.test(cli.replace(/Role execution is not implemented yet\./g, "")), "cli.ts untouched");
+    assert.ok(!/getIntegrationStatus|runStatusCommand|providers\//.test(cli), "cli.ts keeps no status logic");
   });
 
   it("keeps the public API minimal", async () => {

@@ -24,9 +24,14 @@ Usage:
   ai-team run --role implementer --specialty <specialty>
   ai-team run "<prompt text>"
   ai-team run "/<slash command>"
+  ai-team status
 
 Commands:
   run                  Select the Coordinator (default).
+  status               Show integration status (read-only).
+                       Reports desired state separately from fresh
+                       detection. Never installs, configures, or
+                       modifies anything; setup is a separate concern.
 
 Options:
   -h, --help           Show this help message and exit.
