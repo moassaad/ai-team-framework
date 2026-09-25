@@ -92,6 +92,7 @@ Tests are TypeScript files under `tests/`, compiled with `tsc` and executed with
 - `docs/roles.md` — the five roles, specialties, selection.
 - `docs/workflow.md` — ticket lifecycle, states, approval.
 - `docs/providers.md` — provider system and integrations.
+- `docs/troubleshooting.md` — diagnose common problems.
 - `CONTRIBUTING.md` — how to contribute.
 - `AGENTS.md` — persistent instructions for AI agents working in this repository.
 
