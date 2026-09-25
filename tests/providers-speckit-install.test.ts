@@ -6,7 +6,6 @@ import { Integration, supportsCapability } from "../src/providers/integration";
 import { createIntegrationRegistry } from "../src/providers/integration-registry";
 import { detectIntegration } from "../src/providers/integration-detection";
 import {
-  SPECKIT_CLI_INSTALLERS,
   createSpecKitIntegrationWithInstall,
 } from "../src/providers/speckit-install";
 import { SPECKIT_INTEGRATION_NAME } from "../src/providers/speckit-detection";
@@ -220,7 +219,7 @@ describe("spec kit installation", () => {
 
   it("honors an explicit installer choice", async () => {
     const { calls, integration } = harness({
-      run: (command, args) => {
+      run: (command) => {
         if (command === "specify") {
           throw enoent("spawn specify ENOENT");
         }
