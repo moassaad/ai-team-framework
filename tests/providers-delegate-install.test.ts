@@ -289,7 +289,7 @@ describe("delegate-skill installation", () => {
   it("verifies with fresh detection and fails when it cannot confirm", async () => {
     const { integration } = harness({
       files: {},
-      run: (command, args) => {
+      run: (command) => {
         if (command === "npx") {
           return { exitCode: 0, stdout: "installed" };
         }
@@ -366,7 +366,7 @@ describe("delegate-skill installation", () => {
       const { calls, integration } = harness({
         files: {},
         installScope,
-        run: (command, args) => {
+        run: (command) => {
           if (command === "npx") {
             return { exitCode: 0, stdout: "ok" };
           }
