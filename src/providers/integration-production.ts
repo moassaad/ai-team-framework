@@ -12,8 +12,12 @@
  * options).
  *
  * Only Spec Kit is registered: it is the sole integration whose
- * factory (`createSpecKitIntegration`) is fully determined by the
- * project root with safe defaults. Delegate selection is
+ * factory (`createSpecKitIntegrationWithInstall`) is fully
+ * determined by the project root with safe defaults. The
+ * install-capable variant is registered (rather than the
+ * detect-only one) so that explicit, confirmed setup can propose
+ * installation; read-only consumers such as `ai-team status`
+ * never invoke optional capabilities and are unaffected. Delegate selection is
  * intentionally absent — D-102 is one requested skill per
  * instance, and no existing configuration names a skill, its
  * implementer, or its roots, so inventing any of them here would
@@ -29,8 +33,8 @@ import {
   createIntegrationRegistry,
 } from "./integration-registry";
 import {
-  createSpecKitIntegration,
-} from "./speckit-detection";
+  createSpecKitIntegrationWithInstall,
+} from "./speckit-install";
 
 /** Production registry input. Everything assembly needs, nothing more. */
 export interface ProductionRegistryInput {
@@ -58,6 +62,6 @@ export function createProductionRegistry(
     fail("projectRoot must be a non-empty string");
   }
   const registry = createIntegrationRegistry();
-  registry.register(createSpecKitIntegration({ projectRoot: input.projectRoot }));
+  registry.register(createSpecKitIntegrationWithInstall({ projectRoot: input.projectRoot }));
   return registry;
 }

@@ -357,8 +357,13 @@ describe("integration setup", () => {
     const registry = createProductionRegistry({ projectRoot: "/proj" });
     const plan = await planIntegrationSetup({ registry, name: "spec-kit", isEnabled: () => false });
     assert.equal(plan.integration, "spec-kit");
+    assert.equal(typeof plan.enabled, "boolean");
+    assert.equal(typeof plan.detected, "boolean");
+    assert.equal(typeof plan.explanation, "string");
     assert.deepEqual(registry.list().map((entry) => entry.name), ["spec-kit"]);
-    const result = await runIntegrationSetup({ registry, name: "spec-kit", isEnabled: () => false, confirmed: true });
+    // Unconfirmed by design: whatever this machine detects, U-003
+    // must not mutate through the real integration in a test.
+    const result = await runIntegrationSetup({ registry, name: "spec-kit", isEnabled: () => false, confirmed: false });
     assert.equal(result.mutated, false);
     assert.deepEqual(registry.list().map((entry) => entry.name), ["spec-kit"]);
   });

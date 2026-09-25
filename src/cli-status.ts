@@ -81,6 +81,15 @@ const CONFIG_KEY_BY_INTEGRATION: Record<string, string> = {
   "spec-kit": "speckit",
 };
 
+/**
+ * Map a registry identifier to its configuration provider key.
+ * Shared with the setup command so both resolve desired state
+ * identically. Names without an entry pass through unchanged.
+ */
+export function resolveConfigKey(name: string): string {
+  return CONFIG_KEY_BY_INTEGRATION[name] ?? name;
+}
+
 function fail(what: string): never {
   throw new Error(`status command: ${what}`);
 }
@@ -115,7 +124,7 @@ export async function runStatusCommand(deps: StatusCommandDeps): Promise<CliResu
     const registry = deps.buildRegistry(deps.projectRoot);
     const states = await getIntegrationStatus({
       registry,
-      isEnabled: (name) => isIntegrationEnabled(config, CONFIG_KEY_BY_INTEGRATION[name] ?? name),
+      isEnabled: (name) => isIntegrationEnabled(config, resolveConfigKey(name)),
     });
     return { exitCode: 0, stdout: formatIntegrationStatus(states), stderr: "" };
   } catch (error: unknown) {

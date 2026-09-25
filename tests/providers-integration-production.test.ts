@@ -33,6 +33,13 @@ describe("production integration registry", () => {
     assert.equal(typeof specKit?.detect, "function");
   });
 
+  it("registers the install-capable variant so confirmed setup can propose installation", () => {
+    const registry = createProductionRegistry({ projectRoot: "/proj" });
+    const specKit = registry.get("spec-kit");
+    assert.ok((specKit?.capabilities ?? []).includes("install"), "install declared");
+    assert.equal(typeof specKit?.install, "function");
+  });
+
   it("rejects duplicate registration through the existing registry", () => {
     const registry = createProductionRegistry({ projectRoot: "/proj" });
     const specKit = registry.get("spec-kit");
@@ -74,8 +81,8 @@ describe("production integration registry", () => {
     const importedModules = [...new Set([...code.matchAll(/from "([^"]+)"/g)].map((m) => m[1]))];
     assert.deepEqual(
       importedModules.sort(),
-      ["./integration-registry", "./speckit-detection"],
-      "existing factory reused, nothing else imported",
+      ["./integration-registry", "./speckit-install"],
+      "existing install-capable factory reused, nothing else imported",
     );
     assert.ok(!/\.detect\(|\.install\(|\.configure\(|loadConfig|validateConfig/.test(code), "no detection, install, or config calls");
     assert.ok(!/child_process|spawn|exec|fs\.|readFile|writeFile|mkdir/i.test(code), "no processes or filesystem");

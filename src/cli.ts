@@ -25,6 +25,7 @@ Usage:
   ai-team run "<prompt text>"
   ai-team run "/<slash command>"
   ai-team status
+  ai-team setup <integration> [--yes]
 
 Commands:
   run                  Select the Coordinator (default).
@@ -32,6 +33,11 @@ Commands:
                        Reports desired state separately from fresh
                        detection. Never installs, configures, or
                        modifies anything; setup is a separate concern.
+  setup <integration> [--yes]
+                       Set up one integration: explain, ask, then
+                       install/configure once and verify. Without
+                       --yes asks first; --yes confirms explicitly.
+                       Reads configuration, never writes it.
 
 Options:
   -h, --help           Show this help message and exit.
