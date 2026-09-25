@@ -1,17 +1,20 @@
 /**
- * Single-ticket Coordinator runtime foundation (M18 R-001).
+ * Single-ticket Coordinator runtime foundation (M18 R-001, rework
+ * cycle R-002).
  *
- * The first executable slice of the team workflow: exactly one
- * `ready` ticket runs Implementer → implementation review →
- * Senior Reviewer, and the review decision lands on the existing
+ * The first executable slices of the team workflow: exactly one
+ * ticket runs Implementer → implementation review → Senior
+ * Reviewer per invocation, either as new work or as one explicit
+ * rework cycle, and the review decision lands on the existing
  * W-002 edge. No sprint, no rework loop, no TL/PM/User stages —
- * those are later M18 tickets. One new seam only: no ticket
- * store, engine v2, scheduler, or retry framework exists in this
- * repo, and none is added here.
+ * those are later M18 tickets. One seam only: no ticket store,
+ * engine v2, scheduler, or retry framework exists in this repo,
+ * and none is added here.
  *
  * ```text
- * ready → in_progress → Implementer → implementation_review
- *   → Senior Reviewer → technical_approval | changes_requested
+ * new work: ready → in_progress → Implementer → implementation_review
+ * rework:   changes_requested → in_progress → Implementer → implementation_review
+ * then:     Senior Reviewer → technical_approval | changes_requested (stop)
  * ```
  *
  * Composition, not reimplementation: Implementer and Reviewer run
@@ -21,10 +24,10 @@
  * IR-004/IR-003 recommendation semantics
  * (`recommendTechnicalApproval` / `requestChanges`). At most one
  * Implementer invocation and one Reviewer invocation per call —
- * failure stops the path with the existing `failed` edge, and a
- * `changes_requested` outcome stops at the state boundary (the
- * next Implementer run belongs to a later ticket, never to this
- * call).
+ * for new work and for rework alike. Failure stops the path with
+ * the existing `failed` edge, and a `changes_requested` outcome
+ * stops at the state boundary (the next rework run is a separate
+ * invocation, never started here).
  *
  * Explicit evidence, never inference: the Implementer specialty
  * arrives already resolved (as IR-001 requires), and the review
@@ -41,11 +44,14 @@
  * selected ticket's `state` in place so the outcome stays
  * observable through the existing ticket workflow state, and
  * returns every applied edge in the result. Selection is list
- * order: the first `ready` ticket runs, but only when no ticket
- * is already in-flight (`in_progress`, `implementation_review`)
+ * order with rework priority: the first `changes_requested`
+ * ticket carrying preserved feedback wins over any `ready`
+ * ticket (started work finishes first); otherwise the first
+ * `ready` ticket runs. Either runs only when no ticket is
+ * already in-flight (`in_progress`, `implementation_review`)
  * — otherwise a bounded conflict names that ticket and nothing
- * runs. Non-ready tickets are never executed as new
- * work. No approval is consulted or granted: no R-001 edge
+ * runs. Non-ready tickets without rework context are never
+ * executed as new work. No approval is consulted or granted: no R-001 edge
  * touches an approval gate (those live at `pm_review`), so the
  * existing manual-approval semantics hold by construction — this
  * runtime can never close a ticket. No IssueProvider calls: the
@@ -68,7 +74,12 @@ import { recommendTechnicalApproval } from "../execution/technical-approval";
  * Runtime ticket view: the existing PlanTicket/IR ticket shape
  * plus its current workflow state. The runtime advances `state`
  * in place on the caller's objects; nothing is copied into a
- * parallel store.
+ * parallel store. The optional `feedback` carries preserved
+ * Senior Reviewer notes as rework context (R-002): it is
+ * transported verbatim to the rework Implementer, never parsed,
+ * and never written by the runtime — the caller persists each
+ * result's feedback here for the next cycle, which is why the
+ * field is writable like `state`.
  */
 export interface CoordinatorTicket {
   readonly id: string;
@@ -76,6 +87,7 @@ export interface CoordinatorTicket {
   readonly description: string;
   readonly requirements: string;
   state: WorkflowState;
+  feedback?: string;
 }
 
 /** Bounded review verdict, supplied explicitly by the caller. */
@@ -182,7 +194,18 @@ function isTicket(value: unknown): value is CoordinatorTicket {
     candidate.description.length > 0 &&
     typeof candidate.requirements === "string" &&
     candidate.requirements.length > 0 &&
-    isWorkflowState(candidate.state)
+    isWorkflowState(candidate.state) &&
+    (candidate.feedback === undefined ||
+      (typeof candidate.feedback === "string" && candidate.feedback.length > 0))
+  );
+}
+
+/** Rework-eligible: explicitly waiting with preserved reviewer notes. */
+function isReworkable(ticket: CoordinatorTicket): boolean {
+  return (
+    ticket.state === "changes_requested" &&
+    typeof ticket.feedback === "string" &&
+    ticket.feedback.length > 0
   );
 }
 
@@ -262,13 +285,16 @@ export async function runCoordinatorTicket(
       } as const);
     }
   }
-  const selected = input.tickets.find((ticket) => ticket.state === "ready");
+  const selected =
+    input.tickets.find(isReworkable) ??
+    input.tickets.find((ticket) => ticket.state === "ready");
   if (selected === undefined) {
     return Object.freeze({
       outcome: "no-work",
       reason: `no ready tickets (${String(input.tickets.length)} tickets: 0 ready)`,
     } as const);
   }
+  const isRework = selected.state === "changes_requested";
 
   const transitions: CoordinatorTransition[] = [];
   const advance = (ticket: CoordinatorTicket, to: WorkflowState): void => {
@@ -280,8 +306,21 @@ export async function runCoordinatorTicket(
     ticket.state = to;
   };
 
+  // Rework carries the preserved reviewer notes as additive
+  // invocation context: the stored ticket keeps its original
+  // requirements verbatim, while the Implementer also sees the
+  // notes under an explicit label. Transport only — never
+  // parsed, rewritten, or summarized.
+  const invocationTicket = isRework
+    ? {
+        id: selected.id,
+        title: selected.title,
+        description: selected.description,
+        requirements: `${selected.requirements}\n\nReviewer feedback from the previous review:\n${selected.feedback as string}`,
+      }
+    : { id: selected.id, title: selected.title, description: selected.description, requirements: selected.requirements };
   const implementerInput = {
-    ticket: { id: selected.id, title: selected.title, description: selected.description, requirements: selected.requirements },
+    ticket: invocationTicket,
     specialty: input.specialty,
     project_root,
     provider: input.implementerProvider as AgentProvider<ExecutionResult>,
