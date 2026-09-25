@@ -531,6 +531,10 @@ describe("spec kit detection", () => {
       "SPECKIT_EXPECTED_INTEGRATION_KEY",
       "SPECKIT_INTEGRATION_NAME",
       "createSpecKitIntegration",
+      "defaultSpecKitReadFile",
+      "defaultSpecKitRunCommand",
+      "isSpecKitNotFoundError",
+      "specKitStateFilePath",
     ]);
   });
 });

@@ -4,8 +4,9 @@
  * The smallest useful current Spec Kit integration over the M14
  * foundation (I-001): answers whether the Spec Kit capability is
  * available and usable for one target project. Exposes `detect`
- * (required) and `version` (optional); `install`/`configure` belong
- * to S-003 and are deliberately absent.
+ * (required) and `version` (optional); the optional `install()`
+ * capability composes on top in `./speckit-install` (S-003), while
+ * `configure` remains out of scope.
  *
  * Detection order, each step read-only:
  *
@@ -30,6 +31,11 @@
  * `use`, and `switch` never run here. Process launch uses an argument
  * array with no shell; all environment access (process launch, file
  * read) funnels through injected seams so tests stay hermetic.
+ *
+ * The default seams and small state helpers are exported for S-003,
+ * which composes this module's `detect()`/`version()` with a confirmed
+ * `install()` capability in `./speckit-install`. No other module needs
+ * them.
  */
 
 import { spawnSync } from "node:child_process";
@@ -71,7 +77,7 @@ export interface SpecKitCommandRunner {
   (
     command: string,
     args: readonly string[],
-    options: { readonly cwd: string },
+    options: { readonly cwd: string; readonly timeoutMs?: number },
   ): SpecKitCommandResult | Promise<SpecKitCommandResult>;
 }
 
@@ -99,8 +105,8 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-/** True for failed process starts where the executable itself is absent. */
-function isNotFound(error: unknown): boolean {
+/** True for failed starts/reads where the target itself is absent. */
+export function isSpecKitNotFoundError(error: unknown): boolean {
   return (
     typeof error === "object" &&
     error !== null &&
@@ -108,16 +114,17 @@ function isNotFound(error: unknown): boolean {
   );
 }
 
-function defaultRunCommand(
+/** Default command runner: `spawnSync` with no shell. Shared with S-003. */
+export function defaultSpecKitRunCommand(
   command: string,
   args: readonly string[],
-  options: { readonly cwd: string },
+  options: { readonly cwd: string; readonly timeoutMs?: number },
 ): SpecKitCommandResult {
   const completed = spawnSync(command, [...args], {
     cwd: options.cwd,
     shell: false,
     encoding: "utf8",
-    timeout: COMMAND_TIMEOUT_MS,
+    timeout: options.timeoutMs ?? COMMAND_TIMEOUT_MS,
   });
   if (completed.error !== undefined) {
     throw completed.error;
@@ -128,7 +135,8 @@ function defaultRunCommand(
   };
 }
 
-function defaultReadFile(absolutePath: string): string {
+/** Default file reader: UTF-8 read. Shared with S-003. */
+export function defaultSpecKitReadFile(absolutePath: string): string {
   return readFileSync(absolutePath, "utf8");
 }
 
@@ -169,7 +177,7 @@ async function probeVersion(
       { cwd },
     );
   } catch (error: unknown) {
-    if (isNotFound(error)) {
+    if (isSpecKitNotFoundError(error)) {
       return { present: false, version: undefined };
     }
     throw new Error(`spec-kit detection: version probe failed (${errorMessage(error)})`);
@@ -184,7 +192,7 @@ async function probeVersion(
   try {
     plain = await runCommand(SPECKIT_COMMAND, ["version"], { cwd });
   } catch (error: unknown) {
-    if (isNotFound(error)) {
+    if (isSpecKitNotFoundError(error)) {
       return { present: false, version: undefined };
     }
     throw new Error(`spec-kit detection: version probe failed (${errorMessage(error)})`);
@@ -259,7 +267,8 @@ function parseIntegrationState(raw: string): ProjectIntegrationState {
   return { defaultKey, installedKeys: installed };
 }
 
-function stateFilePath(projectRoot: string): string {
+/** Project-local integration-state path for a target project. Shared with S-003. */
+export function specKitStateFilePath(projectRoot: string): string {
   return join(projectRoot, INTEGRATION_STATE_DIR, INTEGRATION_STATE_FILENAME);
 }
 
@@ -282,11 +291,11 @@ export function createSpecKitIntegration(
   if (typeof integrationKey !== "string" || integrationKey.length === 0) {
     fail("integrationKey must be a non-empty string");
   }
-  const runCommand = options.runCommand ?? defaultRunCommand;
+  const runCommand = options.runCommand ?? defaultSpecKitRunCommand;
   if (typeof runCommand !== "function") {
     fail("runCommand must be a function");
   }
-  const readFile = options.readFile ?? defaultReadFile;
+  const readFile = options.readFile ?? defaultSpecKitReadFile;
   if (typeof readFile !== "function") {
     fail("readFile must be a function");
   }
@@ -306,9 +315,9 @@ export function createSpecKitIntegration(
     const versionLabel = probe.version ?? "unknown version";
     let raw: string;
     try {
-      raw = await readFile(stateFilePath(projectRoot));
+      raw = await readFile(specKitStateFilePath(projectRoot));
     } catch (error: unknown) {
-      if (isNotFound(error)) {
+      if (isSpecKitNotFoundError(error)) {
         return validateDetectionResult({
           available: false,
           detail:
