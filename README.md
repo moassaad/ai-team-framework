@@ -93,6 +93,8 @@ Tests are TypeScript files under `tests/`, compiled with `tsc` and executed with
 - `docs/workflow.md` — ticket lifecycle, states, approval.
 - `docs/providers.md` — provider system and integrations.
 - `docs/troubleshooting.md` — diagnose common problems.
+- `docs/examples/existing-project.md` — worked example on a sample project.
+- `docs/examples/laravel-react.md` — worked example on Laravel + React.
 - `CONTRIBUTING.md` — how to contribute.
 - `AGENTS.md` — persistent instructions for AI agents working in this repository.
 
