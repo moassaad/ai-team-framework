@@ -4,6 +4,12 @@ How the AI Team Framework's project configuration works as implemented
 (C-001 through C-005). The implementation under `src/config/` is the
 source of truth; this guide describes its actual behavior.
 
+Configuration controls three things: how approval gates behave, which
+providers are enabled, and how tickets flow by default. It does not
+control role definitions, workflow transitions, or any external tool's
+own settings. Beginners: start from section 3 (defaults) and section
+12 (examples); the rest is the complete reference.
+
 ## 1. Configuration location
 
 Project configuration lives at:
@@ -179,8 +185,9 @@ github       disabled by default (optional)
 delegate     disabled by default (optional, never auto-enabled)
 ```
 
-This is configuration only. Provider execution belongs to later
-milestones and is not implemented here.
+This is configuration only. Provider execution lives in the
+provider modules (`src/providers/`) and is documented separately
+(`docs/providers-opencode.md`, `docs/providers-delegate-skills.md`).
 
 ## 11. Approval and workflow values
 
@@ -196,6 +203,45 @@ Listing `after: sprint` as an allowed configuration value does not mean
 sprint-level execution or approval is implemented anywhere: its broader
 semantics remain deferred (open decision OQ-3), and no sprint behavior
 exists in this codebase.
+
+## 12. Copyable examples
+
+Minimal valid configuration (everything else defaulted):
+
+```yaml
+version: 1
+```
+
+Automatic mode with GitHub tracking:
+
+```yaml
+version: 1
+approval:
+  mode: automatic
+providers:
+  github:
+    enabled: true
+    owner: "acme"
+    repo: "shop"
+```
+
+Opt-in delegation alongside disabled-everything-else. Intent only:
+availability, per-action confirmation, and fallback stay separate
+enforced boundaries (`docs/providers-delegate-skills.md`).
+
+```yaml
+version: 1
+providers:
+  delegate:
+    enabled: true
+```
+
+## 13. Sensitive values
+
+Never store tokens, passwords, or credentials in `config.yaml` or
+anywhere under `.ai-team/`. Provider authentication is out-of-band
+by contract; use placeholders such as `owner: "acme"` in shared
+examples.
 
 ## Reference
 
