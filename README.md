@@ -2,101 +2,130 @@
 
 A reusable, project-agnostic framework for coordinating specialized AI roles during software development.
 
-It is designed to work with new and existing projects — whatever their language, framework, architecture, or tooling — without imposing any technology of its own on the target project.
+It works with new and existing projects — whatever their language, framework, architecture, or tooling — without imposing any technology of its own. A Coordinator routes work to four specialist roles; implementation proceeds one ticket at a time through review and approval gates. The framework discovers your project before planning anything.
 
 ## Status
 
-M0 (Discovery & Specification) is complete. M1 (Repository Foundation) is in progress.
+Under active development toward `0.1.0` (not yet released). Implemented and tested: role contracts and selection, workflow engine with 11 states, configuration validation, project discovery, planning and ticket generation, implementer/reviewer execution flows, OpenCode execution provider, optional GitHub Issues / Spec Kit / delegate-skills integrations with local fallbacks, and 581 automated tests. See `AI-Team-Framework-Project-Plan.md` for milestone status.
 
-### Implemented today
+## How it works
 
-- Repository foundation (`package.json`, strict TypeScript configuration, `.gitignore`).
-- Build, test, and lint tooling (`npm run build`, `npm test`, `npm run lint`).
-- A minimal CLI entry point supporting `ai-team --help` and `ai-team --version`; anything else returns a concise usage error.
-- Node.js built-in test runner with TypeScript compilation, plus smoke and CLI tests.
-
-### Planned (designed, not yet implemented)
-
-- The five role contracts in code, role selection, and the `ai-team run` command.
-- Workflow engine and ticket state management.
-- `.ai-team/` workspace initialization in target projects.
-- Provider integrations (OpenCode, Spec Kit, GitHub Issues, delegate-skills).
-
-No role orchestration is implemented yet. Nothing listed under "Planned" should be treated as available.
-
-## The five roles (design)
-
-- **Coordinator** — default user-facing role; routes requests and orchestrates the other roles. Does not replace the Technical Lead.
-- **Project Manager** — owns requirements, scope, and business acceptance.
-- **Technical Lead** — owns project discovery, technical planning, ticket breakdown, and review outcomes.
-- **Implementer** — implements one assigned ticket at a time, with validation; optional specialties such as backend, frontend, or testing.
-- **Senior Reviewer** — reviews implementation and tests without modifying code; produces advisory findings.
-
-These are framework design roles, not implemented code yet. Full contracts: `docs/specification/roles.md`.
-
-## Project-agnostic by design
-
-The framework does not assume Laravel, React, Vue, Spring, Docker, GitHub, REST, a specific database, or a specific architecture. It discovers and analyzes the target project before planning anything, then adapts to that project's own conventions.
-
-## Framework workspace
-
-Framework-specific configuration and state are intended to live under `.ai-team/` inside a target project (configuration, roles, workflows, state, specs, plans, reviews, reports, logs). That directory is created by future initialization work — this repository does not create it yet.
-
-## Integrations (planned)
-
-- **OpenCode** — required first-class execution provider.
-- **Spec Kit** — optional specification/planning integration.
-- **GitHub Issues** — optional tracking provider; local-only tracking is the default.
-- **delegate-skills** — optional delegation provider; never required.
-
-None of these integrations is implemented yet, and optional integrations will never become core dependencies. Details: `docs/specification/providers.md`.
-
-## CLI
-
-Only this is implemented today:
-
-```bash
-ai-team --help
-ai-team --version
+```text
+User
+→ Coordinator (routes, default entry point)
+→ Project Manager (requirements, scope)
+→ Technical Lead (discovery, planning, tickets)
+→ Implementer (one ticket, with validation)
+→ Senior Reviewer (advisory findings, never edits code)
+→ approval/workflow continuation
 ```
 
-Running `ai-team` with no arguments prints the help text. Any other command prints a short error pointing at `--help` and exits non-zero. Role invocation commands do not exist yet.
+Execution, review, recommendation, approval, and state transition are separate responsibilities — success at one step never skips the next. Details: `docs/roles.md`, `docs/workflow.md`.
 
-To try it locally after building (see below):
+## Features
 
-```bash
-node dist/index.js --help
-```
+- Role selection via CLI flags, prompt keywords, or slash commands — all resolving to one role contract.
+- Framework state isolated under the target project's `.ai-team/` directory.
+- Validated configuration with safe defaults (`docs/configuration.md`).
+- Read-only project discovery that reports `unknown` instead of guessing.
+- Requirements → plan → small implementation tickets.
+- One-ticket execution with review, technical/PM gates, and manual approval by default.
+- OpenCode execution provider with bounded timeouts and sanitized errors.
+- Optional Spec Kit, GitHub Issues, and delegate-skills integrations — each with a local fallback and none required.
+- 581-test safety coverage (transitions, validation, failures, discovery, execution, end-to-end, installation).
 
-## Development
+## Current limitations
 
-Prerequisites: Node.js 18+ and npm.
+- The CLI presents role contracts and resolves role selection, but reports `Role execution is not implemented yet` rather than executing autonomously.
+- Registry installation was not verified; install from a checkout (`docs/installation.md`).
+- End-user Spec Kit setup documentation is unresolved (open item P-006).
+- The delegate-skills adapter assumes a standalone executable protocol that upstream documentation does not establish (documented limitation, unresolved).
+- `approval.after: sprint` is accepted by validation but unsupported by the approval flows (deferred).
+
+## Installation
+
+Prerequisites: Node.js 18+ and npm. Full guide: `docs/installation.md`.
 
 ```bash
 npm install
 npm run build   # compile TypeScript into dist/
-npm test        # compile src/ and tests/, then run the Node.js built-in test runner
-npm run lint    # lint src/ and tests/ with ESLint
+npm test        # full suite; expect 581/581 passing
 ```
 
-## Testing
+## First run
 
-Tests are TypeScript files under `tests/`, compiled with `tsc` and executed with the Node.js built-in test runner (`node:test` with `node:assert`). No separate test framework is used, and no future test architecture is assumed.
+```bash
+node dist/index.js --help
+node dist/index.js --version
+node dist/index.js run                         # Coordinator (default)
+node dist/index.js run --role technical-lead
+node dist/index.js run "talk to the tech lead"
+node dist/index.js run "/technical-lead"
+```
 
-## Further reading
+First-use walkthrough: `docs/quick-start.md`.
 
-- `docs/specification/` — detailed product and system specification.
-- `docs/quick-start.md` — beginner first-use path.
-- `docs/installation.md` — prerequisites, install, build, verify.
-- `docs/configuration.md` — settings, defaults, validation.
-- `docs/roles.md` — the five roles, specialties, selection.
-- `docs/workflow.md` — ticket lifecycle, states, approval.
-- `docs/providers.md` — provider system and integrations.
-- `docs/troubleshooting.md` — diagnose common problems.
-- `docs/examples/existing-project.md` — worked example on a sample project.
-- `docs/examples/laravel-react.md` — worked example on Laravel + React.
+## Roles
+
+**Coordinator** (default) routes and reports. **Project Manager** owns requirements and acceptance. **Technical Lead** owns discovery, planning, and tickets. **Implementer** implements one ticket (specialties: backend, frontend, integration, database, testing, documentation). **Senior Reviewer** reviews without modifying code. Full guide: `docs/roles.md`.
+
+## Workflow
+
+```text
+Discover → Analyze → Plan → Ticket → Implement → Review → Approval → Continue/Close
+```
+
+One ticket at a time by default; terminal states are `closed` and `cancelled`. Full guide: `docs/workflow.md`.
+
+## Configuration
+
+Lives at `<project>/.ai-team/config.yaml` (defaults filled by validation):
+
+```yaml
+version: 1
+approval:
+  mode: manual
+providers:
+  delegate:
+    enabled: false
+```
+
+Full reference: `docs/configuration.md`.
+
+## Providers
+
+**OpenCode** (required execution boundary) plus optional **Spec Kit**, **GitHub Issues**, and **delegate-skills** — each optional one works without, each with fallback behavior and explicit failures. Overview: `docs/providers.md`.
+
+## Examples
+
+- `docs/examples/existing-project.md` — discovery-to-ticket walkthrough on a small Python project.
+- `docs/examples/laravel-react.md` — same flow on a Laravel + React sample.
+
+## Troubleshooting
+
+Installation, CLI, configuration, provider, and workflow problems: `docs/troubleshooting.md`. Never share tokens or secrets when reporting issues.
+
+## Repository structure
+
+```text
+src/          # config, roles, workflow, discovery, planning, providers, execution, cli
+tests/        # 581 tests (node:test, no external framework)
+docs/         # guides, examples, specification/
+dist/         # built output (generated by npm run build, not committed)
+```
+
+## Documentation map
+
+- `docs/quick-start.md` — first-use path.
+- `docs/installation.md` — install, build, verify.
+- `docs/configuration.md` — settings and validation.
+- `docs/roles.md` — roles, specialties, selection.
+- `docs/workflow.md` — lifecycle, states, approval.
+- `docs/providers.md` — integrations and fallbacks.
+- `docs/troubleshooting.md` — diagnose problems.
+- `docs/examples/existing-project.md`, `docs/examples/laravel-react.md` — worked examples.
+- `docs/specification/` — detailed product specification.
 - `CONTRIBUTING.md` — how to contribute.
-- `AGENTS.md` — persistent instructions for AI agents working in this repository.
 
 ## License
 
