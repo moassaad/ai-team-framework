@@ -31,8 +31,8 @@ import {
   DelegationRequest,
   DelegationResult,
   validateDelegationRequest,
-  validateDelegationResult,
 } from "./delegate";
+import { mapDelegateRelayResult } from "./delegate-result";
 import {
   DelegateCommandResult,
   defaultRunCommand,
@@ -47,9 +47,6 @@ const BRIEF_FILENAME = "brief.txt" as const;
 
 /** Structured relay result filename inside the output directory. */
 const RESULT_FILENAME = "result.json" as const;
-
-/** Result-format version this provider understands. */
-const RESULT_SCHEMA = "delegate-relay.result.v1" as const;
 
 /** Bounded process wait default: implementation runs take a while. */
 const DEFAULT_TIMEOUT_MS = 1_800_000;
@@ -135,11 +132,6 @@ function buildBrief(skillName: string, request: DelegationRequest): string {
     "End with a concise final summary of what changed and which checks were run.",
     "",
   ].join("\n");
-}
-
-interface RelayResult {
-  readonly status: string;
-  readonly finalMessage: unknown;
 }
 
 /**
@@ -235,37 +227,7 @@ export function createDelegateRelayProvider(
             ")",
         );
       }
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(raw);
-      } catch {
-        fail(`result.json malformed (relay exit ${String(completed.exitCode)})`);
-      }
-      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-        fail(`result.json malformed (relay exit ${String(completed.exitCode)})`);
-      }
-      const record = parsed as Record<string, unknown>;
-      if (
-        record.schema !== undefined &&
-        record.schema !== RESULT_SCHEMA
-      ) {
-        fail(`unsupported result schema ${JSON.stringify(record.schema)}`);
-      }
-      const result: RelayResult = {
-        status: typeof record.status === "string" ? record.status : "",
-        finalMessage: record.finalMessage,
-      };
-      if (result.status !== "completed") {
-        fail(
-          `relay reported "${result.status === "" ? "unknown" : result.status}" ` +
-            `(exit ${String(completed.exitCode)})`,
-        );
-      }
-      const outcome =
-        typeof result.finalMessage === "string" && result.finalMessage.length > 0
-          ? result.finalMessage
-          : `completed with no final report (exit ${String(completed.exitCode)})`;
-      return validateDelegationResult({ outcome });
+      return mapDelegateRelayResult(raw, completed.exitCode);
     } finally {
       try {
         await files.removeDir(outDir);

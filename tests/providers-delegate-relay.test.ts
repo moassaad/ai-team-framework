@@ -341,7 +341,7 @@ describe("relay delegation provider", () => {
     const importedModules = [...new Set([...code.matchAll(/from "([^"]+)"/g)].map((match) => match[1]))];
     assert.deepEqual(
       importedModules.sort(),
-      ["./delegate", "./delegate-detection", "node:fs", "node:os", "node:path"],
+      ["./delegate", "./delegate-detection", "./delegate-result", "node:fs", "node:os", "node:path"],
       "seam-only imports",
     );
     assert.ok(!/shell\s*:/.test(code), "no shell option");
