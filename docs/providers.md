@@ -60,15 +60,21 @@ Technical Lead  → technical planning/tickets
 Spec Kit        → optional specification/plan artifacts
 ```
 
-The Spec Kit adapter builds an operation prompt from PM-owned
-requirements and executes it through an injected agent provider,
-then maps the result back to the shared artifact shape; agent
-failures propagate unchanged. When Spec Kit is unavailable or
-disabled, the local fallback provider (`"fallback"`) produces a
-minimal deterministic artifact from the same requirements, and
-planning proceeds with plain framework artifacts. End-user Spec
-Kit installation/setup instructions are **unresolved** (M8 P-006,
-still open) — this guide does not claim they exist.
+The modern integration (M15) manages Spec Kit through its own
+provider boundary: fresh detection of the `specify` CLI and project
+state (configuration is intent, never proof), confirmed CLI
+installation (`uv`/`pipx`/`pip`, nothing bootstrapped), confirmed
+existing-project initialization (`specify init --here --force
+--non-interactive --integration <key>`, managed files only),
+integration installation without `--force`, read-only mapping of
+`spec.md`/`plan.md`/`tasks.md` into framework tickets through the
+unchanged generic planner, and bounded failure/fallback selection
+that never installs, retries, or reconfigures automatically. Full
+user guide: `docs/providers-speckit.md` (P-006 resolved there).
+When Spec Kit is unavailable or disabled, the local fallback
+provider (`"fallback"`) produces a minimal deterministic artifact
+from the same requirements, and planning proceeds with plain
+framework artifacts.
 
 ## GitHub Issues (optional tracking)
 
@@ -191,6 +197,7 @@ No ranking is implied. Every cell verified against
 ## Where to go next
 
 - `docs/providers-opencode.md` — execution path details.
+- `docs/providers-speckit.md` — Spec Kit setup, mapping, fallback (P-006 resolved).
 - `docs/providers-delegate-skills.md` — delegation setup and limitations.
 - `docs/configuration.md` — all provider settings.
 - `docs/workflow.md` — what providers never own.

@@ -38,7 +38,7 @@ Execution, review, recommendation, approval, and state transition are separate r
 
 - The CLI presents role contracts and resolves role selection, but reports `Role execution is not implemented yet` rather than executing autonomously.
 - Registry installation was not verified; install from a checkout (`docs/installation.md`).
-- End-user Spec Kit setup documentation is unresolved (open item P-006).
+- End-user Spec Kit setup documentation is resolved (P-006 closed by `docs/providers-speckit.md` on top of the M15 integration).
 - The delegate-skills adapter assumes a standalone executable protocol that upstream documentation does not establish (documented limitation, unresolved).
 - `approval.after: sprint` is accepted by validation but unsupported by the approval flows (deferred).
 

@@ -87,8 +87,27 @@ They surface differently per provider, always explicitly:
   limitation is documented, not solved
   (`docs/providers-delegate-skills.md`).
 - Spec Kit unavailable/disabled → local fallback artifact; this is
-  the designed path, not an error (end-user Spec Kit setup docs
-  remain open as P-006).
+  the designed path, not an error. Enabled-but-unavailable never
+  pretends readiness, and explicitly Spec-Kit-required operations
+  fail clearly instead of swapping silently. Setup, existing-project
+  initialization, mapping, and failure modes:
+  `docs/providers-speckit.md` (P-006 resolved).
+
+## Spec Kit integration symptoms
+
+- **Not detected** (`specify` absent) → confirm-install the CLI
+  (`uv` recommended), then `specify version`.
+- **Project not initialized** → baseline (commit/stash), confirm,
+  then initialize; the framework never auto-initializes.
+- **Integration missing** → confirm-install the integration without
+  `--force`; never switch/uninstall silently.
+- **Malformed state** → do not hand-edit
+  `.specify/integration.json`; restore from baseline, re-detect.
+- **Old/unsupported CLI** → upgrade `specify-cli`, then verify.
+- **No installer** (`uv`/`pipx`/`pip` all absent) → provide one;
+  nothing is bootstrapped for you.
+- **Verification failure** → exit 0 is not success; re-run
+  detection. Full table: `docs/providers-speckit.md`.
 
 ## Execution problems
 

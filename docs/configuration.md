@@ -187,7 +187,8 @@ delegate     disabled by default (optional, never auto-enabled)
 
 This is configuration only. Provider execution lives in the
 provider modules (`src/providers/`) and is documented separately
-(`docs/providers-opencode.md`, `docs/providers-delegate-skills.md`).
+(`docs/providers-opencode.md`, `docs/providers-speckit.md`,
+`docs/providers-delegate-skills.md`).
 
 ## 11. Approval and workflow values
 
