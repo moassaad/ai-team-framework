@@ -29,8 +29,9 @@
  * stops at the state boundary (the next rework run is a separate
  * invocation, never started here).
  *
- * Explicit evidence, never inference: the Implementer specialty
- * arrives already resolved (as IR-001 requires), and the review
+ * Explicit evidence, never inference: Implementer and Senior
+ * Reviewer references arrive through the caller-supplied role
+ * resolver (R-003) — validated, never classified — and the review
  * decision arrives as an explicit caller-supplied verdict —
  * IR-002/IR-003 forbid parsing reviewer reports into verdicts,
  * and both outgoing W-002 edges are technical-lead owned, so
@@ -60,15 +61,19 @@
  * specifics: providers stay behind `AgentProvider`.
  */
 
-import { AgentProvider, isAgentProvider } from "../providers/agent";
 import { ExecutionResult } from "../providers/result";
-import { ImplementerSpecialty, isImplementerSpecialty } from "../roles/contract";
 import { WorkflowState, isWorkflowState } from "../workflow/states";
 import { isValidTransition } from "../workflow/transitions";
 import { executeImplementerTicket } from "../execution/implementer";
 import { executeReviewerTicket } from "../execution/reviewer";
 import { requestChanges } from "../execution/changes-requested";
 import { recommendTechnicalApproval } from "../execution/technical-approval";
+import {
+  RoleResolver,
+  isRoleResolver,
+  validateImplementerReference,
+  validateSeniorReviewerReference,
+} from "./roles";
 
 /**
  * Runtime ticket view: the existing PlanTicket/IR ticket shape
@@ -104,16 +109,17 @@ export interface CoordinatorTransition {
 }
 
 export interface CoordinatorRuntimeInput {
-  /** Caller-owned tickets; exactly one `ready` entry may advance. */
+  /** Caller-owned tickets; exactly one eligible entry may advance. */
   readonly tickets: CoordinatorTicket[];
-  /** Already-resolved canonical Implementer specialty. */
-  readonly specialty: ImplementerSpecialty;
+  /**
+   * Caller-supplied role resolution (R-003): the single explicit
+   * source of Implementer and Senior Reviewer references. Replaces
+   * direct specialty/provider fields so the Coordinator never
+   * carries role fulfillment itself.
+   */
+  readonly roles: RoleResolver;
   /** Target project root for both provider invocations. */
   readonly project_root: string;
-  /** Generic provider executing the Implementer prompt, once. */
-  readonly implementerProvider: AgentProvider<ExecutionResult>;
-  /** Generic provider executing the Senior Reviewer prompt, once. */
-  readonly reviewerProvider: AgentProvider<ExecutionResult>;
   /** Execution bound in milliseconds for each invocation. */
   readonly timeout_ms: number;
   /** Explicit review verdict; never derived from report text. */
@@ -222,8 +228,9 @@ function isActiveState(state: WorkflowState): boolean {
 }
 
 /**
- * Run exactly one ready ticket through Implementer and Senior
+ * Run exactly one eligible ticket through Implementer and Senior
  * Reviewer. Validates everything before invoking anything;
+ * resolves each role explicitly before its provider runs;
  * verifies every edge before recording it; invokes each provider
  * at most once; never retries, never closes, never touches
  * another ticket. Unexpected provider errors (non-boundary
@@ -244,16 +251,10 @@ export async function runCoordinatorTicket(
       fail("every ticket must carry id, title, description, requirements, and a valid state");
     }
   }
-  if (!isImplementerSpecialty(input.specialty)) {
-    fail(`unknown specialty ${JSON.stringify(input.specialty)}`);
+  if (!isRoleResolver(input.roles)) {
+    fail("roles must satisfy the role resolver contract");
   }
   const project_root = nonEmptyString(input.project_root, "project_root");
-  if (!isAgentProvider(input.implementerProvider)) {
-    fail("implementerProvider must satisfy the agent provider contract");
-  }
-  if (!isAgentProvider(input.reviewerProvider)) {
-    fail("reviewerProvider must satisfy the agent provider contract");
-  }
   if (typeof input.timeout_ms !== "number" || !Number.isFinite(input.timeout_ms) || input.timeout_ms <= 0) {
     fail("timeout_ms must be a positive finite number");
   }
@@ -309,7 +310,7 @@ export async function runCoordinatorTicket(
   // Rework carries the preserved reviewer notes as additive
   // invocation context: the stored ticket keeps its original
   // requirements verbatim, while the Implementer also sees the
-  // notes under an explicit label. Transport only — never
+  // notes under an explicit heading. Transport only — never
   // parsed, rewritten, or summarized.
   const invocationTicket = isRework
     ? {
@@ -319,11 +320,22 @@ export async function runCoordinatorTicket(
         requirements: `${selected.requirements}\n\nReviewer feedback from the previous review:\n${selected.feedback as string}`,
       }
     : { id: selected.id, title: selected.title, description: selected.description, requirements: selected.requirements };
+  // The Implementer role resolves before any transition or
+  // invocation: a resolution failure leaves the ticket exactly
+  // where it was, with no provider invoked.
+  const implementerRole = validateImplementerReference(
+    await input.roles.resolveImplementer({
+      id: selected.id,
+      title: selected.title,
+      description: selected.description,
+      requirements: selected.requirements,
+    }),
+  );
   const implementerInput = {
     ticket: invocationTicket,
-    specialty: input.specialty,
+    specialty: implementerRole.specialty,
     project_root,
-    provider: input.implementerProvider as AgentProvider<ExecutionResult>,
+    provider: implementerRole.provider,
     timeout_ms: input.timeout_ms,
     ...(discovery_summary !== undefined ? { discovery_summary } : {}),
   };
@@ -341,11 +353,23 @@ export async function runCoordinatorTicket(
   }
   advance(selected, "implementation_review");
 
+  // The Senior Reviewer role resolves only after a successful
+  // implementation: a resolution failure preserves
+  // implementation_review with the reviewer never invoked and
+  // nothing auto-approved.
+  const reviewerRole = validateSeniorReviewerReference(
+    await input.roles.resolveSeniorReviewer({
+      id: selected.id,
+      title: selected.title,
+      description: selected.description,
+      requirements: selected.requirements,
+    }),
+  );
   const reviewed = await executeReviewerTicket({
     ticket: { id: selected.id, title: selected.title, description: selected.description, requirements: selected.requirements },
     implementation_result: implemented.result.text,
     project_root,
-    provider: input.reviewerProvider as AgentProvider<ExecutionResult>,
+    provider: reviewerRole.provider,
     timeout_ms: input.timeout_ms,
     ...(discovery_summary !== undefined ? { discovery_summary } : {}),
   });

@@ -73,12 +73,15 @@ function baseInput(
     reviewFeedback?: string;
   } = {},
 ): Parameters<typeof runCoordinatorTicket>[0] {
+  const implementerProvider = fakeProvider(counts, "implementer", overrides.implementerBehavior ?? succeedWith("Implemented; gates pass."));
+  const reviewerProvider = fakeProvider(counts, "reviewer", overrides.reviewerBehavior ?? succeedWith("No blocking issues."));
   return {
     tickets: overrides.tickets ?? [ticket("T-001", "ready")],
-    specialty: "backend",
+    roles: {
+      resolveImplementer: () => ({ role: "implementer", specialty: "backend", provider: implementerProvider }),
+      resolveSeniorReviewer: () => ({ role: "senior-reviewer", provider: reviewerProvider }),
+    },
     project_root: "/proj",
-    implementerProvider: fakeProvider(counts, "implementer", overrides.implementerBehavior ?? succeedWith("Implemented; gates pass.")),
-    reviewerProvider: fakeProvider(counts, "reviewer", overrides.reviewerBehavior ?? succeedWith("No blocking issues.")),
     timeout_ms: 5000,
     reviewDecision: overrides.reviewDecision ?? "approved",
     ...(overrides.reviewFeedback !== undefined ? { reviewFeedback: overrides.reviewFeedback } : {}),
@@ -268,13 +271,9 @@ describe("single-ticket coordinator runtime", () => {
   it("validates all inputs before invoking any provider", async () => {
     const counts = freshCounts();
     const valid = baseInput(counts, {});
-    await assert.rejects(runCoordinatorTicket({ ...valid, specialty: "wizard" as never }), /unknown specialty/);
+    await assert.rejects(runCoordinatorTicket({ ...valid, roles: "yes" as never }), /roles must satisfy the role resolver contract/);
     await assert.rejects(runCoordinatorTicket({ ...valid, timeout_ms: 0 }), /timeout_ms must be a positive finite number/);
     await assert.rejects(runCoordinatorTicket({ ...valid, reviewDecision: "maybe" as never }), /reviewDecision must be/);
-    await assert.rejects(
-      runCoordinatorTicket({ ...valid, implementerProvider: { name: "broken" } as never }),
-      /implementerProvider must satisfy/,
-    );
     await assert.rejects(
       runCoordinatorTicket({ ...valid, tickets: [{ id: "", title: "t", description: "d", requirements: "r", state: "ready" }] }),
       /every ticket must carry/,
@@ -363,13 +362,12 @@ describe("single-ticket coordinator runtime", () => {
         "../execution/implementer",
         "../execution/reviewer",
         "../execution/technical-approval",
-        "../providers/agent",
         "../providers/result",
-        "../roles/contract",
         "../workflow/states",
         "../workflow/transitions",
+        "./roles",
       ],
-      "existing execution/workflow/contract seams only",
+      "existing execution/workflow seams plus the role seam only",
     );
     assert.ok(!/child_process|spawn|exec\(|shell|relay\.mjs|specify|opencode|github|npx/i.test(code), "no provider commands or processes");
     assert.ok(!/\bgit\b|commit|merge|branch/i.test(code), "no git");

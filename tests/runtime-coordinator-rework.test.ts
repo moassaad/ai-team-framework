@@ -77,12 +77,15 @@ function baseInput(
     reviewFeedback?: string;
   } = {},
 ): Parameters<typeof runCoordinatorTicket>[0] {
+  const implementerProvider = fakeProvider(counts, "implementer", overrides.implementerBehavior ?? succeedWith("Reworked; gates pass."));
+  const reviewerProvider = fakeProvider(counts, "reviewer", overrides.reviewerBehavior ?? succeedWith("Clean now."));
   return {
     tickets: overrides.tickets ?? [reworkTicket("T-001")],
-    specialty: "backend",
+    roles: {
+      resolveImplementer: () => ({ role: "implementer", specialty: "backend", provider: implementerProvider }),
+      resolveSeniorReviewer: () => ({ role: "senior-reviewer", provider: reviewerProvider }),
+    },
     project_root: "/proj",
-    implementerProvider: fakeProvider(counts, "implementer", overrides.implementerBehavior ?? succeedWith("Reworked; gates pass.")),
-    reviewerProvider: fakeProvider(counts, "reviewer", overrides.reviewerBehavior ?? succeedWith("Clean now.")),
     timeout_ms: 5000,
     reviewDecision: overrides.reviewDecision ?? "approved",
     ...(overrides.reviewFeedback !== undefined ? { reviewFeedback: overrides.reviewFeedback } : {}),
