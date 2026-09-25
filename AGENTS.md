@@ -40,18 +40,12 @@ M9 — Implementation and Review Flow: COMPLETE
 M10 — GitHub Issues: COMPLETE
 M11 — Optional delegate-skills Integration: COMPLETE
 M12 — Testing and Safety: COMPLETE
-M13 — Documentation and Release: NEXT
+M13 — Documentation and Release: COMPLETE
 ```
 
-M0, M1, M2, M3, M4, M5, M6, M7, M8, M9, M10, M11, and M12 are complete. F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, O-001 through O-006, P-001 through P-005, IR-001 through IR-006, G-001 through G-007, D-001 through D-007, and T-001 through T-009 are accepted.
+M0, M1, M2, M3, M4, M5, M6, M7, M8, M9, M10, M11, M12, and M13 are complete. F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, O-001 through O-006, P-001 through P-005, IR-001 through IR-006, G-001 through G-007, D-001 through D-007, T-001 through T-009, and REL-001 through REL-012 are accepted.
 
-Next implementation ticket:
-
-```text
-REL-001 Quick start
-```
-
-Do not start REL-001 unless explicitly assigned.
+No further implementation tickets are defined. Version 0.1.0 is released.
 
 ## Role Selection
 

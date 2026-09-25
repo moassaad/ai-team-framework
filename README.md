@@ -6,7 +6,7 @@ It works with new and existing projects — whatever their language, framework, 
 
 ## Status
 
-Under active development toward `0.1.0` (not yet released). Implemented and tested: role contracts and selection, workflow engine with 11 states, configuration validation, project discovery, planning and ticket generation, implementer/reviewer execution flows, OpenCode execution provider, optional GitHub Issues / Spec Kit / delegate-skills integrations with local fallbacks, and 581 automated tests. See `AI-Team-Framework-Project-Plan.md` for milestone status.
+Version `0.1.0` is released. Implemented and tested: role contracts and selection, workflow engine with 11 states, configuration validation, project discovery, planning and ticket generation, implementer/reviewer execution flows, OpenCode execution provider, optional GitHub Issues / Spec Kit / delegate-skills integrations with local fallbacks, and 581 automated tests. See `AI-Team-Framework-Project-Plan.md` for milestone status.
 
 ## How it works
 

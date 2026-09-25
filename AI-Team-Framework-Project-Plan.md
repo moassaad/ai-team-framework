@@ -1,7 +1,7 @@
 # AI Team Framework — Project Plan
 
 > **Document status:** Approved baseline plan  
-> **Current phase:** M13 — Documentation and Release (next)
+> **Current phase:** 0.1.0 released
 > **M0:** COMPLETE  
 > **M1:** COMPLETE  
 > **M2:** COMPLETE  
@@ -15,6 +15,7 @@
 > **M10:** COMPLETE
 > **M11:** COMPLETE
 > **M12:** COMPLETE
+> **M13:** COMPLETE
 > **Implementation started:** Yes  
 > **Target:** First usable release (MVP / `0.1.0`)
 
@@ -828,22 +829,28 @@ M12 closeout (2026-09-24): 581/581 tests passing; build, lint, and diff-check cl
 
 ## M13 — Documentation and Release
 
-Status: **PENDING**
+Status: **COMPLETE**
 
 ```text
-REL-001 Quick start
-REL-002 Installation guide
-REL-003 Configuration guide
-REL-004 Roles guide
-REL-005 Workflow guide
-REL-006 Providers guide
-REL-007 Troubleshooting
-REL-008 Existing-project example
-REL-009 Laravel + React example
-REL-010 Final README
-REL-011 Release checklist
-REL-012 Release 0.1.0
+REL-001 Quick start ✅
+REL-002 Installation guide ✅
+REL-003 Configuration guide ✅
+REL-004 Roles guide ✅
+REL-005 Workflow guide ✅
+REL-006 Providers guide ✅
+REL-007 Troubleshooting ✅
+REL-008 Existing-project example ✅
+REL-009 Laravel + React example ✅
+REL-010 Final README ✅
+REL-011 Release checklist ✅
+REL-012 Release 0.1.0 ✅
 ```
+
+M13 closeout (2026-09-24): 581/581 tests passing; build, lint, and
+diff-check clean; 0.1.0 released from this repository. No registry
+publication was performed (no registry configured, no credentials)
+and no git tag was created (no established tag convention); see the
+REL-012 report for the exact scope.
 
 ---
 
@@ -1026,15 +1033,13 @@ Before finishing, report:
 | M10 GitHub Issues | **COMPLETE** | G-001 through G-007 accepted |
 | M11 delegate-skills | **COMPLETE** | D-001 through D-007 accepted |
 | M12 Testing & Safety | **COMPLETE** | T-001 through T-009 accepted; 581/581 tests passing |
-| M13 Documentation & Release | PENDING | Next milestone; not started |
+| M13 Documentation & Release | **COMPLETE** | REL-001 through REL-012 accepted; 0.1.0 released |
 
 ---
 
 # 20. Next Steps
 
-The next work item is **M13 — Documentation and Release**.
-
-M0, M1, M2, M3, M4, M5, M6, M7, M8, M9, M10, M11, and M12 are complete (F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, O-001 through O-006, P-001 through P-005, IR-001 through IR-006, G-001 through G-007, D-001 through D-007, and T-001 through T-009 accepted).
+M0, M1, M2, M3, M4, M5, M6, M7, M8, M9, M10, M11, M12, and M13 are complete (F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, O-001 through O-006, P-001 through P-005, IR-001 through IR-006, G-001 through G-007, D-001 through D-007, T-001 through T-009, and REL-001 through REL-012 accepted). Version 0.1.0 is released; no further milestones are defined.
 
 ### M0 checklist
 
@@ -1057,11 +1062,7 @@ M0, M1, M2, M3, M4, M5, M6, M7, M8, M9, M10, M11, and M12 are complete (F-001 th
 [done] Finalize 0.1.0 Definition of Done
 ```
 
-M13 begins with (not started yet):
-
-```text
-REL-001 Quick start
-```
+No further milestones are defined. Version 0.1.0 is released.
 
 ---
 
