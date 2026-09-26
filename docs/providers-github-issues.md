@@ -74,3 +74,36 @@ deferred to R-011.
   write permission; failures surface as bounded rejections
   (`issue gone` for 410 included) with no retry, no rollback,
   and no compensating mutation.
+
+## Production composition (R-011)
+
+`runGitHubProductionCoordinator` (`src/runtime/github-production.ts`)
+is the one production path: validated `FrameworkConfig` plus
+explicit caller inputs into the shared source/sink pair and the
+existing source-based application operation. No CLI, scheduler,
+polling, provisioning, or registry changes.
+
+- Required configuration (existing keys, unchanged schema):
+  `providers.github.enabled: true` with non-empty
+  `providers.github.owner` / `providers.github.repo`. A
+  disabled or absent GitHub section fails bounded before any
+  HTTP; configuration is never mutated.
+- Required explicit inputs (never configuration, never
+  defaults): `token` (caller-supplied secret, never logged or
+  reported), `managedLabel` (no default label is assumed),
+  plus the normal application inputs (specialty, OpenCode
+  agent, project root, timeout, review verdict).
+- State mapping: `decodeManagedLabelState(managedLabel)` is
+  the documented default — the round-trip of the R-010 label
+  convention (one `<managedLabel>:<state>` label wins; a
+  managed issue with no state label is new work, `ready`;
+  ambiguous or unknown state labels fail bounded). Override
+  with an explicit `parseState` when a repository needs it;
+  an optional `parseFeedback` passes through to the source.
+- One transport instance is shared by source and sink.
+  Construction performs zero HTTP; execution follows source
+  → Coordinator → sink with the existing `sync-failed`
+  semantics. No labels, tokens, webhooks, or permissions are
+  provisioned — missing GitHub resources fail truthfully.
+- CLI runtime execution (`ai-team run`) is still deferred to
+  R-012; `status` and `setup` behavior is unchanged.
