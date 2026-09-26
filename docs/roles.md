@@ -62,6 +62,12 @@ review never mutates tickets and never creates correction
 tickets itself — those belong to a later stage — and it never
 invokes PM or user review.
 
+Technical Lead corrections produce one generic aggregated
+correction ticket through `IssueProvider`
+(`createTechnicalLeadCorrectionTicket`): the affected ticket
+IDs plus verbatim notes, never a parsed report or per-ticket
+fan-out.
+
 ## Implementer
 
 Implements exactly one assigned ticket: reads its scope, makes the
