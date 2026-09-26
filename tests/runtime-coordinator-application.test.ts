@@ -223,9 +223,10 @@ describe("production application boundary", () => {
         "../roles/contract",
         "./coordinator",
         "./production",
+        "./ticket-sink",
         "./ticket-source",
       ],
-      "OpenCode adapter + R-004 factory + Coordinator + source boundary + contracts only",
+      "OpenCode adapter + R-004 factory + Coordinator + source/sink boundaries + contracts only",
     );
     assert.ok(!/child_process|spawn|exec\(|shell|opencode run/i.test(code), "no process execution");
     assert.ok(!/delegate|skill|fleet|lane|model|session|relay/i.test(code), "no delegate discovery");

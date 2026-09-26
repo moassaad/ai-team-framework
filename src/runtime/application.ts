@@ -47,6 +47,7 @@ import {
   isTicketSource,
   validateSourceTickets,
 } from "./ticket-source";
+import { TicketSink, isTicketSink } from "./ticket-sink";
 
 /**
  * Application input. Tickets and every production ingredient
@@ -119,6 +120,13 @@ export async function runProductionCoordinator(
 export interface ProductionSourceApplicationInput {
   /** Read-only ticket source; read exactly once per invocation. */
   readonly ticketSource: TicketSource;
+  /**
+   * Optional write-only sink for the selected ticket. When
+   * omitted the Coordinator runs normally with no persistence
+   * (current in-memory behavior); never defaulted, never a
+   * local-file fallback.
+   */
+  readonly ticketSink?: TicketSink;
   /** Implementer specialty, decided externally by the caller. */
   readonly specialty: ImplementerSpecialty;
   /** Ready-made OpenCode string agent (such as `createOpenCodeProvider()` output). */
@@ -136,6 +144,22 @@ export interface ProductionSourceApplicationInput {
 }
 
 /**
+ * Bounded synchronization failure (M18 R-008): the Coordinator
+ * ran and advanced the selected ticket, but the caller-supplied
+ * sink rejected. The preserved Coordinator result is the
+ * evidence that workflow execution completed/advanced; the
+ * error says only that synchronization failed. No retry, no
+ * rollback, no second ticket — recovery belongs to a later
+ * persistence/integration ticket.
+ */
+export interface ProductionSynchronizationFailed {
+  readonly outcome: "sync-failed";
+  readonly ticket_id: string;
+  readonly coordinatorResult: CoordinatorTicketResult;
+  readonly error: { readonly kind: string; readonly message: string };
+}
+
+/**
  * Run one source-fed production Coordinator invocation: read
  * the source once, validate its result with the Coordinator's
  * own ticket guard, then delegate to the tickets-based
@@ -144,15 +168,29 @@ export interface ProductionSourceApplicationInput {
  * the Coordinator never runs, nothing is fabricated or
  * retried, and no ticket state mutates. Empty collections
  * reach the Coordinator's authoritative no-work behavior.
+ *
+ * When `ticketSink` is supplied, the selected ticket is
+ * synchronized after Coordinator execution: exactly one
+ * `updateTicket` call with the final in-memory ticket, only
+ * when a Coordinator result shows the ticket was actually
+ * processed and advanced (`completed`, `implementer-failed`
+ * to `failed`, `reviewer-failed` to `implementation_review`).
+ * `no-work` and `conflict` never touch the sink; unexpected
+ * Coordinator errors never touch the sink; sink rejection
+ * returns a bounded `sync-failed` result preserving the
+ * Coordinator outcome.
  */
 export async function runProductionCoordinatorFromSource(
   input: ProductionSourceApplicationInput,
-): Promise<CoordinatorTicketResult> {
+): Promise<CoordinatorTicketResult | ProductionSynchronizationFailed> {
   if (typeof input !== "object" || input === null || Array.isArray(input)) {
     fail("expected an application input object");
   }
   if (!isTicketSource(input.ticketSource)) {
     fail("ticketSource must satisfy the ticket source contract");
+  }
+  if (input.ticketSink !== undefined && !isTicketSink(input.ticketSink)) {
+    fail("ticketSink must satisfy the ticket sink contract");
   }
   let listed: unknown;
   try {
@@ -161,7 +199,7 @@ export async function runProductionCoordinatorFromSource(
     throw new Error("production application: ticket source failed", { cause: error });
   }
   const tickets = validateSourceTickets(listed);
-  return runProductionCoordinator({
+  const result = await runProductionCoordinator({
     tickets,
     specialty: input.specialty,
     openCodeAgent: input.openCodeAgent,
@@ -171,4 +209,30 @@ export async function runProductionCoordinatorFromSource(
     ...(input.reviewFeedback !== undefined ? { reviewFeedback: input.reviewFeedback } : {}),
     ...(input.discovery_summary !== undefined ? { discovery_summary: input.discovery_summary } : {}),
   });
+  if (input.ticketSink === undefined) {
+    return result;
+  }
+  if (
+    result.outcome !== "completed" &&
+    result.outcome !== "implementer-failed" &&
+    result.outcome !== "reviewer-failed"
+  ) {
+    return result;
+  }
+  const selected = tickets.find((ticket) => ticket.id === result.ticket_id);
+  if (selected === undefined || selected.state !== result.final_state) {
+    fail(`ticket ${result.ticket_id} is not in its reported final state; refusing synchronization`);
+  }
+  try {
+    await input.ticketSink.updateTicket(selected);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return Object.freeze({
+      outcome: "sync-failed",
+      ticket_id: result.ticket_id,
+      coordinatorResult: result,
+      error: { kind: "ticket-synchronization-failed", message },
+    } as const);
+  }
+  return result;
 }
