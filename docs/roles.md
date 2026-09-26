@@ -42,6 +42,15 @@ missing, and later checks whether the implementation matches what
 was agreed. It is not the low-level implementation authority — that
 belongs to the Technical Lead's tickets and the Implementer.
 
+PM/User Testing is an explicit sprint-level boundary
+(`runPmUserTestingReview`) that runs only after explicit
+Technical Lead approval: one provider invocation under the
+`project-manager` identity over the current ticket snapshot,
+an opaque report, and an explicit verdict (`approved` or
+`changes-required`). It is report-opaque and non-mutating —
+it creates no correction tickets and performs no final
+Coordinator approval.
+
 ## Technical Lead
 
 Owns project discovery, technical planning, ticket breakdown, and

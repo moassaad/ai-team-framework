@@ -57,6 +57,17 @@ export interface TechnicalLeadRoleReference {
 }
 
 /**
+ * Who performs PM/User Testing: identity plus the R-019
+ * execution provider. Same minimality rule — a distinct
+ * logical role from Implementer, Senior Reviewer, and
+ * Technical Lead; never inferred or silently reused.
+ */
+export interface ProjectManagerRoleReference {
+  readonly role: RoleId;
+  readonly provider: AgentProvider<ExecutionResult>;
+}
+
+/**
  * Caller-supplied role resolution. The Coordinator instantiates
  * nothing and discovers nothing; it calls each resolver exactly
  * once per invocation, after ticket selection and before the
@@ -152,6 +163,22 @@ export function validateTechnicalLeadReference(data: unknown): TechnicalLeadRole
   }
   const raw = data as Record<string, unknown>;
   const role = checkRoleId(raw.role, "technical-lead", "role");
+  const provider = checkProvider(raw.provider, "provider");
+  return { role, provider };
+}
+
+/**
+ * Validate raw data as a Project Manager reference and return
+ * it unchanged. Same strictness: exact `project-manager`
+ * identity, valid provider, no fallback, no silent reuse of
+ * any other role.
+ */
+export function validateProjectManagerReference(data: unknown): ProjectManagerRoleReference {
+  if (typeof data !== "object" || data === null || Array.isArray(data)) {
+    fail("expected a project manager reference object");
+  }
+  const raw = data as Record<string, unknown>;
+  const role = checkRoleId(raw.role, "project-manager", "role");
   const provider = checkProvider(raw.provider, "provider");
   return { role, provider };
 }
