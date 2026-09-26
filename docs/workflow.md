@@ -258,6 +258,32 @@ R-020. No automatic final ticket synchronization happens in
 E2E-001: `completed` is an approval result, and translating
 it into state transitions belongs to later E2E work.
 
+## Sprint synchronization and re-entry (M19 E2E-002)
+
+Final approval synchronizes explicitly and separately:
+`synchronizeSprintOutcome` closes exactly the
+`technical_approval`/`pm_review` tickets — one sequential
+`TicketSink.updateTicket` call per eligible ticket, in
+caller order, with defensive copies — while the caller's
+objects stay untouched. Anything else (including
+non-`completed` outcomes) means zero sink calls; a sink
+failure stops with partial success observable, never
+retried or rolled back.
+
+Re-entry is caller-controlled: `work-remaining` and
+post-correction results may be re-invoked explicitly
+(R-002 selection still chooses the ticket), while failures
+and withheld approvals need attention first, `completed`
+is terminal, and a sync failure is never terminal success
+(`sprintReentryStatus` classifies this purely, invoking
+nothing itself).
+
+The aggregated Technical Lead correction IssueReference
+does not automatically become a Coordinator rework ticket;
+translating externally created correction work into
+executable coordinator work is deferred to a later
+orchestration/production layer.
+
 ## Where to go next
 
 - `docs/specification/workflow.md` — the full contract this guide summarizes.
