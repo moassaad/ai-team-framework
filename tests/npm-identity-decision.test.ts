@@ -86,7 +86,11 @@ describe("npm release identity decision", () => {
   it("invents no replacement identity anywhere", () => {
     const pkg = JSON.parse(readFileSync(join(REPO_ROOT, "package.json"), "utf8")) as { name?: unknown };
     assert.equal(pkg.name, "ai-team-framework", "manifest identity untouched");
-    const tree = ["package.json", "README.md", "docs/installation.md", "docs/quick-start.md", ".github/workflows/publish.yml"]
+    // Implementation surfaces only: docs/installation.md may
+    // record the explicitly supplied M21 candidate, but no
+    // scoped variant may appear in the manifest, workflow, or
+    // install commands.
+    const tree = ["package.json", "README.md", "docs/quick-start.md", ".github/workflows/publish.yml"]
       .map((file) => readFileSync(join(REPO_ROOT, file), "utf8"))
       .join("\n");
     assert.ok(!/@[A-Za-z0-9-]+\/ai-team-framework/.test(tree), "no scoped variant constructed");

@@ -13,21 +13,31 @@ binary there. Installation through npm is therefore
 supported; registry publication remains a separate release
 step (`M20 / NPM-003`).
 
-## Release identity (NPM-003, `identity-blocked`)
+## Release identity (M21 verification, `identity-blocked`)
 
-Release work stops here until the owner explicitly supplies
-a verified package identity:
+Release work stops here until npm authentication and scope
+control are explicitly resolved:
 
-- Current package identity: `ai-team-framework@0.1.0`.
-- Collision: the unscoped name is already registered on npm
-  by another publisher (`npm view ai-team-framework`
-  shows versions up to `0.2.0` that are not this project's
-  artifact), and no ownership has been established.
-- Missing input: no explicitly selected, owner-controlled
-  scope or available name has been supplied, and none is
-  invented by this ticket.
-- Release remains blocked: no version bump, no rename, no
-  publication; the `ai-team` CLI binary is unaffected.
+- Current package identity: `ai-team-framework@0.1.0`
+  (manifest unchanged; no rename without approval).
+- Explicit candidate: `@moassaad/ai-team-framework`
+  (owner-supplied; the only candidate — no fallback
+  generated).
+- Candidate registry state: unclaimed (`npm view
+  @moassaad/ai-team-framework` returns 404) — available in
+  principle, but availability alone approves nothing.
+- Authentication: unavailable (`npm whoami` requires a
+  login), so neither the `moassaad` publisher identity nor
+  `@moassaad` scope control can be verified here.
+- Unscoped collision (unchanged): `ai-team-framework` is
+  registered by another publisher (versions up to `0.2.0`
+  that are not this project's artifact).
+- Release remains blocked: no version bump, no manifest
+  change, no publication, no merge; the `ai-team` CLI
+  binary is unaffected. Approval needs an authenticated
+  `moassaad` session plus verifiable `@moassaad` scope
+  control, then the manifest rename, `--access public`
+  workflow flag, and consumer re-verification follow.
 
 The release workflow (`.github/workflows/publish.yml`) is prepared for
 npm Trusted Publishing over OIDC — no tokens in the
