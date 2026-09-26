@@ -46,6 +46,19 @@ import {
   ProductionSynchronizationFailed,
   runProductionCoordinatorFromSource,
 } from "./application";
+import {
+  CoordinatorApprovalReference,
+  ProjectManagerRoleReference,
+  TechnicalLeadRoleReference,
+} from "./roles";
+import { TechnicalLeadDecisionResolver } from "./technical-lead";
+import { PmUserTestingDecisionResolver } from "./pm-testing";
+import { FinalApprovalDecisionResolver } from "./final-approval";
+import { IssueProvider } from "../providers/issue";
+import {
+  ProductionSprintResult,
+  runProductionSprintWorkflow,
+} from "./production-sprint";
 
 export interface GitHubProductionOptions {
   /** Validated framework configuration; only `providers.github` is read. */
@@ -178,6 +191,139 @@ export async function runGitHubProductionCoordinator(
     project_root: options.project_root,
     timeout_ms: options.timeout_ms,
     decideReview: options.decideReview,
+    ...(options.discovery_summary !== undefined ? { discovery_summary: options.discovery_summary } : {}),
+  });
+}
+
+/**
+ * Production GitHub sprint options (M19 E2E-003). The same
+ * validated-configuration path as the Coordinator variant
+ * above — no new configuration keys — plus the explicit
+ * sprint dependencies the generic production operation
+ * requires: Technical Lead, Project Manager, and Coordinator
+ * approval references, the correction `IssueProvider` (built
+ * by the caller with `createGitHubIssueProvider`, sharing
+ * the repository and credential), and the four explicit
+ * decision resolvers. Nothing is inferred or defaulted.
+ */
+export interface GitHubProductionSprintOptions {
+  /** Validated framework configuration; only `providers.github` is read. */
+  readonly config: FrameworkConfig;
+  /** Credential, supplied explicitly by the caller. Never logged. */
+  readonly token: string;
+  /** Required managed-issue label; no default. */
+  readonly managedLabel: string;
+  /**
+   * Optional override for the production state decoder.
+   * Defaults to `decodeManagedLabelState(managedLabel)`.
+   */
+  readonly parseState?: (issue: GitHubIssue) => WorkflowState;
+  /** Optional feedback decoder, passed through to the source. */
+  readonly parseFeedback?: (issue: GitHubIssue) => string | undefined;
+  /** Shared transport for source and sink; fetch default. */
+  readonly transport?: GitHubIssuesTransport;
+  /** Implementer specialty, decided externally by the caller. */
+  readonly specialty: ImplementerSpecialty;
+  /** Ready-made OpenCode string agent. */
+  readonly openCodeAgent: AgentProvider<string>;
+  /** Explicit Technical Lead reference; exact `technical-lead` identity. */
+  readonly technicalLead: TechnicalLeadRoleReference;
+  /** Explicit PM/User Testing reference; exact `project-manager` identity. */
+  readonly projectManager: ProjectManagerRoleReference;
+  /** Explicit final approval authority; exact `coordinator` identity. */
+  readonly coordinatorApproval: CoordinatorApprovalReference;
+  /** Explicit issue tracker for Technical Lead correction creation only. */
+  readonly issues: IssueProvider;
+  /** Target project root for both provider invocations. */
+  readonly project_root: string;
+  /** Execution bound in milliseconds for each invocation. */
+  readonly timeout_ms: number;
+  /**
+   * Explicit review decision resolver, passed through to the
+   * Coordinator unchanged; resolved after Reviewer execution.
+   * Never defaulted — the runtime never assumes approval.
+   */
+  readonly decideReview: ReviewDecisionResolver;
+  /** Technical Lead decision resolver. */
+  readonly decideTechnicalLead: TechnicalLeadDecisionResolver;
+  /** PM/User Testing decision resolver. */
+  readonly decidePmUserTesting: PmUserTestingDecisionResolver;
+  /** Final Coordinator decision resolver. */
+  readonly decideFinalApproval: FinalApprovalDecisionResolver;
+  /** Pre-computed discovery summary, when available. */
+  readonly discovery_summary?: string;
+}
+
+/**
+ * Run one production GitHub sprint traversal: resolve
+ * configuration, build the source and sink with the shared
+ * repository mapping, and delegate to the generic production
+ * sprint operation (which owns dependency assembly, the
+ * single workflow call, and the explicit final
+ * synchronization). Invalid production inputs fail before any
+ * HTTP; a disabled GitHub path never activates.
+ */
+export async function runGitHubProductionSprintWorkflow(
+  options: GitHubProductionSprintOptions,
+): Promise<ProductionSprintResult> {
+  if (typeof options !== "object" || options === null || Array.isArray(options)) {
+    fail("expected an options object");
+  }
+  const github =
+    typeof options.config === "object" && options.config !== null
+      ? (options.config as FrameworkConfig).providers?.github
+      : undefined;
+  if (github?.enabled !== true) {
+    fail("providers.github.enabled must be true for the GitHub runtime path");
+  }
+  if (typeof github.owner !== "string" || github.owner.length === 0) {
+    fail("providers.github.owner must be a non-empty string");
+  }
+  if (typeof github.repo !== "string" || github.repo.length === 0) {
+    fail("providers.github.repo must be a non-empty string");
+  }
+  if (typeof options.token !== "string" || options.token.length === 0) {
+    fail("token must be a non-empty string");
+  }
+  if (typeof options.managedLabel !== "string" || options.managedLabel.length === 0) {
+    fail("managedLabel must be a non-empty string");
+  }
+  const parseState = options.parseState ?? decodeManagedLabelState(options.managedLabel);
+  if (typeof parseState !== "function") {
+    fail("parseState must be a function");
+  }
+  const transport = options.transport;
+  const ticketSource = createGitHubIssuesTicketSource({
+    owner: github.owner,
+    repo: github.repo,
+    token: options.token,
+    managedLabel: options.managedLabel,
+    parseState,
+    ...(options.parseFeedback !== undefined ? { parseFeedback: options.parseFeedback } : {}),
+    ...(transport !== undefined ? { transport } : {}),
+  });
+  const ticketSink = createGitHubIssuesTicketSink({
+    owner: github.owner,
+    repo: github.repo,
+    token: options.token,
+    managedLabel: options.managedLabel,
+    ...(transport !== undefined ? { transport } : {}),
+  });
+  return runProductionSprintWorkflow({
+    ticketSource,
+    ticketSink,
+    specialty: options.specialty,
+    openCodeAgent: options.openCodeAgent,
+    technicalLead: options.technicalLead,
+    projectManager: options.projectManager,
+    coordinatorApproval: options.coordinatorApproval,
+    issues: options.issues,
+    project_root: options.project_root,
+    timeout_ms: options.timeout_ms,
+    decideReview: options.decideReview,
+    decideTechnicalLead: options.decideTechnicalLead,
+    decidePmUserTesting: options.decidePmUserTesting,
+    decideFinalApproval: options.decideFinalApproval,
     ...(options.discovery_summary !== undefined ? { discovery_summary: options.discovery_summary } : {}),
   });
 }

@@ -284,6 +284,31 @@ translating externally created correction work into
 executable coordinator work is deferred to a later
 orchestration/production layer.
 
+## Production composition (M19 E2E-003)
+
+`runProductionSprintWorkflow` is the one callable
+production traversal, wiring existing components only:
+
+```text
+source → workflow → explicit final synchronization
+```
+
+One invocation reads the `TicketSource` once, assembles
+Coordinator roles through the established
+R-004/R-005/R-006 path (explicit OpenCode string agent,
+explicit specialty, explicit review resolver), runs
+`runSprintWorkflow` once with explicit Technical Lead,
+Project Manager, Coordinator approval, issue-tracker, and
+decision dependencies, then — only after `completed` —
+calls `synchronizeSprintOutcome` once. Anything else
+returns wrapped with zero sink calls. One traversal per
+invocation: no drain loop, no retry, no re-entry, no hidden
+state, no automatic integration setup, and no
+provider-specific logic — GitHub wiring
+(`runGitHubProductionSprintWorkflow`, same validated
+configuration, shared source/sink mapping) lives in the
+production/provider layer only.
+
 ## Where to go next
 
 - `docs/specification/workflow.md` — the full contract this guide summarizes.

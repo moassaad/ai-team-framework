@@ -281,13 +281,19 @@ describe("production github composition", () => {
         "../providers/agent",
         "../providers/github-issues",
         "../providers/github-sink",
+        "../providers/issue",
         "../roles/contract",
         "../workflow/states",
         "./application",
         "./coordinator",
+        "./final-approval",
+        "./pm-testing",
+        "./production-sprint",
         "./review-decision",
+        "./roles",
+        "./technical-lead",
       ],
-      "config types + adapters + application boundary only",
+      "config types + adapters + application/sprint boundaries only",
     );
     assert.ok(!/cli|status|setup|run\(|argv/i.test(code.replace(/runGitHubProductionCoordinator|runProductionCoordinatorFromSource/g, "")), "no CLI");
     assert.ok(!/poll|schedule|webhook|queue|retry|rollback|while/i.test(code), "no scheduler, queue, or retry");
