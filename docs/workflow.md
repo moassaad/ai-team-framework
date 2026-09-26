@@ -241,6 +241,23 @@ failed ──confirmed abort──▶ cancelled ★
 ★ = terminal (no outgoing transitions). Any active state ──user cancels──▶ cancelled ★.
 ```
 
+## Sprint orchestration (M19)
+
+`runSprintWorkflow` (`src/runtime/sprint-workflow.ts`) connects
+the runtime boundaries into one deterministic traversal over
+the caller's ticket collection: one Coordinator ticket
+invocation, sprint completion evaluation, Technical Lead
+review, correction-ticket creation on demand (then stop),
+PM/User Testing, and final Coordinator approval. Routing
+reads explicit result outcomes only — never report text —
+and each stage runs at most once per call: no hidden
+retries, no parallelism, no drain loops (call again
+explicitly for the next ticket). Correction creation is
+delegated to R-018, PM review to R-019, final approval to
+R-020. No automatic final ticket synchronization happens in
+E2E-001: `completed` is an approval result, and translating
+it into state transitions belongs to later E2E work.
+
 ## Where to go next
 
 - `docs/specification/workflow.md` — the full contract this guide summarizes.
