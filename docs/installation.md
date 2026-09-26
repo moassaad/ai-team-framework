@@ -15,15 +15,21 @@ step (`M20 / NPM-003`).
 
 ## Release identity (NPM-003, `identity-blocked`)
 
-The unscoped name `ai-team-framework` is already registered
-on npm by another publisher (`npm view ai-team-framework`
-shows versions up to `0.2.0` that are not this project's
-artifact), so the current identity is not available and no
-replacement name has been invented. Publishing requires an
-explicit owner decision first: either prove ownership of the
-unscoped name or select an owned npm scope (the `ai-team`
-CLI binary stays unchanged either way). The release
-workflow (`.github/workflows/publish.yml`) is prepared for
+Release work stops here until the owner explicitly supplies
+a verified package identity:
+
+- Current package identity: `ai-team-framework@0.1.0`.
+- Collision: the unscoped name is already registered on npm
+  by another publisher (`npm view ai-team-framework`
+  shows versions up to `0.2.0` that are not this project's
+  artifact), and no ownership has been established.
+- Missing input: no explicitly selected, owner-controlled
+  scope or available name has been supplied, and none is
+  invented by this ticket.
+- Release remains blocked: no version bump, no rename, no
+  publication; the `ai-team` CLI binary is unaffected.
+
+The release workflow (`.github/workflows/publish.yml`) is prepared for
 npm Trusted Publishing over OIDC — no tokens in the
 repository, `id-token: write` plus `contents: read`, Node
 22.14.0 with npm 11.5.1+, build → test → artifact check →
