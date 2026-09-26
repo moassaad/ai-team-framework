@@ -20,7 +20,10 @@
  * Composition, not reimplementation: Implementer and Reviewer run
  * through IR-001/IR-002 with injected generic `AgentProvider`s;
  * every state change is verified with `isValidTransition` before
- * it is recorded; the review branches go through the existing
+ * it is recorded; the validated role identity travels with each
+ * execution input and is stamped into the provider invocation
+ * (R-015), so role context survives the boundary as data; the
+ * review branches go through the existing
  * IR-004/IR-003 recommendation semantics
  * (`recommendTechnicalApproval` / `requestChanges`). At most one
  * Implementer invocation and one Reviewer invocation per call —
@@ -342,6 +345,7 @@ export async function runCoordinatorTicket(
   const implementerInput = {
     ticket: invocationTicket,
     specialty: implementerRole.specialty,
+    role: implementerRole.role,
     project_root,
     provider: implementerRole.provider,
     timeout_ms: input.timeout_ms,
@@ -376,6 +380,7 @@ export async function runCoordinatorTicket(
   const reviewed = await executeReviewerTicket({
     ticket: { id: selected.id, title: selected.title, description: selected.description, requirements: selected.requirements },
     implementation_result: implemented.result.text,
+    role: reviewerRole.role,
     project_root,
     provider: reviewerRole.provider,
     timeout_ms: input.timeout_ms,

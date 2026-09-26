@@ -47,7 +47,7 @@ function implementerInput(
   provider: AgentProvider<ExecutionResult>,
   timeout_ms = 1000,
 ): ImplementerExecutionInput {
-  return { ticket, specialty: "backend", project_root: "/proj", provider, timeout_ms };
+  return { ticket, specialty: "backend", role: "implementer", project_root: "/proj", provider, timeout_ms };
 }
 
 describe("execution safety contract", () => {
@@ -62,6 +62,7 @@ describe("execution safety contract", () => {
       executeReviewerTicket({
         ticket,
         implementation_result: "Implemented.",
+        role: "senior-reviewer",
         project_root: "/proj",
         provider,
         timeout_ms: 1000,

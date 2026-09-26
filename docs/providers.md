@@ -33,6 +33,11 @@ specific behavior. Four categories exist — no others:
 - Failures are explicit rejections with sanitized messages — never
   fabricated success, never silent retries.
 - No provider owns workflow states, approvals, or transitions.
+- Roles are explicit and logical: Implementer and Senior Reviewer
+  arrive at the execution boundary as structured invocation
+  context (`role`), validated before any provider runs. The same
+  provider may serve both roles. Role identity is not a delegate
+  skill and never implies model, session, or fleet routing.
 
 ## OpenCode (required execution boundary)
 

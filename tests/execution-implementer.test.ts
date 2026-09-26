@@ -38,6 +38,7 @@ describe("implementer execution flow", () => {
     const calls: AgentInvocation[] = [];
     const outcome = await executeImplementerTicket({
       ticket,
+      role: "implementer",
       specialty: "backend",
       project_root: "/proj",
       discovery_summary: "languages: typescript.",
@@ -59,6 +60,7 @@ describe("implementer execution flow", () => {
     const calls: AgentInvocation[] = [];
     await executeImplementerTicket({
       ticket,
+      role: "implementer",
       specialty: "backend",
       project_root: "/proj",
       provider: fakeProvider(calls, succeed()),
@@ -85,9 +87,9 @@ describe("implementer execution flow", () => {
       { ticket, specialty: "wizard", project_root: "/proj", provider, timeout_ms: 1000 },
       { ticket: { ...ticket, id: "" }, specialty: "backend", project_root: "/proj", provider, timeout_ms: 1000 },
       { ticket, specialty: "backend", project_root: "", provider, timeout_ms: 1000 },
-      { ticket, specialty: "backend", project_root: "/proj", provider: { name: "x" }, timeout_ms: 1000 },
-      { ticket, specialty: "backend", project_root: "/proj", provider, timeout_ms: 0 },
-      { ticket, specialty: "backend", project_root: "/proj", provider, timeout_ms: Infinity },
+      { ticket, role: "implementer", specialty: "backend", project_root: "/proj", provider: { name: "x" }, timeout_ms: 1000 },
+      { ticket, role: "implementer", specialty: "backend", project_root: "/proj", provider, timeout_ms: 0 },
+      { ticket, role: "implementer", specialty: "backend", project_root: "/proj", provider, timeout_ms: Infinity },
     ];
     for (const data of cases) {
       await assert.rejects(
@@ -96,13 +98,14 @@ describe("implementer execution flow", () => {
       );
     }
     assert.equal(calls.length, 0);
-    assert.ok(Object.isFrozen(validateImplementerInput({ ticket, specialty: "backend", project_root: "/proj", provider, timeout_ms: 1000 })));
+    assert.ok(Object.isFrozen(validateImplementerInput({ ticket, role: "implementer", specialty: "backend", project_root: "/proj", provider, timeout_ms: 1000 })));
   });
 
   it("maps provider failure to a failed outcome with no transition", async () => {
     const calls: AgentInvocation[] = [];
     const outcome = await executeImplementerTicket({
       ticket,
+      role: "implementer",
       specialty: "testing",
       project_root: "/proj",
       provider: fakeProvider(calls, async () => {
@@ -124,6 +127,7 @@ describe("implementer execution flow", () => {
     const calls: AgentInvocation[] = [];
     const outcome = await executeImplementerTicket({
       ticket,
+      role: "implementer",
       specialty: "frontend",
       project_root: "/proj",
       provider: fakeProvider(calls, () => new Promise<ExecutionResult>(() => {})),
@@ -142,6 +146,7 @@ describe("implementer execution flow", () => {
     const calls: AgentInvocation[] = [];
     const outcome = await executeImplementerTicket({
       ticket,
+      role: "implementer",
       specialty: "backend",
       project_root: "/proj",
       provider: fakeProvider(calls, succeed()),

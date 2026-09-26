@@ -38,6 +38,7 @@ describe("reviewer execution flow", () => {
     const outcome = await executeReviewerTicket({
       ticket,
       implementation_result: "Implemented catalog with tests.",
+      role: "senior-reviewer",
       project_root: "/proj",
       discovery_summary: "languages: typescript.",
       provider: fakeProvider(calls, succeed("No blocking issues.")),
@@ -58,6 +59,7 @@ describe("reviewer execution flow", () => {
     await executeReviewerTicket({
       ticket,
       implementation_result: "Implemented catalog.",
+      role: "senior-reviewer",
       project_root: "/proj",
       provider: fakeProvider(calls, succeed()),
       timeout_ms: 1000,
@@ -80,6 +82,7 @@ describe("reviewer execution flow", () => {
     const base = {
       ticket,
       implementation_result: "Implemented.",
+      role: "senior-reviewer",
       project_root: "/proj",
       provider,
       timeout_ms: 1000,
@@ -108,6 +111,7 @@ describe("reviewer execution flow", () => {
     const outcome = await executeReviewerTicket({
       ticket,
       implementation_result: "Implemented.",
+      role: "senior-reviewer",
       project_root: "/proj",
       provider: fakeProvider(calls, async () => {
         throw new Error("agent exploded with SECRET=1");
@@ -128,6 +132,7 @@ describe("reviewer execution flow", () => {
     const outcome = await executeReviewerTicket({
       ticket,
       implementation_result: "Implemented.",
+      role: "senior-reviewer",
       project_root: "/proj",
       provider: fakeProvider(calls, () => new Promise<ExecutionResult>(() => {})),
       timeout_ms: 20,
@@ -145,6 +150,7 @@ describe("reviewer execution flow", () => {
     const outcome = await executeReviewerTicket({
       ticket,
       implementation_result: "Implemented.",
+      role: "senior-reviewer",
       project_root: "/proj",
       provider: fakeProvider(calls, succeed()),
       timeout_ms: 1000,

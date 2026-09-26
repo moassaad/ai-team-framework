@@ -11,6 +11,8 @@
  * no provider list, and names no external tool, transport, or offering.
  */
 
+import { RoleId, isRoleId } from "../roles/contract";
+
 export interface AgentInvocation {
   /**
    * Prepared instructions to execute. Opaque to the provider: prompt
@@ -24,6 +26,16 @@ export interface AgentInvocation {
    * the project root; never the framework workspace.
    */
   readonly project_root: string;
+  /**
+   * Structured role context (R-015): which logical role this
+   * invocation executes for. Optional for backward
+   * compatibility — execution seams always set it, so role
+   * identity survives the boundary as data rather than only
+   * inside prompt text. Providers may use it when building
+   * their request; they must not route models, sessions, or
+   * skills from it. No other metadata belongs here.
+   */
+  readonly role?: RoleId;
 }
 
 function fail(what: string): never {
@@ -32,8 +44,9 @@ function fail(what: string): never {
 
 /**
  * Validate raw data as an agent invocation and return a frozen copy.
- * Rejects missing or empty `prompt`/`project_root` and wrong types.
- * Says nothing about any provider or external system.
+ * Rejects missing or empty `prompt`/`project_root`, wrong types, and
+ * unknown role identities. Says nothing about any provider or
+ * external system.
  */
 export function validateAgentInvocation(data: unknown): AgentInvocation {
   if (typeof data !== "object" || data === null || Array.isArray(data)) {
@@ -46,7 +59,17 @@ export function validateAgentInvocation(data: unknown): AgentInvocation {
   if (typeof raw.project_root !== "string" || raw.project_root.length === 0) {
     fail("project_root must be a non-empty string");
   }
-  return Object.freeze({ prompt: raw.prompt, project_root: raw.project_root });
+  if (raw.role !== undefined && !isRoleId(raw.role)) {
+    fail(`role must be a valid role id, got ${JSON.stringify(raw.role)}`);
+  }
+  const invocation: { prompt: string; project_root: string; role?: RoleId } = {
+    prompt: raw.prompt,
+    project_root: raw.project_root,
+  };
+  if (raw.role !== undefined) {
+    invocation.role = raw.role;
+  }
+  return Object.freeze(invocation);
 }
 
 /**
