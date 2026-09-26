@@ -6,6 +6,13 @@ verified locally by the test suite, while the registry
 release itself is not yet published. For first use after installing,
 see `docs/quick-start.md`.
 
+The package is tested from the generated npm artifact: the
+suite packs the real tarball, installs it with npm into a
+temporary consumer, and runs the installed `ai-team`
+binary there. Installation through npm is therefore
+supported; registry publication remains a separate release
+step (`M20 / NPM-003`).
+
 ## Prerequisites
 
 - Node.js 18+ (verified on v18.19.1; `package.json` declares

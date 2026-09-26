@@ -490,6 +490,9 @@ export async function runSprintCommand(deps: SprintCommandDeps, argv: string[]):
     if (argv.length < 1 || argv[0] !== "sprint") {
       return commandError(SPRINT_USAGE);
     }
+    if (argv.length === 2 && (argv[1] === "--help" || argv[1] === "-h")) {
+      return ok(SPRINT_USAGE);
+    }
     let parsed: ParsedDecisions = {};
     try {
       const decisions = parseDecisionArgs(argv);

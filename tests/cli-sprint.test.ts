@@ -96,6 +96,17 @@ describe("sprint command routing", () => {
     assert.match(result.stdout, /sprint synchronized: tickets 7 approved; closed 7/);
   });
 
+  it("sprint help succeeds without touching the runtime", async () => {
+    for (const flag of ["--help", "-h"]) {
+      const command = deps();
+      const result = await runSprintCommand(command, ["sprint", flag]);
+      assert.equal(result.exitCode, 0);
+      assert.match(result.stdout, /usage: ai-team sprint/);
+      assert.equal(result.stderr, "");
+      assert.equal(command.productions.length, 0, "help never reaches the runtime");
+    }
+  });
+
   it("non-sprint argv and unknown flags fail with usage before runtime", async () => {
     const command = deps();
     const wrong = await runSprintCommand(command, ["run"]);
