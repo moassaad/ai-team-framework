@@ -57,10 +57,20 @@ npm test        # full suite; expect 581/581 passing
 ```bash
 node dist/index.js --help
 node dist/index.js --version
-node dist/index.js run                         # Coordinator (default)
 node dist/index.js run --role technical-lead
 node dist/index.js run "talk to the tech lead"
 node dist/index.js run "/technical-lead"
+```
+
+Bare `ai-team run` executes one production Coordinator ticket
+against managed GitHub issues (at most one ticket, at most one
+synchronization; never a sprint, never a retry). It needs
+`providers.github` with `owner`, `repo`, `managedLabel`, and
+`specialty` in `.ai-team/config.yaml`, and reads the GitHub
+token from stdin:
+
+```bash
+echo "$GITHUB_TOKEN" | node dist/index.js run
 ```
 
 `ai-team status` reports integration state read-only (desired

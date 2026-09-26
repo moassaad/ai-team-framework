@@ -81,7 +81,7 @@ describe("integration foundation", () => {
     const registry = registered(OPENCODE_PROVIDER_NAME, () => ({ available: true }));
     const config = validateConfig({
       version: 1,
-      providers: { github: { enabled: true, owner: "acme", repo: "shop" } },
+      providers: { github: { enabled: true, owner: "acme", repo: "shop", managedLabel: "ai-team", specialty: "backend" } },
     });
     assert.equal(isIntegrationEnabled(config, "github"), true, "desired, not supported");
     assert.equal(registry.get("github"), undefined, "unsupported without registration");

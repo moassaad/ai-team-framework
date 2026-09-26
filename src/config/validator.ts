@@ -9,6 +9,7 @@ import {
   SensitiveChanges,
   WorkflowExecution,
 } from "./schema";
+import { IMPLEMENTER_SPECIALTIES, isImplementerSpecialty } from "../roles/contract";
 
 // Runtime value lists for the C-001 string unions. Annotated with the
 // schema types so a renamed union member breaks compilation here.
@@ -172,9 +173,19 @@ export function validateConfig(data: unknown): FrameworkConfig {
     PROVIDER_DEFAULTS.github.enabled;
   let githubOwner = asString(github.owner, "providers.github.owner");
   let githubRepo = asString(github.repo, "providers.github.repo");
+  let githubManagedLabel = asString(github.managedLabel, "providers.github.managedLabel");
+  let githubSpecialty = asString(github.specialty, "providers.github.specialty");
   if (githubEnabled) {
     githubOwner = asNonEmptyString(githubOwner, "providers.github.owner");
     githubRepo = asNonEmptyString(githubRepo, "providers.github.repo");
+    githubManagedLabel = asNonEmptyString(githubManagedLabel, "providers.github.managedLabel");
+    githubSpecialty = asNonEmptyString(githubSpecialty, "providers.github.specialty");
+    if (!isImplementerSpecialty(githubSpecialty)) {
+      fail(
+        "providers.github.specialty",
+        `unknown specialty ${formatValue(githubSpecialty)}; expected one of ${IMPLEMENTER_SPECIALTIES.map((entry) => `"${entry}"`).join(", ")}`,
+      );
+    }
   }
 
   return {
@@ -204,6 +215,8 @@ export function validateConfig(data: unknown): FrameworkConfig {
         enabled: githubEnabled,
         ...(githubOwner !== undefined ? { owner: githubOwner } : {}),
         ...(githubRepo !== undefined ? { repo: githubRepo } : {}),
+        ...(githubManagedLabel !== undefined ? { managedLabel: githubManagedLabel } : {}),
+        ...(githubSpecialty !== undefined ? { specialty: githubSpecialty } : {}),
       },
       delegate: {
         enabled:

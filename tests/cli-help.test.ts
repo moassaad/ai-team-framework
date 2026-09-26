@@ -73,7 +73,6 @@ describe("cli help", () => {
       "--output",
       "--watch",
       "OpenCode",
-      "GitHub",
       "delegate-skills",
       "interactive",
       "daemon",

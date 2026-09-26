@@ -19,7 +19,7 @@ describe("integration desired state", () => {
       providers: {
         delegate: { enabled: true },
         speckit: { enabled: false },
-        github: { enabled: true, owner: "acme", repo: "shop" },
+        github: { enabled: true, owner: "acme", repo: "shop", managedLabel: "ai-team", specialty: "backend" },
         opencode: { enabled: true },
       },
     });

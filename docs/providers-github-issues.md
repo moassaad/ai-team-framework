@@ -105,5 +105,27 @@ polling, provisioning, or registry changes.
   → Coordinator → sink with the existing `sync-failed`
   semantics. No labels, tokens, webhooks, or permissions are
   provisioned — missing GitHub resources fail truthfully.
-- CLI runtime execution (`ai-team run`) is still deferred to
-  R-012; `status` and `setup` behavior is unchanged.
+
+## CLI runtime execution (R-012)
+
+Bare `ai-team run` (`src/cli-run.ts`) executes exactly one
+`runGitHubProductionCoordinator` call: one source read, one
+Coordinator invocation, at most one ticket, at most one sink
+write — then it reports the result and exits. It never runs a
+sprint, never retries, never loops.
+
+- Configuration comes from `.ai-team/config.yaml`
+  (`providers.github` with `owner`, `repo`, `managedLabel`,
+  `specialty`; review verdict is `approved`, timeout 5 min,
+  project root is the working directory).
+- The GitHub token is read from stdin — pipe it in
+  (`echo "$GITHUB_TOKEN" | ai-team run`). It never appears in
+  arguments, history, logs, output, errors, or on disk, and
+  there is intentionally no `--token` flag, no environment
+  lookup, and no credential discovery.
+- Exit codes: `completed` and `no-work` exit 0;
+  `conflict`, `implementer-failed`, `reviewer-failed`,
+  `sync-failed`, configuration failures, credential
+  failures, and unexpected errors exit 1 with a bounded
+  single-line message. `sync-failed` states explicitly that
+  workflow execution advanced but synchronization failed.

@@ -89,9 +89,12 @@ node dist/index.js run
 ```
 
 Once installed as a package binary the same invocation is
-`ai-team run`. The CLI currently presents role contracts and
-resolves role selection; it reports `Role execution is not
-implemented yet` rather than executing autonomously. First-use
+`ai-team run`. Role selection (`run --role ...`, prompt text,
+slash commands) presents role contracts and reports
+`Role execution is not implemented yet` rather than executing
+autonomously; bare `ai-team run` instead executes one
+production Coordinator ticket via the GitHub runtime
+(`providers.github` configured, token on stdin). First-use
 workflow: `docs/quick-start.md`.
 
 ## Network and registry boundaries
