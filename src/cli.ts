@@ -15,7 +15,7 @@ export interface CliResult {
 }
 
 const HELP_TEXT = `AI Team Framework CLI
-Minimal command-line entry point. Framework orchestration is not implemented yet.
+Minimal command-line entry point.
 
 Usage:
   ai-team [options]
@@ -24,9 +24,30 @@ Usage:
   ai-team run --role implementer --specialty <specialty>
   ai-team run "<prompt text>"
   ai-team run "/<slash command>"
+  ai-team status
+  ai-team setup <integration> [--yes]
 
 Commands:
-  run                  Select the Coordinator (default).
+  run                  Execute one production Coordinator ticket:
+                       read managed GitHub issues once, run at most
+                       one ticket, synchronize it once. The GitHub
+                       token is read from stdin (pipe it in). After
+                       the reviewer report, asks once whether to
+                       approve (interactive terminal only); never
+                       auto-approves. Never runs a sprint, never
+                       retries.
+                       With --role, prompt text, or a slash command,
+                       only presents the selected role contract;
+                       role execution stays unimplemented there.
+  status               Show integration status (read-only).
+                       Reports desired state separately from fresh
+                       detection. Never installs, configures, or
+                       modifies anything; setup is a separate concern.
+  setup <integration> [--yes]
+                       Set up one integration: explain, ask, then
+                       install/configure once and verify. Without
+                       --yes asks first; --yes confirms explicitly.
+                       Reads configuration, never writes it.
 
 Options:
   -h, --help           Show this help message and exit.

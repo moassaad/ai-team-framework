@@ -60,15 +60,21 @@ Technical Lead  → technical planning/tickets
 Spec Kit        → optional specification/plan artifacts
 ```
 
-The Spec Kit adapter builds an operation prompt from PM-owned
-requirements and executes it through an injected agent provider,
-then maps the result back to the shared artifact shape; agent
-failures propagate unchanged. When Spec Kit is unavailable or
-disabled, the local fallback provider (`"fallback"`) produces a
-minimal deterministic artifact from the same requirements, and
-planning proceeds with plain framework artifacts. End-user Spec
-Kit installation/setup instructions are **unresolved** (M8 P-006,
-still open) — this guide does not claim they exist.
+The modern integration (M15) manages Spec Kit through its own
+provider boundary: fresh detection of the `specify` CLI and project
+state (configuration is intent, never proof), confirmed CLI
+installation (`uv`/`pipx`/`pip`, nothing bootstrapped), confirmed
+existing-project initialization (`specify init --here --force
+--non-interactive --integration <key>`, managed files only),
+integration installation without `--force`, read-only mapping of
+`spec.md`/`plan.md`/`tasks.md` into framework tickets through the
+unchanged generic planner, and bounded failure/fallback selection
+that never installs, retries, or reconfigures automatically. Full
+user guide: `docs/providers-speckit.md` (P-006 resolved there).
+When Spec Kit is unavailable or disabled, the local fallback
+provider (`"fallback"`) produces a minimal deterministic artifact
+from the same requirements, and planning proceeds with plain
+framework artifacts.
 
 ## GitHub Issues (optional tracking)
 
@@ -88,6 +94,15 @@ conceptually separate from external issue records.
   reject with sanitized fixed messages that carry neither the token
   nor the tracker's response body. Exactly one tracker operation
   per call; no retry, no automatic local fallback.
+- Read path: GitHub Issues can also act as a read-only
+  `TicketSource` (`createGitHubIssuesTicketSource`) with explicit
+  managed-label selection and caller-supplied state decoding;
+  the matching write-only `TicketSink`
+  (`createGitHubIssuesTicketSink`) synchronizes state labels
+  through one PATCH per ticket and never fabricates feedback.
+  Details: `docs/providers-github-issues.md`. Writes stay on
+  the `IssueProvider` contract; production registration and
+  runtime composition are deferred.
 
 ## Local IssueProvider fallback
 
@@ -101,27 +116,32 @@ stand-in, not a persistent tracker.
 ## delegate-skills (optional delegation)
 
 `delegate-skills` (`"delegate"`) is an optional delegation
-provider, **not a role**. Delegation passes four gates in order,
-each owned by a separate boundary:
+provider, **not a role**. The modern integration (M16) delegates
+through an explicitly chosen installed `*-delegate` skill's
+bundled relay script — there is no `delegate-skills` executable,
+and the historical executable assumption is obsolete (see the
+historical note in `docs/providers-delegate-skills.md`):
 
 ```text
-enabled (explicit providers.delegate.enabled: true, default false)
-→ explicit human confirmation (only "confirmed" passes)
-→ availability (capability detected in the environment)
-→ delegation attempt (exactly once)
+detect      fresh skill + implementer reality over bounded roots
+install     one explicitly requested skill via the Skills CLI,
+            only when explicitly requested and confirmed
+verify      re-check reality after any change; this decides success
+delegate    one relay call (node <skill>/scripts/relay.mjs),
+            brief forbids commit/push/merge/branching
+map         result.json → DelegationResult{outcome}; failures stay
+            failures; sessions/touched-files never exposed
+fallback    caller-supplied non-delegate path when optional;
+            bounded failure when explicitly required
 ```
 
-Failure or absence at any gate returns control to the normal
-single-role flow (`not_delegated` with a reason); a failed attempt
-is reported, never converted into a fabricated result. No retry,
-no alternate provider, no workflow changes. Full behavior and
-setup: `docs/providers-delegate-skills.md`.
-
-**Unresolved limitation (preserved):** upstream documentation
-describes delegate-skills as a Skills package installed via the
-Skills CLI and does not establish the standalone executable
-protocol the adapter boundary assumes. This is documented, not
-solved, in `docs/providers-delegate-skills.md` and unchanged here.
+Enabling it, installing a skill, and requiring a delegation are
+separate explicit decisions. Detection never installs; delegation
+never repairs — absence is reported, then fallback or bounded
+failure. No retry, no alternate provider, no workflow changes,
+no commits. The Skills CLI requires Node `>= 22.20.0`; the
+framework checks and fails safely instead of upgrading anything.
+Full behavior: `docs/providers-delegate-skills.md`.
 
 ## Provider selection
 
@@ -135,8 +155,9 @@ Adapters never discover, choose, or replace each other.
 
 Four different facts, easily confused:
 
-- **Exists** — the external tool is installed (the framework never
-  installs anything).
+- **Exists** — the external tool/skill is installed
+  (installation is always explicit and confirmed, never
+  automatic).
 - **Enabled** — the user explicitly opted in via configuration
   (opt-in, default off for every optional provider).
 - **Available** — the capability is detected in the current
@@ -152,9 +173,11 @@ Provider errors reject explicitly per adapter contract
 (`provider_error`/`timeout` at the execution boundary, sanitized
 per-adapter messages elsewhere). Failure never becomes success —
 except where a fallback contract explicitly defines a
-non-delegated outcome (Spec Kit → local artifact, delegation →
-`not_delegated`), which is a reported outcome, not a fabricated
-result. There are no hidden retries anywhere in the provider layer.
+non-delegated outcome (Spec Kit → local artifact; delegation →
+caller-supplied fallback result, or the historical D-006
+`not_delegated` report), which is a reported outcome, not a
+fabricated result. There are no hidden retries anywhere in the
+provider layer.
 
 ## Configuration summary
 
@@ -191,6 +214,7 @@ No ranking is implied. Every cell verified against
 ## Where to go next
 
 - `docs/providers-opencode.md` — execution path details.
+- `docs/providers-speckit.md` — Spec Kit setup, mapping, fallback (P-006 resolved).
 - `docs/providers-delegate-skills.md` — delegation setup and limitations.
 - `docs/configuration.md` — all provider settings.
 - `docs/workflow.md` — what providers never own.

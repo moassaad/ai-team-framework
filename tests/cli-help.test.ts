@@ -73,9 +73,7 @@ describe("cli help", () => {
       "--output",
       "--watch",
       "OpenCode",
-      "GitHub",
       "delegate-skills",
-      "interactive",
       "daemon",
     ]) {
       assert.equal(help.includes(unsupported), false, `help must not mention ${unsupported}`);

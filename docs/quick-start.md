@@ -45,22 +45,31 @@ npm test        # full suite; expect 581/581 passing
 
 ## First run
 
-Verify the installation and meet the Coordinator:
+Verify the installation:
 
 ```bash
 node dist/index.js --help
 node dist/index.js --version
-node dist/index.js run
 ```
 
-`run` with no arguments selects the Coordinator and prints its
-contract:
+Bare `node dist/index.js run` executes one production
+Coordinator ticket against managed GitHub issues (it needs
+`providers.github` with `owner`, `repo`, `managedLabel`, and
+`specialty` in `.ai-team/config.yaml`, plus the GitHub token
+on stdin) — so meet the Coordinator through role selection
+first:
 
-```text
-Coordinator (coordinator)
-Default user-facing role: receive user requests, route work to the appropriate roles, and communicate status and results.
-Role execution is not implemented yet.
+```bash
+node dist/index.js run --role technical-lead
 ```
+
+```bash
+node dist/index.js run --role technical-lead
+```
+
+prints the Technical Lead contract. Role selection only presents
+contracts (`Role execution is not implemented yet` there); only
+bare `ai-team run` executes, via the production GitHub runtime.
 
 The last line is honest scoping: the CLI currently presents role
 contracts and resolves role selection. Full role execution is wired
