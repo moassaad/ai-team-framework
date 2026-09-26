@@ -58,10 +58,12 @@ const RUN_TIMEOUT_MS = 300000;
  * Secure credential reader: one token string, injectable for
  * hermetic tests. Production reads a single line from stdin
  * (pipe the token in; it never appears in argv or history).
+ * Exported for reuse by the sprint command (E2E-004), which
+ * shares the credential mechanism but nothing else.
  */
 export type TokenReader = () => Promise<string>;
 
-function readTokenFromStdin(): Promise<string> {
+export function readTokenFromStdin(): Promise<string> {
   return new Promise((resolve, reject) => {
     let data = "";
     process.stdin.setEncoding("utf8");
@@ -111,7 +113,14 @@ function fail(what: string): never {
   throw new Error(`run command: ${what}`);
 }
 
-function ask(question: string): Promise<string | undefined> {
+/**
+ * Single TTY question shared by the interactive decision
+ * prompts. Resolves the trimmed answer, or undefined on
+ * close/EOF. Exported for the sprint command's stage
+ * prompts (E2E-004), which follow the same ask-once
+ * convention with stage-specific wording.
+ */
+export function ask(question: string): Promise<string | undefined> {
   return new Promise((resolve) => {
     const terminal = createInterface({ input: process.stdin, output: process.stdout });
     terminal.question(question, (answer: string) => {

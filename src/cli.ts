@@ -24,6 +24,7 @@ Usage:
   ai-team run --role implementer --specialty <specialty>
   ai-team run "<prompt text>"
   ai-team run "/<slash command>"
+  ai-team sprint [--review-decision ...] [--tl-decision ...] [--pm-decision ...] [--final-decision ...]
   ai-team status
   ai-team setup <integration> [--yes]
 
@@ -40,9 +41,25 @@ Commands:
                        Non-interactive runs without explicit
                        decision arguments fail safely. Never runs
                        a sprint, never retries.
-                       With --role, prompt text, or a slash command,
-                       only presents the selected role contract;
-                       role execution stays unimplemented there.
+                        With --role, prompt text, or a slash command,
+                        only presents the selected role contract;
+                        role execution stays unimplemented there.
+   sprint             Execute one production sprint traversal:
+                        read managed GitHub issues once, run the
+                        sprint workflow once (Coordinator, then
+                        Technical Lead, PM/User Testing, and final
+                        Coordinator approval reviews), synchronize
+                        explicitly approved tickets once. Same
+                        configuration and stdin token as run, plus
+                        one explicit decision per review stage
+                        (--review-decision keeps its run meaning;
+                        --tl-decision, --pm-decision, and
+                        --final-decision cover the later stages),
+                        or decide interactively at the TTY prompts.
+                        Non-interactive runs without a needed
+                        decision fail safely. Never retries, never
+                        re-enters: reenterable outcomes exit
+                        non-success for an explicit later call.
   status               Show integration status (read-only).
                        Reports desired state separately from fresh
                        detection. Never installs, configures, or

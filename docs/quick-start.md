@@ -71,6 +71,26 @@ prints the Technical Lead contract. Role selection only presents
 contracts (`Role execution is not implemented yet` there); only
 bare `ai-team run` executes, via the production GitHub runtime.
 
+`ai-team sprint` executes one production sprint traversal
+through the same configuration and stdin token: it reads the
+managed issues once, runs the sprint workflow once
+(Coordinator, then Technical Lead, PM/User Testing, and final
+Coordinator approval reviews), and synchronizes explicitly
+approved tickets once. Each review stage needs its own explicit
+decision — `--review-decision` (same meaning as `run`),
+`--tl-decision`, `--pm-decision`, `--final-decision` — or an
+interactive TTY prompt per stage when the flags are absent:
+
+```bash
+echo "$GITHUB_TOKEN" | node dist/index.js sprint --review-decision approved --tl-decision approved --pm-decision approved --final-decision approved
+```
+
+Exit `0` means final synchronization succeeded; any other exit
+means the sprint stopped (work remaining, corrections created,
+changes required, or a failure) with a bounded message. The
+command never retries or re-enters: invoke it again explicitly
+when the follow-up work has landed.
+
 The last line is honest scoping: the CLI currently presents role
 contracts and resolves role selection. Full role execution is wired
 through the library modules (`src/roles/`, `src/execution/`), not

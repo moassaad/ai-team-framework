@@ -5,6 +5,7 @@ import { run } from "./cli";
 import { createProductionStatusDeps, runStatusCommand } from "./cli-status";
 import { createProductionSetupDeps, runSetupCommand } from "./cli-setup";
 import { createProductionRunDeps, runRunCommand } from "./cli-run";
+import { createProductionSprintDeps, runSprintCommand } from "./cli-sprint";
 
 function readVersion(): string {
   try {
@@ -22,9 +23,10 @@ function readVersion(): string {
 
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
-  // `status` and `setup` need async detection/installation, and
+  // `status` and `setup` need async detection/installation,
   // `run` (bare or with explicit `--review-decision` arguments)
-  // executes the production Coordinator runtime, all of which
+  // executes the production Coordinator runtime, and `sprint`
+  // executes the production sprint workflow — all of which
   // the synchronous `run` cannot host: route them to the
   // dedicated async commands, which validate their own shapes.
   // They never reject (failures become exit-1 results), so no
@@ -42,7 +44,9 @@ async function main(): Promise<void> {
         ? await runSetupCommand(createProductionSetupDeps(process.cwd()), argv)
         : runsProduction
           ? await runRunCommand(createProductionRunDeps(process.cwd()), argv)
-          : run(argv, readVersion());
+          : argv.length >= 1 && argv[0] === "sprint"
+            ? await runSprintCommand(createProductionSprintDeps(process.cwd()), argv)
+            : run(argv, readVersion());
   if (result.stdout.length > 0) {
     process.stdout.write(result.stdout);
   }
