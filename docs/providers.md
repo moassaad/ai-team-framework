@@ -94,6 +94,11 @@ conceptually separate from external issue records.
   reject with sanitized fixed messages that carry neither the token
   nor the tracker's response body. Exactly one tracker operation
   per call; no retry, no automatic local fallback.
+- Read path: GitHub Issues can also act as a read-only
+  `TicketSource` (`createGitHubIssuesTicketSource`) with explicit
+  managed-label selection and caller-supplied state decoding.
+  Details: `docs/providers-github-issues.md`. Writes stay on the
+  `IssueProvider` contract; synchronization is deferred.
 
 ## Local IssueProvider fallback
 
