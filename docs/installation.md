@@ -1,14 +1,15 @@
 # Installation Guide
 
 How to install the AI Team Framework and reach a working CLI.
-Only the paths below exist; registry installation has not been
-verified and is labeled as such. For first use after installing,
+Only the paths below exist; the packed-tarball artifact is
+verified locally by the test suite, while the registry
+release itself is not yet published. For first use after installing,
 see `docs/quick-start.md`.
 
 ## Prerequisites
 
-- Node.js 18+ (verified on v18.19.1; `package.json` declares no
-  narrower `engines` range, so treat 18 as the floor).
+- Node.js 18+ (verified on v18.19.1; `package.json` declares
+  `engines: { "node": ">=18" }`, so treat 18 as the floor).
 - npm 9+ (verified on 9.2.0). It is needed for dependency
   installation and for running the `build`/`test`/`lint` scripts.
 - No global TypeScript installation: `typescript`, `eslint`, and
