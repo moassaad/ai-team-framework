@@ -126,11 +126,16 @@ sprint, never retries, never loops.
 - The review verdict is never assumed: after the Senior
   Reviewer report, `ai-team run` asks once whether to approve
   (interactive terminal only; `changes_requested` needs
-  verbatim feedback on the spot). Reviewer output stays
-  opaque — never parsed, classified, or scored. A piped
-  (non-interactive) run without a decision mechanism fails
-  safely before `technical_approval` instead of
-  auto-approving; reviewer and decision steps never retry.
+  verbatim feedback on the spot), or the operator supplies it
+  explicitly up front for fully non-interactive runs:
+  `ai-team run --review-decision approved` or `ai-team run
+  --review-decision changes_requested --review-feedback
+  "..."`. Reviewer output stays opaque — never parsed,
+  classified, or scored. A piped run without explicit
+  decision arguments fails safely before `technical_approval`
+  instead of auto-approving; reviewer and decision steps
+  never retry. There is intentionally no `--auto-approve`
+  and no configured default decision.
 - Exit codes: `completed` and `no-work` exit 0;
   `conflict`, `implementer-failed`, `reviewer-failed`,
   `decision-failed`, `sync-failed`, configuration failures,

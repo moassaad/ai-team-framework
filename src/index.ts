@@ -23,19 +23,24 @@ function readVersion(): string {
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
   // `status` and `setup` need async detection/installation, and
-  // bare `run` executes the production Coordinator runtime, all
-  // of which the synchronous `run` cannot host: route them to
-  // the dedicated async commands, which validate their own
-  // shapes. They never reject (failures become exit-1 results),
-  // so no further error handling is required here. Anything
-  // else follows the existing sync command path (including
+  // `run` (bare or with explicit `--review-decision` arguments)
+  // executes the production Coordinator runtime, all of which
+  // the synchronous `run` cannot host: route them to the
+  // dedicated async commands, which validate their own shapes.
+  // They never reject (failures become exit-1 results), so no
+  // further error handling is required here. Anything else
+  // follows the existing sync command path (including
   // `run --role ...`, prompts, and slash commands).
+  const runsProduction =
+    argv.length >= 1 &&
+    argv[0] === "run" &&
+    (argv.length === 1 || argv[1] === "--review-decision" || argv[1] === "--review-feedback");
   const result =
     argv.length === 1 && argv[0] === "status"
       ? await runStatusCommand(createProductionStatusDeps(process.cwd()))
       : argv.length >= 1 && argv[0] === "setup"
         ? await runSetupCommand(createProductionSetupDeps(process.cwd()), argv)
-        : argv.length === 1 && argv[0] === "run"
+        : runsProduction
           ? await runRunCommand(createProductionRunDeps(process.cwd()), argv)
           : run(argv, readVersion());
   if (result.stdout.length > 0) {

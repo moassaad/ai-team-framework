@@ -70,10 +70,13 @@ synchronization; never a sprint, never a retry). It needs
 token from stdin. After the reviewer report it asks once
 whether to approve (interactive terminal); it never
 auto-approves — a non-interactive run without a decision
-mechanism fails safely instead:
+mechanism fails safely instead. CI/non-TTY callers decide
+explicitly up front instead (no default is ever selected):
 
 ```bash
 echo "$GITHUB_TOKEN" | node dist/index.js run
+echo "$GITHUB_TOKEN" | node dist/index.js run --review-decision approved
+echo "$GITHUB_TOKEN" | node dist/index.js run --review-decision changes_requested --review-feedback "Tighten the edge."
 ```
 
 `ai-team status` reports integration state read-only (desired

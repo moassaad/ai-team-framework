@@ -2,11 +2,14 @@
  * Production runtime CLI command (M18 R-012): `ai-team run`.
  *
  * The first user-facing entry point executing the production
- * Coordinator runtime. One bare invocation means exactly one
+ * Coordinator runtime. One invocation means exactly one
  * composed application call — one source read, one Coordinator
  * invocation, at most one ticket, at most one sink write — and
  * then the command reports the result and exits. No loops, no
- * scheduler, no sprint, no second ticket.
+ * scheduler, no sprint, no second ticket. Bare `run` decides
+ * interactively at a TTY prompt; explicit `--review-decision`
+ * arguments decide non-interactively; anything else never
+ * auto-approves.
  *
  * ```text
  * CLI (argument + config + credential assembly only)
@@ -41,6 +44,7 @@ import {
   ReviewDecisionRequest,
   ReviewDecisionResolution,
   ReviewDecisionResolver,
+  validateReviewDecisionResolution,
 } from "./runtime/review-decision";
 import {
   GitHubProductionOptions,
@@ -130,7 +134,7 @@ function ask(question: string): Promise<string | undefined> {
  * fails without advancing. The report is shown so the
  * decision is informed; it is never parsed or classified.
  */
-async function promptReviewDecision(request: ReviewDecisionRequest): Promise<ReviewDecisionResolution> {
+export async function promptReviewDecision(request: ReviewDecisionRequest): Promise<ReviewDecisionResolution> {
   if (process.stdin.isTTY !== true) {
     fail("no interactive decision mechanism available; refusing to auto-approve");
   }
@@ -157,13 +161,74 @@ function commandError(stderr: string): CliResult {
   return { exitCode: 1, stdout: "", stderr };
 }
 
-const RUN_USAGE = `usage: ai-team run
+const RUN_USAGE = `usage: ai-team run [--review-decision approved | --review-decision changes_requested --review-feedback "..."]
 Executes one production Coordinator ticket: reads managed GitHub
 issues once, runs at most one ticket, synchronizes it once.
 Configuration (providers.github with owner, repo, managedLabel,
 specialty) comes from .ai-team/config.yaml; the GitHub token is
 read from stdin (pipe it in, never pass it as an argument).
+The review decision is never assumed: supply it explicitly with
+--review-decision (changes_requested needs --review-feedback),
+or decide interactively at the TTY prompt after the reviewer
+report. Non-interactive runs without explicit decision arguments
+fail safely instead of auto-approving.
 `;
+
+/**
+ * Explicit non-interactive decision arguments (R-014): parse
+ * `run --review-decision <verdict> [--review-feedback <text>]`
+ * into a deterministic resolver, or return undefined when no
+ * decision arguments are present (the TTY prompt then applies).
+ * Every invalid shape fails here, before configuration,
+ * credentials, or runtime work. Feedback travels byte-for-byte
+ * (validated, never trimmed or rewritten); approved with
+ * feedback, duplicates, and unknown verdicts are rejected
+ * through the existing decision validation seam.
+ */
+function parseReviewDecisionArgs(argv: string[]): { kind: "usage" } | { kind: "ok"; decide?: ReviewDecisionResolver } {
+  const rest = argv.slice(1);
+  if (rest.length === 0) {
+    return { kind: "ok" };
+  }
+  let decision: string | undefined;
+  let feedback: string | undefined;
+  let decisionCount = 0;
+  let feedbackCount = 0;
+  for (let index = 0; index < rest.length; index += 1) {
+    const token = rest[index];
+    if (token !== "--review-decision" && token !== "--review-feedback") {
+      return { kind: "usage" };
+    }
+    const value = rest[index + 1];
+    if (value === undefined) {
+      fail(`missing value for ${token}`);
+    }
+    if (token === "--review-decision") {
+      decisionCount += 1;
+      decision = value;
+    } else {
+      feedbackCount += 1;
+      feedback = value;
+    }
+    index += 1;
+  }
+  if (decisionCount > 1) {
+    fail("duplicate --review-decision");
+  }
+  if (feedbackCount > 1) {
+    fail("duplicate --review-feedback");
+  }
+  if (decision === undefined) {
+    fail("--review-feedback requires --review-decision");
+  }
+  const resolution = validateReviewDecisionResolution(
+    { decision, ...(feedback !== undefined ? { feedback } : {}) },
+    "cli",
+  );
+  const frozen = Object.freeze({ ...resolution });
+  const decide: ReviewDecisionResolver = async () => frozen;
+  return { kind: "ok", decide };
+}
 
 function finalStateOf(result: CoordinatorTicketResult): string {
   if ("final_state" in result) {
@@ -204,10 +269,14 @@ function describeResult(result: CoordinatorTicketResult | ProductionSynchronizat
 }
 
 /**
- * Execute bare `ai-team run` exactly once. Any other argument
- * shape is a usage error and never reaches the runtime.
- * Configuration, credential, and runtime failures become
- * bounded exit-1 results; this function never rejects.
+ * Execute `ai-team run` exactly once: bare for the interactive
+ * TTY decision prompt, or with explicit `--review-decision`
+ * arguments for a fully non-interactive run. Unknown argument
+ * shapes are usage errors; malformed decision arguments are
+ * bounded errors naming the problem. Either way nothing
+ * reaches the runtime. Configuration, credential, and runtime
+ * failures become bounded exit-1 results; this function never
+ * rejects.
  */
 export async function runRunCommand(deps: RunCommandDeps, argv: string[]): Promise<CliResult> {
   try {
@@ -232,8 +301,19 @@ export async function runRunCommand(deps: RunCommandDeps, argv: string[]): Promi
     if (typeof deps.runProduction !== "function") {
       fail("runProduction must be a function");
     }
-    if (argv.length !== 1 || argv[0] !== "run") {
+    if (argv.length < 1 || argv[0] !== "run") {
       return commandError(RUN_USAGE);
+    }
+    let explicitDecision: ReviewDecisionResolver | undefined;
+    try {
+      const parsed = parseReviewDecisionArgs(argv);
+      if (parsed.kind === "usage") {
+        return commandError(RUN_USAGE);
+      }
+      explicitDecision = parsed.decide;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return commandError(`run error: ${message}.\n`);
     }
     const config = deps.loadConfiguration(deps.projectRoot);
     const github =
@@ -266,7 +346,7 @@ export async function runRunCommand(deps: RunCommandDeps, argv: string[]): Promi
       openCodeAgent: deps.createAgent(),
       project_root: deps.projectRoot,
       timeout_ms: RUN_TIMEOUT_MS,
-      decideReview: deps.readReviewDecision,
+      decideReview: explicitDecision ?? deps.readReviewDecision,
     });
     return describeResult(result);
   } catch (error) {

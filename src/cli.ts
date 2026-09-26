@@ -19,7 +19,7 @@ Minimal command-line entry point.
 
 Usage:
   ai-team [options]
-  ai-team run
+  ai-team run [--review-decision approved | --review-decision changes_requested --review-feedback "..."]
   ai-team run --role <role>
   ai-team run --role implementer --specialty <specialty>
   ai-team run "<prompt text>"
@@ -31,11 +31,15 @@ Commands:
   run                  Execute one production Coordinator ticket:
                        read managed GitHub issues once, run at most
                        one ticket, synchronize it once. The GitHub
-                       token is read from stdin (pipe it in). After
-                       the reviewer report, asks once whether to
-                       approve (interactive terminal only); never
-                       auto-approves. Never runs a sprint, never
-                       retries.
+                       token is read from stdin (pipe it in). The
+                       review decision is never assumed: pass it
+                       explicitly with --review-decision
+                       (changes_requested needs --review-feedback),
+                       or decide interactively at the prompt after
+                       the reviewer report (terminal only).
+                       Non-interactive runs without explicit
+                       decision arguments fail safely. Never runs
+                       a sprint, never retries.
                        With --role, prompt text, or a slash command,
                        only presents the selected role contract;
                        role execution stays unimplemented there.

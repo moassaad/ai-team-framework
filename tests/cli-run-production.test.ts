@@ -11,7 +11,7 @@ import {
   ProductionSynchronizationFailed,
 } from "../src/runtime/application";
 import { GitHubProductionOptions } from "../src/runtime/github-production";
-import { RunCommandDeps, runRunCommand } from "../src/cli-run";
+import { RunCommandDeps, promptReviewDecision, runRunCommand } from "../src/cli-run";
 
 // Production run command tests (M18 R-012): `ai-team run` as a
 // thin entrypoint over the R-011 composition. Every dependency
@@ -230,17 +230,136 @@ describe("run command", () => {
     );
     assert.ok(!/listTickets|updateTicket|PATCH|GET /.test(code), "never touches GitHub HTTP");
     assert.ok(!/reviewDecision/.test(code), "no static verdict field survives anywhere");
-    assert.ok(code.includes("decideReview: deps.readReviewDecision"), "injected reader passed through, never assumed");
+    assert.ok(code.includes("decideReview: explicitDecision ?? deps.readReviewDecision"), "explicit args or injected reader, never assumed");
     assert.ok(!/opencode run|spawn|shell/.test(code), "never launches OpenCode");
     assert.ok(!/\bgit\b|commit|push|branch/.test(code), "never calls Git");
     assert.ok(!/resolveRole|resolveImplementerSpecialty|RoleContract/.test(code), "never selects roles");
     assert.ok(!/backend|frontend/.test(code), "never infers or defaults specialty");
     assert.ok(!/delegate|skill|fleet|lane|model|session/.test(code), "never selects delegate skills");
-    assert.ok(!/while|for ?\(|poll|schedule|daemon|loop/i.test(code.replace(/runProductionCoordinator|runGitHubProductionCoordinator/g, "")), "never loops tickets");
+    assert.deepEqual(code.match(/await deps\.runProduction\(/g)?.length ?? 0, 1, "exactly one production call site, never a loop");
+    assert.ok(!/decideReview\(/.test(code), "resolver passed through, never invoked or retried by the CLI");
     assert.ok(!/runCoordinatorTicket|executeImplementer|executeReviewer/.test(code), "never bypasses the production seam");
     const indexCode = readFileSync(join(__dirname, "..", "..", "src", "index.ts"), "utf8")
       .replace(/\/\*[\s\S]*?\*\//g, "");
     assert.ok(indexCode.includes('"run"'), "bare run routes to the async command");
     assert.ok(/runRunCommand/.test(indexCode), "routing uses the run command");
+  });
+});
+
+describe("run command review decision arguments", () => {
+  const request = {
+    ticket_id: "T-7",
+    title: "Work T-7",
+    description: "Description.",
+    requirements: "Requirements.",
+    report: "Reviewer notes: solid.",
+  };
+
+  it("explicit approved decision reaches the resolver without prompting", async () => {
+    let prompts = 0;
+    const command = deps({
+      readReviewDecision: async () => {
+        prompts += 1;
+        return { decision: "approved" };
+      },
+    });
+    const result = await runRunCommand(command, ["run", "--review-decision", "approved"]);
+    assert.equal(result.exitCode, 0);
+    assert.match(result.stdout, /run no-work/);
+    assert.equal(command.productions.length, 1);
+    assert.equal(prompts, 0, "explicit decision suppresses the TTY prompt");
+    const resolution = await command.productions[0].decideReview(request);
+    assert.deepEqual(resolution, { decision: "approved" });
+    assert.deepEqual(Object.isFrozen(resolution), true, "frozen like other runtime results");
+  });
+
+  it("explicit changes-requested decision preserves exact feedback bytes", async () => {
+    const feedback = "  Tighten the  edge.\n-- second line --\t";
+    const command = deps();
+    const result = await runRunCommand(command, [
+      "run",
+      "--review-decision",
+      "changes_requested",
+      "--review-feedback",
+      feedback,
+    ]);
+    assert.equal(result.exitCode, 0);
+    assert.equal(command.productions.length, 1);
+    const resolution = await command.productions[0].decideReview(request);
+    assert.deepEqual(resolution, { decision: "changes_requested", feedback });
+    assert.equal(resolution.feedback, feedback, "byte-for-byte, no trimming or rewriting");
+  });
+
+  it("invalid decision combinations fail before runtime", async () => {
+    const cases: Array<[string, string[], RegExp]> = [
+      ["missing decision value", ["run", "--review-decision"], /missing value for --review-decision/],
+      ["missing feedback value", ["run", "--review-decision", "changes_requested", "--review-feedback"], /missing value for --review-feedback/],
+      ["unknown decision", ["run", "--review-decision", "maybe"], /unknown verdict/],
+      ["changes without feedback", ["run", "--review-decision", "changes_requested"], /non-empty feedback/],
+      ["empty feedback", ["run", "--review-decision", "changes_requested", "--review-feedback", ""], /non-empty feedback/],
+      ["approved with feedback", ["run", "--review-decision", "approved", "--review-feedback", "nice"], /no feedback/],
+      ["duplicate decision", ["run", "--review-decision", "approved", "--review-decision", "approved"], /duplicate --review-decision/],
+      ["duplicate feedback", ["run", "--review-decision", "changes_requested", "--review-feedback", "a", "--review-feedback", "b"], /duplicate --review-feedback/],
+      ["feedback without decision", ["run", "--review-feedback", "late"], /requires --review-decision/],
+      ["trailing argument", ["run", "--review-decision", "approved", "extra"], /usage: ai-team run/],
+    ];
+    for (const [name, argv, pattern] of cases) {
+      let configs = 0;
+      let tokens = 0;
+      const command = deps({
+        loadConfiguration: () => {
+          configs += 1;
+          return validConfig();
+        },
+        readToken: async () => {
+          tokens += 1;
+          return SECRET;
+        },
+      });
+      const result = await runRunCommand(command, argv);
+      assert.equal(result.exitCode, 1, name);
+      assert.match(result.stderr, pattern, name);
+      assert.deepEqual(command.productions, [], `${name}: runtime never invoked`);
+      assert.equal(configs, 0, `${name}: configuration never loaded`);
+      assert.equal(tokens, 0, `${name}: credential never read`);
+      assert.ok(!result.stderr.includes(SECRET), `${name}: token absent`);
+    }
+  });
+
+  it("bare run without explicit decision still uses the injected reader", async () => {
+    let prompts = 0;
+    const reader = async () => {
+      prompts += 1;
+      return { decision: "changes_requested" as const, feedback: "TTY notes." };
+    };
+    const command = deps({ readReviewDecision: reader });
+    const result = await runRunCommand(command, ["run"]);
+    assert.equal(result.exitCode, 0);
+    assert.equal(command.productions.length, 1);
+    assert.equal(prompts, 0, "reader invoked later by production, not by the CLI");
+    assert.ok(command.productions[0].decideReview === reader, "TTY reader passed through for R-013 behavior");
+  });
+
+  it("production prompt without a TTY fails safely instead of approving", { skip: process.stdin.isTTY === true }, async () => {
+    await assert.rejects(
+      promptReviewDecision(request),
+      /no interactive decision mechanism available; refusing to auto-approve/,
+    );
+  });
+
+  it("decision arguments never leak secrets or loop the runtime", async () => {
+    const feedback = `notes involving ${SECRET}`;
+    const command = deps();
+    const result = await runRunCommand(command, [
+      "run",
+      "--review-decision",
+      "changes_requested",
+      "--review-feedback",
+      feedback,
+    ]);
+    assert.equal(result.exitCode, 0);
+    assert.equal(command.productions.length, 1, "one production call, no additional invocation");
+    const resolution = await command.productions[0].decideReview(request);
+    assert.equal(resolution.feedback, feedback, "feedback transported, not redacted");
   });
 });

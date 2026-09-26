@@ -14,7 +14,9 @@ describe("cli help", () => {
   });
 
   it("documents the default run command and explicit role selection", () => {
-    assert.match(help, /ai-team run\n/);
+    assert.match(help, /ai-team run \[--review-decision/);
+    assert.match(help, /--review-decision changes_requested --review-feedback/);
+    assert.match(help, /never assumed/);
     assert.match(help, /ai-team run --role <role>/);
     for (const role of [
       "coordinator",
