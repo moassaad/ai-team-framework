@@ -42,6 +42,11 @@ import {
   ReviewDecision,
   runCoordinatorTicket,
 } from "./coordinator";
+import {
+  TicketSource,
+  isTicketSource,
+  validateSourceTickets,
+} from "./ticket-source";
 
 /**
  * Application input. Tickets and every production ingredient
@@ -92,6 +97,74 @@ export async function runProductionCoordinator(
   return runCoordinatorTicket({
     tickets: input.tickets,
     roles: deps.roles,
+    project_root: input.project_root,
+    timeout_ms: input.timeout_ms,
+    reviewDecision: input.reviewDecision,
+    ...(input.reviewFeedback !== undefined ? { reviewFeedback: input.reviewFeedback } : {}),
+    ...(input.discovery_summary !== undefined ? { discovery_summary: input.discovery_summary } : {}),
+  });
+}
+
+/**
+ * Source-fed production application input (M18 R-007). The
+ * explicit production path: identical to
+ * `ProductionApplicationInput` except tickets arrive through a
+ * caller-supplied read-only `TicketSource` instead of a
+ * caller-owned array. The direct-array operation above remains
+ * as the lower-level seam (runtime tests compose through it);
+ * production callers use this function so there is exactly one
+ * source-driven production API, never an ambiguous
+ * tickets-or-source union.
+ */
+export interface ProductionSourceApplicationInput {
+  /** Read-only ticket source; read exactly once per invocation. */
+  readonly ticketSource: TicketSource;
+  /** Implementer specialty, decided externally by the caller. */
+  readonly specialty: ImplementerSpecialty;
+  /** Ready-made OpenCode string agent (such as `createOpenCodeProvider()` output). */
+  readonly openCodeAgent: AgentProvider<string>;
+  /** Target project root for both provider invocations. */
+  readonly project_root: string;
+  /** Execution bound in milliseconds for each invocation. */
+  readonly timeout_ms: number;
+  /** Explicit review verdict; never derived from report text. */
+  readonly reviewDecision: ReviewDecision;
+  /** Required with `changes_requested`; preserved as the rework reason. */
+  readonly reviewFeedback?: string;
+  /** Pre-computed discovery summary, when available. */
+  readonly discovery_summary?: string;
+}
+
+/**
+ * Run one source-fed production Coordinator invocation: read
+ * the source once, validate its result with the Coordinator's
+ * own ticket guard, then delegate to the tickets-based
+ * operation (which owns provider assembly and the single
+ * Coordinator call). Source rejection propagates wrapped —
+ * the Coordinator never runs, nothing is fabricated or
+ * retried, and no ticket state mutates. Empty collections
+ * reach the Coordinator's authoritative no-work behavior.
+ */
+export async function runProductionCoordinatorFromSource(
+  input: ProductionSourceApplicationInput,
+): Promise<CoordinatorTicketResult> {
+  if (typeof input !== "object" || input === null || Array.isArray(input)) {
+    fail("expected an application input object");
+  }
+  if (!isTicketSource(input.ticketSource)) {
+    fail("ticketSource must satisfy the ticket source contract");
+  }
+  let listed: unknown;
+  try {
+    listed = await input.ticketSource.listTickets();
+  } catch (error) {
+    throw new Error("production application: ticket source failed", { cause: error });
+  }
+  const tickets = validateSourceTickets(listed);
+  return runProductionCoordinator({
+    tickets,
+    specialty: input.specialty,
+    openCodeAgent: input.openCodeAgent,
     project_root: input.project_root,
     timeout_ms: input.timeout_ms,
     reviewDecision: input.reviewDecision,

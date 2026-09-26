@@ -186,7 +186,7 @@ function nonEmptyString(value: unknown, field: string): string {
   return value;
 }
 
-function isTicket(value: unknown): value is CoordinatorTicket {
+export function isTicket(value: unknown): value is CoordinatorTicket {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return false;
   }
