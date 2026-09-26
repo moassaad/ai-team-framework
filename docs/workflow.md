@@ -309,6 +309,33 @@ provider-specific logic — GitHub wiring
 configuration, shared source/sink mapping) lives in the
 production/provider layer only.
 
+## Integration verification (M19 E2E-005)
+
+The full path is verified end to end:
+
+```text
+CLI
+→ production composition
+→ sprint workflow
+→ explicit final synchronization
+```
+
+`tests/e2e-sprint-workflow.test.ts` exercises the real
+stack — CLI parsing and assembly, production composition,
+orchestration, and every M18 boundary — with hermetic
+edges only (in-memory source, fake providers, explicit
+resolvers, fake issues and sink). It proves the happy
+path event order, every stop/failure path, caller-controlled
+re-entry, one-ticket-per-invocation, frozen-copy
+synchronization, report opacity (misleading report words
+never change routing), and `ai-team run` compatibility;
+the GitHub composition is proven through a deterministic
+fake transport, never the real API. There is no live
+external smoke test: the repository has no safe live-test
+credential mechanism, and none was invented for this
+ticket. Re-entry remains caller-controlled and
+synchronization remains explicit.
+
 ## Where to go next
 
 - `docs/specification/workflow.md` — the full contract this guide summarizes.
