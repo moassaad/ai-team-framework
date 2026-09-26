@@ -34,6 +34,13 @@ progress and results — including relaying your explicit approval
 decisions. It is not an implementation role: it writes no code and
 never replaces the Technical Lead on technical decisions.
 
+Final Coordinator approval (`runFinalApproval`) requires explicit
+PM/User Testing approval first, then one explicit Coordinator
+decision over the current ticket snapshot with the opaque PM
+report as evidence. It mutates nothing and creates nothing —
+translating approval into ticket state transitions belongs to
+later orchestration work.
+
 ## Project Manager
 
 Owns requirements, scope, and business acceptance. It collects

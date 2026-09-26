@@ -68,6 +68,18 @@ export interface ProjectManagerRoleReference {
 }
 
 /**
+ * Who grants final Coordinator approval: the explicit
+ * `coordinator` identity alone (R-020). No provider — final
+ * approval is a caller/human authority resolved through an
+ * explicit decision resolver, never an AI execution stage,
+ * so there is nothing to execute with. Any other role
+ * identity is rejected; nothing is discovered or defaulted.
+ */
+export interface CoordinatorApprovalReference {
+  readonly role: RoleId;
+}
+
+/**
  * Caller-supplied role resolution. The Coordinator instantiates
  * nothing and discovers nothing; it calls each resolver exactly
  * once per invocation, after ticket selection and before the
@@ -181,4 +193,19 @@ export function validateProjectManagerReference(data: unknown): ProjectManagerRo
   const role = checkRoleId(raw.role, "project-manager", "role");
   const provider = checkProvider(raw.provider, "provider");
   return { role, provider };
+}
+
+/**
+ * Validate raw data as a final-approval authority and return
+ * it unchanged. Exact `coordinator` identity only — Senior
+ * Reviewer, Technical Lead, Project Manager, and Implementer
+ * are all rejected, never silently reused.
+ */
+export function validateCoordinatorApprovalReference(data: unknown): CoordinatorApprovalReference {
+  if (typeof data !== "object" || data === null || Array.isArray(data)) {
+    fail("expected a coordinator approval reference object");
+  }
+  const raw = data as Record<string, unknown>;
+  const role = checkRoleId(raw.role, "coordinator", "role");
+  return { role };
 }
