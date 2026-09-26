@@ -52,6 +52,16 @@ assigns Implementer specialties, decides rework-or-proceed after
 review, and escalates technical decisions it cannot resolve. It
 never invents requirements; those stay with the Project Manager.
 
+After Coordinator work is ready (no executable, in-flight,
+blocked, failed, or invalid tickets remain), the Technical Lead
+reviews the sprint as a separate runtime stage
+(`runTechnicalLeadReview`): one provider invocation under the
+explicit `technical-lead` identity, an opaque report, and an
+explicit verdict (`approved` or `corrections-required`). The
+review never mutates tickets and never creates correction
+tickets itself — those belong to a later stage — and it never
+invokes PM or user review.
+
 ## Implementer
 
 Implements exactly one assigned ticket: reads its scope, makes the

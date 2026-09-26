@@ -46,6 +46,17 @@ export interface SeniorReviewerRoleReference {
 }
 
 /**
+ * Who leads the sprint review: identity plus the R-017 TL
+ * execution provider. Same minimality rule — a distinct
+ * logical role from Senior Reviewer, never a skill, model,
+ * session, or fleet reference.
+ */
+export interface TechnicalLeadRoleReference {
+  readonly role: RoleId;
+  readonly provider: AgentProvider<ExecutionResult>;
+}
+
+/**
  * Caller-supplied role resolution. The Coordinator instantiates
  * nothing and discovers nothing; it calls each resolver exactly
  * once per invocation, after ticket selection and before the
@@ -125,6 +136,22 @@ export function validateSeniorReviewerReference(data: unknown): SeniorReviewerRo
   }
   const raw = data as Record<string, unknown>;
   const role = checkRoleId(raw.role, "senior-reviewer", "role");
+  const provider = checkProvider(raw.provider, "provider");
+  return { role, provider };
+}
+
+/**
+ * Validate raw data as a Technical Lead reference and return
+ * it unchanged. Same strictness: exact `technical-lead`
+ * identity, valid provider, no fallback, no silent Senior
+ * Reviewer reuse.
+ */
+export function validateTechnicalLeadReference(data: unknown): TechnicalLeadRoleReference {
+  if (typeof data !== "object" || data === null || Array.isArray(data)) {
+    fail("expected a technical lead reference object");
+  }
+  const raw = data as Record<string, unknown>;
+  const role = checkRoleId(raw.role, "technical-lead", "role");
   const provider = checkProvider(raw.provider, "provider");
   return { role, provider };
 }
