@@ -96,9 +96,13 @@ conceptually separate from external issue records.
   per call; no retry, no automatic local fallback.
 - Read path: GitHub Issues can also act as a read-only
   `TicketSource` (`createGitHubIssuesTicketSource`) with explicit
-  managed-label selection and caller-supplied state decoding.
-  Details: `docs/providers-github-issues.md`. Writes stay on the
-  `IssueProvider` contract; synchronization is deferred.
+  managed-label selection and caller-supplied state decoding;
+  the matching write-only `TicketSink`
+  (`createGitHubIssuesTicketSink`) synchronizes state labels
+  through one PATCH per ticket and never fabricates feedback.
+  Details: `docs/providers-github-issues.md`. Writes stay on
+  the `IssueProvider` contract; production registration and
+  runtime composition are deferred.
 
 ## Local IssueProvider fallback
 

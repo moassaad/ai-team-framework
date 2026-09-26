@@ -1,12 +1,17 @@
-# GitHub Issues TicketSource (M18 R-009)
+# GitHub Issues TicketSource and TicketSink (M18 R-009, R-010)
 
-GitHub Issues can also serve as a concrete read-only `TicketSource`
+GitHub Issues serves as a concrete read-only `TicketSource`
 (`src/providers/github-issues.ts`, factory
-`createGitHubIssuesTicketSource`). It pages through
-`GET /repos/{owner}/{repo}/issues` and converts managed entries to
-the existing `CoordinatorTicket` shape. Read path only: no issue
-updates, creation, completion, comments, or labels; write and
-synchronization are deferred to R-010.
+`createGitHubIssuesTicketSource`) and a concrete write-only
+`TicketSink` (`src/providers/github-sink.ts`, factory
+`createGitHubIssuesTicketSink`). The source pages through
+`GET /repos/{owner}/{repo}/issues` and converts managed entries
+to the existing `CoordinatorTicket` shape; the sink
+synchronizes one Coordinator-processed ticket back through a
+single `PATCH /repos/{owner}/{repo}/issues/{issue_number}`.
+No issue creation, completion endpoint, comments, polling, or
+queues; production registration and runtime composition are
+deferred to R-011.
 
 - Explicit inputs only: `owner`, `repo`, `token`, `managedLabel`,
   plus an adapter-local `parseState` decoder and an optional
@@ -34,10 +39,38 @@ synchronization are deferred to R-010.
   many HTTP GETs internally but remains a single source
   operation.
 - Failures are bounded rejections (`authentication failed`,
-  `repository not found`, `request rejected`, `server failure`,
-  `request failed`, mapping errors): no retry, no empty-source
+  `repository not found` / `issue not found`, `request rejected`,
+  `server failure`, `request failed`, mapping errors): no retry, no empty-source
   fabrication, no credential leakage.
 - Not registered in the production integration registry and not
   wired into the application runtime or CLI — composition with
   configuration/credentials is a later ticket. The generic
   `TicketSource` contract is unchanged.
+
+## Sink (R-010)
+
+- Same explicit inputs (`owner`, `repo`, `token`,
+  `managedLabel`, injectable transport reusing the R-009 seam
+  shape with a local fetch default). One bounded GET pre-read
+  verifies the managed label, observes the `pull_request` key
+  (pull requests are never mutated), and captures current
+  labels; at most one PATCH mutation follows.
+- Workflow state synchronizes as adapter-local labels
+  `<managedLabel>:<state>` (for example
+  `ai-team:technical_approval`); unrelated user labels are
+  preserved and only AI Team state labels are replaced,
+  idempotently. Native open/closed stays separate: only the
+  established close convention (`closed`, `cancelled` →
+  native `closed`) touches it. Reachable R-008 states
+  (`technical_approval`, `changes_requested`, `failed`,
+  `implementation_review`) send labels only; any other state
+  without a representation fails bounded before HTTP.
+- Minimal PATCH payload (labels, plus native `state` only for
+  the close convention): title, body, and the `## Requirements`
+  section are never sent and therefore never altered.
+  Reviewer feedback is never fabricated into comments or body —
+  no comment endpoint is called.
+- Update operations require the corresponding GitHub Issues
+  write permission; failures surface as bounded rejections
+  (`issue gone` for 410 included) with no retry, no rollback,
+  and no compensating mutation.
