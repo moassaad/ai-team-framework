@@ -175,7 +175,7 @@ describe("opencode execution boundary", () => {
       roles: deps.roles,
       project_root: "/proj",
       timeout_ms: 5000,
-      reviewDecision: "approved",
+      decideReview: async () => ({ decision: "approved" }),
     });
     assert.equal(result.outcome, "completed");
     assert.ok(result.outcome === "completed" && result.final_state === "technical_approval");
@@ -197,7 +197,7 @@ describe("opencode execution boundary", () => {
       roles: makeDeps().roles,
       project_root: "/proj",
       timeout_ms: 5000,
-      reviewDecision: "approved",
+      decideReview: async () => ({ decision: "approved" }),
     });
     assert.equal(fresh.outcome, "completed");
     const reworkTickets = [ticket("T-002", "changes_requested", "Tighten the assertion.")];
@@ -206,7 +206,7 @@ describe("opencode execution boundary", () => {
       roles: makeDeps().roles,
       project_root: "/proj",
       timeout_ms: 5000,
-      reviewDecision: "approved",
+      decideReview: async () => ({ decision: "approved" }),
     });
     assert.equal(rework.outcome, "completed");
     assert.ok(rework.outcome === "completed" && rework.final_state === "technical_approval");

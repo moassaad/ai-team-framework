@@ -31,14 +31,18 @@
  *
  * Explicit evidence, never inference: Implementer and Senior
  * Reviewer references arrive through the caller-supplied role
- * resolver (R-003) — validated, never classified — and the review
- * decision arrives as an explicit caller-supplied verdict —
- * IR-002/IR-003 forbid parsing reviewer reports into verdicts,
- * and both outgoing W-002 edges are technical-lead owned, so
- * automated report→decision mapping belongs to a later ticket
- * with provider-contract support. `changes_requested` requires
- * non-empty feedback (it becomes the IR-003 reason); the report
- * itself travels as opaque evidence and is preserved.
+ * resolver (R-003) — validated, never classified — and the
+ * review decision arrives through the caller-supplied decision
+ * resolver (R-013), invoked once after Reviewer execution with
+ * the opaque report as context — IR-002/IR-003 forbid parsing
+ * reviewer reports into verdicts, and both outgoing W-002
+ * edges are technical-lead owned, so automated report→decision
+ * mapping belongs nowhere in this runtime. `changes_requested`
+ * requires non-empty feedback (it becomes the IR-003 reason);
+ * the report itself travels as opaque evidence and is
+ * preserved. A missing or invalid decision never advances the
+ * workflow: it lands as a bounded decision failure on
+ * implementation_review.
  *
  * Ownership: the caller owns the ticket list (no new store —
  * planning/issue layers produce it); the runtime advances the
@@ -74,6 +78,12 @@ import {
   validateImplementerReference,
   validateSeniorReviewerReference,
 } from "./roles";
+import {
+  ReviewDecisionResolution,
+  isReviewDecisionResolver,
+  validateReviewDecisionResolution,
+  ReviewDecisionResolver,
+} from "./review-decision";
 
 /**
  * Runtime ticket view: the existing PlanTicket/IR ticket shape
@@ -98,10 +108,6 @@ export interface CoordinatorTicket {
 /** Bounded review verdict, supplied explicitly by the caller. */
 export type ReviewDecision = "approved" | "changes_requested";
 
-function isReviewDecision(value: unknown): value is ReviewDecision {
-  return value === "approved" || value === "changes_requested";
-}
-
 /** One applied workflow edge, verified before it was recorded. */
 export interface CoordinatorTransition {
   readonly from: WorkflowState;
@@ -122,10 +128,13 @@ export interface CoordinatorRuntimeInput {
   readonly project_root: string;
   /** Execution bound in milliseconds for each invocation. */
   readonly timeout_ms: number;
-  /** Explicit review verdict; never derived from report text. */
-  readonly reviewDecision: ReviewDecision;
-  /** Required with `changes_requested`; preserved as the rework reason. */
-  readonly reviewFeedback?: string;
+  /**
+   * Explicit review decision resolver (R-013): invoked once
+   * after Senior Reviewer execution with the opaque report as
+   * context, before either outgoing review edge. Replaces any
+   * static verdict — the Coordinator never assumes approval.
+   */
+  readonly decideReview: ReviewDecisionResolver;
   /** Pre-computed discovery summary, when available. */
   readonly discovery_summary?: string;
 }
@@ -168,12 +177,21 @@ export interface CoordinatorReviewerFailed {
   readonly error: { readonly kind: string; readonly message: string };
 }
 
+export interface CoordinatorDecisionFailed {
+  readonly outcome: "decision-failed";
+  readonly ticket_id: string;
+  readonly final_state: "implementation_review";
+  readonly transitions: readonly CoordinatorTransition[];
+  readonly error: { readonly kind: string; readonly message: string };
+}
+
 export type CoordinatorTicketResult =
   | CoordinatorNoWork
   | CoordinatorConflict
   | CoordinatorCompleted
   | CoordinatorImplementerFailed
-  | CoordinatorReviewerFailed;
+  | CoordinatorReviewerFailed
+  | CoordinatorDecisionFailed;
 
 function fail(what: string): never {
   throw new Error(`coordinator runtime: ${what}`);
@@ -258,18 +276,8 @@ export async function runCoordinatorTicket(
   if (typeof input.timeout_ms !== "number" || !Number.isFinite(input.timeout_ms) || input.timeout_ms <= 0) {
     fail("timeout_ms must be a positive finite number");
   }
-  if (!isReviewDecision(input.reviewDecision)) {
-    fail(`reviewDecision must be "approved" or "changes_requested", got ${JSON.stringify(input.reviewDecision)}`);
-  }
-  let feedback: string | undefined;
-  if (input.reviewFeedback !== undefined) {
-    if (typeof input.reviewFeedback !== "string" || input.reviewFeedback.length === 0) {
-      fail("reviewFeedback must be a non-empty string");
-    }
-    feedback = input.reviewFeedback;
-  }
-  if (input.reviewDecision === "changes_requested" && feedback === undefined) {
-    fail('reviewFeedback is required with reviewDecision "changes_requested"');
+  if (!isReviewDecisionResolver(input.decideReview)) {
+    fail("decideReview must be a review decision resolver");
   }
   let discovery_summary: string | undefined;
   if (input.discovery_summary !== undefined) {
@@ -383,7 +391,46 @@ export async function runCoordinatorTicket(
     } as const);
   }
 
-  if (input.reviewDecision === "approved") {
+  // The review decision arrives only through the explicit
+  // caller-supplied resolver (R-013): invoked once after
+  // Senior Reviewer execution with the opaque report as
+  // context, before either outgoing review edge. The report
+  // is never parsed — the resolution alone selects the IR-004
+  // approval or the IR-003 changes outcome. Resolver failure
+  // or an invalid resolution preserves implementation_review
+  // as a bounded decision failure: never a second attempt,
+  // never an implicit approval, and the reviewer never reruns.
+  const decisionFailed = (
+    kind: string,
+    message: string,
+  ): CoordinatorDecisionFailed =>
+    Object.freeze({
+      outcome: "decision-failed",
+      ticket_id: selected.id,
+      final_state: "implementation_review",
+      transitions: Object.freeze([...transitions]),
+      error: { kind, message },
+    } as const);
+  let resolved: unknown;
+  try {
+    resolved = await input.decideReview({
+      ticket_id: selected.id,
+      title: selected.title,
+      description: selected.description,
+      requirements: selected.requirements,
+      report: reviewed.report,
+    });
+  } catch (error) {
+    return decisionFailed("decision_error", error instanceof Error ? error.message : String(error));
+  }
+  let resolution: ReviewDecisionResolution;
+  try {
+    resolution = validateReviewDecisionResolution(resolved, selected.id);
+  } catch (error) {
+    return decisionFailed("invalid_decision", error instanceof Error ? error.message : String(error));
+  }
+
+  if (resolution.decision === "approved") {
     const approval = recommendTechnicalApproval({
       ticket_id: selected.id,
       from_state: "implementation_review",
@@ -404,7 +451,7 @@ export async function runCoordinatorTicket(
   const changes = requestChanges({
     ticket_id: selected.id,
     from_state: "implementation_review",
-    reason: feedback as string,
+    reason: resolution.feedback as string,
     report: reviewed.report,
   });
   advance(selected, changes.to_state);
@@ -415,6 +462,6 @@ export async function runCoordinatorTicket(
     transitions: Object.freeze([...transitions]),
     implementation: implemented.result,
     report: reviewed.report,
-    feedback,
+    feedback: resolution.feedback,
   } as const);
 }

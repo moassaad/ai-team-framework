@@ -60,8 +60,10 @@ function baseInput(
     openCodeAgent: overrides.agent ?? fakeStringAgent(calls, overrides.behavior ?? (async () => "Shipped; gates pass.")),
     project_root: "/proj",
     timeout_ms: 5000,
-    reviewDecision: overrides.reviewDecision ?? "approved",
-    ...(overrides.reviewFeedback !== undefined ? { reviewFeedback: overrides.reviewFeedback } : {}),
+    decideReview: async () => ({
+      decision: overrides.reviewDecision ?? "approved",
+      ...(overrides.reviewFeedback !== undefined ? { feedback: overrides.reviewFeedback } : {}),
+    }),
   };
 }
 
@@ -223,10 +225,11 @@ describe("production application boundary", () => {
         "../roles/contract",
         "./coordinator",
         "./production",
+        "./review-decision",
         "./ticket-sink",
         "./ticket-source",
       ],
-      "OpenCode adapter + R-004 factory + Coordinator + source/sink boundaries + contracts only",
+      "OpenCode adapter + R-004 factory + Coordinator + decision/source/sink boundaries + contracts only",
     );
     assert.ok(!/child_process|spawn|exec\(|shell|opencode run/i.test(code), "no process execution");
     assert.ok(!/delegate|skill|fleet|lane|model|session|relay/i.test(code), "no delegate discovery");

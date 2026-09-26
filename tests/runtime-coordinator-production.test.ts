@@ -97,7 +97,7 @@ describe("production runtime assembly", () => {
       roles: deps.roles,
       project_root: "/proj",
       timeout_ms: 5000,
-      reviewDecision: "approved",
+      decideReview: async () => ({ decision: "approved" }),
     });
     assert.equal(result.outcome, "completed");
     assert.ok(result.outcome === "completed" && result.final_state === "technical_approval");
@@ -113,7 +113,7 @@ describe("production runtime assembly", () => {
       roles: deps.roles,
       project_root: "/proj",
       timeout_ms: 5000,
-      reviewDecision: "approved",
+      decideReview: async () => ({ decision: "approved" }),
     });
     assert.equal(result.outcome, "completed");
     assert.equal(counts.reviewer, 1);
@@ -129,7 +129,7 @@ describe("production runtime assembly", () => {
       roles: deps.roles,
       project_root: "/proj",
       timeout_ms: 5000,
-      reviewDecision: "approved",
+      decideReview: async () => ({ decision: "approved" }),
     });
     assert.equal(result.outcome, "completed");
   });
@@ -174,7 +174,7 @@ describe("production runtime assembly", () => {
         roles: deps.roles,
         project_root: "/proj",
         timeout_ms: 5000,
-        reviewDecision: "approved",
+        decideReview: async () => ({ decision: "approved" }),
       }),
       /implementation_result must be a non-empty string/,
     );
@@ -191,7 +191,7 @@ describe("production runtime assembly", () => {
       roles: deps.roles,
       project_root: "/proj",
       timeout_ms: 5000,
-      reviewDecision: "approved",
+      decideReview: async () => ({ decision: "approved" }),
     });
     assert.equal(result.outcome, "completed");
     assert.ok(result.outcome === "completed" && result.ticket_id === "T-001");
@@ -208,7 +208,7 @@ describe("production runtime assembly", () => {
       roles: deps.roles,
       project_root: "/proj",
       timeout_ms: 5000,
-      reviewDecision: "approved",
+      decideReview: async () => ({ decision: "approved" }),
     });
     assert.equal(result.outcome, "completed");
     assert.ok(result.outcome === "completed" && result.final_state === "technical_approval");

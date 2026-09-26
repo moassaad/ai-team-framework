@@ -94,7 +94,7 @@ function baseOptions(overrides: Partial<GitHubProductionOptions> = {}): GitHubPr
     openCodeAgent: agent(prompts),
     project_root: "/proj",
     timeout_ms: 5000,
-    reviewDecision: "approved",
+    decideReview: async () => ({ decision: "approved" }),
     ...overrides,
   };
 }
@@ -285,6 +285,7 @@ describe("production github composition", () => {
         "../workflow/states",
         "./application",
         "./coordinator",
+        "./review-decision",
       ],
       "config types + adapters + application boundary only",
     );

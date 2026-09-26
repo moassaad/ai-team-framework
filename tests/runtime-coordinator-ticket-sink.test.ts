@@ -80,8 +80,10 @@ function baseInput(overrides: {
     openCodeAgent: fakeStringAgent(overrides.log ?? { prompts: [] }, overrides.agentBehavior),
     project_root: "/proj",
     timeout_ms: 5000,
-    reviewDecision: overrides.reviewDecision ?? "approved",
-    ...(overrides.reviewFeedback !== undefined ? { reviewFeedback: overrides.reviewFeedback } : {}),
+    decideReview: async () => ({
+      decision: overrides.reviewDecision ?? "approved",
+      ...(overrides.reviewFeedback !== undefined ? { feedback: overrides.reviewFeedback } : {}),
+    }),
   };
 }
 
@@ -171,8 +173,8 @@ describe("ticket sink boundary", () => {
     const tickets = [ticket("T-001", "ready")];
     const input = baseInput({ tickets, reads, log, sink: recordingSink(sinkLog) });
     await assert.rejects(
-      runProductionCoordinatorFromSource({ ...input, reviewDecision: "maybe" as never }),
-      /coordinator runtime: reviewDecision must be/,
+      runProductionCoordinatorFromSource({ ...input, decideReview: "maybe" as never }),
+      /coordinator runtime: decideReview must be a review decision resolver/,
     );
     assert.deepEqual(sinkLog.writes, [], "no partial synchronization");
     assert.deepEqual(log.prompts, [], "no provider invoked");

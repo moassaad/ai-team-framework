@@ -39,9 +39,9 @@ import { createProductionCoordinatorDeps } from "./production";
 import {
   CoordinatorTicket,
   CoordinatorTicketResult,
-  ReviewDecision,
   runCoordinatorTicket,
 } from "./coordinator";
+import { ReviewDecisionResolver } from "./review-decision";
 import {
   TicketSource,
   isTicketSource,
@@ -65,10 +65,11 @@ export interface ProductionApplicationInput {
   readonly project_root: string;
   /** Execution bound in milliseconds for each invocation. */
   readonly timeout_ms: number;
-  /** Explicit review verdict; never derived from report text. */
-  readonly reviewDecision: ReviewDecision;
-  /** Required with `changes_requested`; preserved as the rework reason. */
-  readonly reviewFeedback?: string;
+  /**
+   * Explicit review decision resolver, passed through to the
+   * Coordinator unchanged; resolved after Reviewer execution.
+   */
+  readonly decideReview: ReviewDecisionResolver;
   /** Pre-computed discovery summary, when available. */
   readonly discovery_summary?: string;
 }
@@ -100,8 +101,7 @@ export async function runProductionCoordinator(
     roles: deps.roles,
     project_root: input.project_root,
     timeout_ms: input.timeout_ms,
-    reviewDecision: input.reviewDecision,
-    ...(input.reviewFeedback !== undefined ? { reviewFeedback: input.reviewFeedback } : {}),
+    decideReview: input.decideReview,
     ...(input.discovery_summary !== undefined ? { discovery_summary: input.discovery_summary } : {}),
   });
 }
@@ -135,10 +135,11 @@ export interface ProductionSourceApplicationInput {
   readonly project_root: string;
   /** Execution bound in milliseconds for each invocation. */
   readonly timeout_ms: number;
-  /** Explicit review verdict; never derived from report text. */
-  readonly reviewDecision: ReviewDecision;
-  /** Required with `changes_requested`; preserved as the rework reason. */
-  readonly reviewFeedback?: string;
+  /**
+   * Explicit review decision resolver, passed through to the
+   * Coordinator unchanged; resolved after Reviewer execution.
+   */
+  readonly decideReview: ReviewDecisionResolver;
   /** Pre-computed discovery summary, when available. */
   readonly discovery_summary?: string;
 }
@@ -205,8 +206,7 @@ export async function runProductionCoordinatorFromSource(
     openCodeAgent: input.openCodeAgent,
     project_root: input.project_root,
     timeout_ms: input.timeout_ms,
-    reviewDecision: input.reviewDecision,
-    ...(input.reviewFeedback !== undefined ? { reviewFeedback: input.reviewFeedback } : {}),
+    decideReview: input.decideReview,
     ...(input.discovery_summary !== undefined ? { discovery_summary: input.discovery_summary } : {}),
   });
   if (input.ticketSink === undefined) {

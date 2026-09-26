@@ -31,8 +31,11 @@ Commands:
   run                  Execute one production Coordinator ticket:
                        read managed GitHub issues once, run at most
                        one ticket, synchronize it once. The GitHub
-                       token is read from stdin (pipe it in). Never
-                       runs a sprint, never retries.
+                       token is read from stdin (pipe it in). After
+                       the reviewer report, asks once whether to
+                       approve (interactive terminal only); never
+                       auto-approves. Never runs a sprint, never
+                       retries.
                        With --role, prompt text, or a slash command,
                        only presents the selected role contract;
                        role execution stays unimplemented there.

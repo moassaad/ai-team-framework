@@ -40,8 +40,8 @@ import {
 import { createGitHubIssuesTicketSink } from "../providers/github-sink";
 import {
   CoordinatorTicketResult,
-  ReviewDecision,
 } from "./coordinator";
+import { ReviewDecisionResolver } from "./review-decision";
 import {
   ProductionSynchronizationFailed,
   runProductionCoordinatorFromSource,
@@ -71,10 +71,12 @@ export interface GitHubProductionOptions {
   readonly project_root: string;
   /** Execution bound in milliseconds for each invocation. */
   readonly timeout_ms: number;
-  /** Explicit review verdict; never derived from report text. */
-  readonly reviewDecision: ReviewDecision;
-  /** Required with `changes_requested`; preserved as the rework reason. */
-  readonly reviewFeedback?: string;
+  /**
+   * Explicit review decision resolver, passed through to the
+   * Coordinator unchanged; resolved after Reviewer execution.
+   * Never defaulted — the runtime never assumes approval.
+   */
+  readonly decideReview: ReviewDecisionResolver;
   /** Pre-computed discovery summary, when available. */
   readonly discovery_summary?: string;
 }
@@ -175,8 +177,7 @@ export async function runGitHubProductionCoordinator(
     openCodeAgent: options.openCodeAgent,
     project_root: options.project_root,
     timeout_ms: options.timeout_ms,
-    reviewDecision: options.reviewDecision,
-    ...(options.reviewFeedback !== undefined ? { reviewFeedback: options.reviewFeedback } : {}),
+    decideReview: options.decideReview,
     ...(options.discovery_summary !== undefined ? { discovery_summary: options.discovery_summary } : {}),
   });
 }

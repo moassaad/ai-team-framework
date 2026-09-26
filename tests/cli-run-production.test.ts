@@ -38,6 +38,7 @@ function deps(overrides: Partial<RunCommandDeps> = {}): RunCommandDeps & { produ
     projectRoot: "/proj",
     loadConfiguration: () => validConfig(),
     readToken: async () => SECRET,
+    readReviewDecision: async () => ({ decision: "approved" }),
     createAgent: agent,
     runProduction: async (options) => {
       productions.push(options);
@@ -69,7 +70,7 @@ describe("run command", () => {
     assert.equal(options.token, SECRET, "stdin credential flows only into the production call");
     assert.equal(options.project_root, "/proj");
     assert.equal(options.timeout_ms, 300000);
-    assert.equal(options.reviewDecision, "approved");
+    assert.equal(typeof options.decideReview, "function", "decision dependency passed through, never hard-coded");
     assert.equal(options.config.providers?.github?.owner, "acme");
     assert.ok(options.openCodeAgent.name.length > 0, "execution agent supplied by deps");
     assert.equal(result.exitCode, 0);
@@ -141,6 +142,13 @@ describe("run command", () => {
           error: { kind: "ticket-synchronization-failed", message: "tracker offline" },
         },
         1, /run sync-failed: ticket T-7 advanced to technical_approval but synchronization failed \(ticket-synchronization-failed\): tracker offline\./, "stderr",
+      ],
+      [
+        {
+          outcome: "decision-failed", ticket_id: "T-7", final_state: "implementation_review",
+          transitions: [], error: { kind: "decision_error", message: "no interactive decision mechanism available" },
+        },
+        1, /run decision-failed: ticket T-7 preserved at implementation_review \(decision_error\): no interactive decision mechanism available\./, "stderr",
       ],
     ];
     for (const [productionResult, exitCode, pattern, stream] of cases) {
@@ -215,10 +223,14 @@ describe("run command", () => {
         "./runtime/application",
         "./runtime/coordinator",
         "./runtime/github-production",
+        "./runtime/review-decision",
+        "node:readline",
       ],
-      "config + agent factory + production seam + result types only",
+      "config + agent factory + production seam + decision reader + result types only",
     );
     assert.ok(!/listTickets|updateTicket|PATCH|GET /.test(code), "never touches GitHub HTTP");
+    assert.ok(!/reviewDecision/.test(code), "no static verdict field survives anywhere");
+    assert.ok(code.includes("decideReview: deps.readReviewDecision"), "injected reader passed through, never assumed");
     assert.ok(!/opencode run|spawn|shell/.test(code), "never launches OpenCode");
     assert.ok(!/\bgit\b|commit|push|branch/.test(code), "never calls Git");
     assert.ok(!/resolveRole|resolveImplementerSpecialty|RoleContract/.test(code), "never selects roles");

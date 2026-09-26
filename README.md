@@ -67,7 +67,10 @@ against managed GitHub issues (at most one ticket, at most one
 synchronization; never a sprint, never a retry). It needs
 `providers.github` with `owner`, `repo`, `managedLabel`, and
 `specialty` in `.ai-team/config.yaml`, and reads the GitHub
-token from stdin:
+token from stdin. After the reviewer report it asks once
+whether to approve (interactive terminal); it never
+auto-approves — a non-interactive run without a decision
+mechanism fails safely instead:
 
 ```bash
 echo "$GITHUB_TOKEN" | node dist/index.js run

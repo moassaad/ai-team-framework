@@ -286,7 +286,7 @@ describe("github issues ticket sink", () => {
         openCodeAgent: agent,
         project_root: "/proj",
         timeout_ms: 5000,
-        reviewDecision: "approved",
+        decideReview: async () => ({ decision: "approved" }),
       });
       assert.equal(result.outcome, "completed", `path from ${ticketState}`);
       assert.ok(result.outcome === "completed" && result.final_state === "technical_approval");

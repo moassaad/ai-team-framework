@@ -15,14 +15,16 @@
  * ```
  *
  * The CLI never selects tickets, transitions workflow states,
- * resolves roles, infers specialty, calls OpenCode or GitHub,
- * or touches Git: it assembles validated configuration
- * (`providers.github`, including the R-012 `managedLabel`
- * and `specialty` keys), reads the token through an injected
- * secure reader, and translates the existing application
- * result into concise bounded output plus an exit code. The
- * token travels only in memory into the production call —
- * never argv, history, logs, output, errors, or disk.
+ * resolves roles, infers specialty, decides reviews itself,
+ * calls OpenCode or GitHub, or touches Git: it assembles
+ * validated configuration (`providers.github`, including the
+ * R-012 `managedLabel` and `specialty` keys), reads the token
+ * through an injected secure reader, supplies an explicit
+ * decision reader (interactive TTY prompt in production, never
+ * an assumed approval), and translates the existing
+ * application result into concise bounded output plus an exit
+ * code. The token travels only in memory into the production
+ * call — never argv, history, logs, output, errors, or disk.
  */
 
 import { FrameworkConfig } from "./config/schema";
@@ -31,16 +33,21 @@ import { validateConfig } from "./config/validator";
 import { AgentProvider } from "./providers/agent";
 import { isImplementerSpecialty } from "./roles/contract";
 import { createOpenCodeProvider } from "./providers/opencode";
+import { createInterface } from "node:readline";
 import { CliResult } from "./cli";
 import { CoordinatorTicketResult } from "./runtime/coordinator";
 import { ProductionSynchronizationFailed } from "./runtime/application";
+import {
+  ReviewDecisionRequest,
+  ReviewDecisionResolution,
+  ReviewDecisionResolver,
+} from "./runtime/review-decision";
 import {
   GitHubProductionOptions,
   runGitHubProductionCoordinator,
 } from "./runtime/github-production";
 
-/** Production review verdict and execution bound for `ai-team run`. */
-const RUN_REVIEW_DECISION = "approved" as const;
+/** Production execution bound for `ai-team run`. */
 const RUN_TIMEOUT_MS = 300000;
 
 /**
@@ -70,13 +77,15 @@ function readTokenFromStdin(): Promise<string> {
 /**
  * Injectable production dependencies, following the
  * cli-status/cli-setup seam pattern. Production uses config
- * files, stdin credentials, the real OpenCode provider, and
- * the R-011 composition; tests inject fakes for all four.
+ * files, stdin credentials, the real OpenCode provider, an
+ * interactive TTY decision prompt, and the R-011 composition;
+ * tests inject fakes for all of them.
  */
 export interface RunCommandDeps {
   readonly projectRoot: string;
   readonly loadConfiguration: (projectRoot: string) => FrameworkConfig;
   readonly readToken: TokenReader;
+  readonly readReviewDecision: ReviewDecisionResolver;
   readonly createAgent: () => AgentProvider<string>;
   readonly runProduction: (
     options: GitHubProductionOptions,
@@ -88,6 +97,7 @@ export function createProductionRunDeps(projectRoot: string): RunCommandDeps {
     projectRoot,
     loadConfiguration: (root) => validateConfig(loadConfig(root)),
     readToken: readTokenFromStdin,
+    readReviewDecision: promptReviewDecision,
     createAgent: () => createOpenCodeProvider(),
     runProduction: (options) => runGitHubProductionCoordinator(options),
   };
@@ -95,6 +105,48 @@ export function createProductionRunDeps(projectRoot: string): RunCommandDeps {
 
 function fail(what: string): never {
   throw new Error(`run command: ${what}`);
+}
+
+function ask(question: string): Promise<string | undefined> {
+  return new Promise((resolve) => {
+    const terminal = createInterface({ input: process.stdin, output: process.stdout });
+    terminal.question(question, (answer: string) => {
+      terminal.close();
+      resolve(answer);
+    });
+    terminal.on("close", () => {
+      resolve(undefined);
+    });
+  });
+}
+
+/**
+ * Production review decision reader (R-013): presents the
+ * opaque reviewer report and asks the operator once, inside
+ * the same invocation, after Reviewer execution. No TTY
+ * means no decision mechanism, which fails safely instead of
+ * auto-approving; "yes" approves, "no" requests changes with
+ * mandatory verbatim feedback, anything else (including EOF)
+ * fails without advancing. The report is shown so the
+ * decision is informed; it is never parsed or classified.
+ */
+async function promptReviewDecision(request: ReviewDecisionRequest): Promise<ReviewDecisionResolution> {
+  if (process.stdin.isTTY !== true) {
+    fail("no interactive decision mechanism available; refusing to auto-approve");
+  }
+  process.stdout.write(`Review complete for ticket ${request.ticket_id} (${request.title}).\nReport:\n${request.report}\n`);
+  const answer = await ask("Approve? [y/N]: ");
+  if (answer !== undefined && /^(y|yes)$/i.test(answer.trim())) {
+    return { decision: "approved" };
+  }
+  if (answer !== undefined && /^(n|no)$/i.test(answer.trim())) {
+    const feedback = await ask("Feedback (required): ");
+    if (feedback !== undefined && feedback.trim().length > 0) {
+      return { decision: "changes_requested", feedback: feedback.trim() };
+    }
+    fail("changes_requested requires non-empty feedback");
+  }
+  fail("no decision provided; refusing to auto-approve");
 }
 
 function ok(stdout: string): CliResult {
@@ -142,6 +194,10 @@ function describeResult(result: CoordinatorTicketResult | ProductionSynchronizat
       return commandError(
         `run sync-failed: ticket ${result.ticket_id} advanced to ${finalStateOf(result.coordinatorResult)} but synchronization failed (${result.error.kind}): ${result.error.message}.\n`,
       );
+    case "decision-failed":
+      return commandError(
+        `run decision-failed: ticket ${result.ticket_id} preserved at implementation_review (${result.error.kind}): ${result.error.message}.\n`,
+      );
     default:
       return commandError("run error: unknown runtime result.\n");
   }
@@ -166,6 +222,9 @@ export async function runRunCommand(deps: RunCommandDeps, argv: string[]): Promi
     }
     if (typeof deps.readToken !== "function") {
       fail("readToken must be a function");
+    }
+    if (typeof deps.readReviewDecision !== "function") {
+      fail("readReviewDecision must be a function");
     }
     if (typeof deps.createAgent !== "function") {
       fail("createAgent must be a function");
@@ -207,7 +266,7 @@ export async function runRunCommand(deps: RunCommandDeps, argv: string[]): Promi
       openCodeAgent: deps.createAgent(),
       project_root: deps.projectRoot,
       timeout_ms: RUN_TIMEOUT_MS,
-      reviewDecision: RUN_REVIEW_DECISION,
+      decideReview: deps.readReviewDecision,
     });
     return describeResult(result);
   } catch (error) {

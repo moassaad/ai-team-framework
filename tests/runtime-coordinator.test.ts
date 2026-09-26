@@ -83,8 +83,10 @@ function baseInput(
     },
     project_root: "/proj",
     timeout_ms: 5000,
-    reviewDecision: overrides.reviewDecision ?? "approved",
-    ...(overrides.reviewFeedback !== undefined ? { reviewFeedback: overrides.reviewFeedback } : {}),
+    decideReview: async () => ({
+      decision: overrides.reviewDecision ?? "approved",
+      ...(overrides.reviewFeedback !== undefined ? { feedback: overrides.reviewFeedback } : {}),
+    }),
   };
 }
 
@@ -186,13 +188,15 @@ describe("single-ticket coordinator runtime", () => {
     }
   });
 
-  it("changes requested without feedback rejects before any provider runs", async () => {
+  it("changes requested without feedback becomes a bounded decision failure", async () => {
     const counts = freshCounts();
-    await assert.rejects(
-      runCoordinatorTicket(baseInput(counts, { reviewDecision: "changes_requested" })),
-      /reviewFeedback is required/,
-    );
-    assert.deepEqual({ implementer: counts.implementer, reviewer: counts.reviewer }, { implementer: 0, reviewer: 0 });
+    const tickets = [ticket("T-001", "ready")];
+    const result = await runCoordinatorTicket(baseInput(counts, { tickets, reviewDecision: "changes_requested" }));
+    assert.equal(result.outcome, "decision-failed");
+    assert.ok(result.outcome === "decision-failed" && result.final_state === "implementation_review");
+    assert.ok(result.outcome === "decision-failed" && result.error.kind === "invalid_decision");
+    assert.equal(tickets[0].state, "implementation_review", "no transition recorded");
+    assert.deepEqual({ implementer: counts.implementer, reviewer: counts.reviewer }, { implementer: 1, reviewer: 1 });
   });
 
   it("Implementer failure records failed without retrying or reviewing", async () => {
@@ -273,7 +277,7 @@ describe("single-ticket coordinator runtime", () => {
     const valid = baseInput(counts, {});
     await assert.rejects(runCoordinatorTicket({ ...valid, roles: "yes" as never }), /roles must satisfy the role resolver contract/);
     await assert.rejects(runCoordinatorTicket({ ...valid, timeout_ms: 0 }), /timeout_ms must be a positive finite number/);
-    await assert.rejects(runCoordinatorTicket({ ...valid, reviewDecision: "maybe" as never }), /reviewDecision must be/);
+    await assert.rejects(runCoordinatorTicket({ ...valid, decideReview: "maybe" as never }), /decideReview must be a review decision resolver/);
     await assert.rejects(
       runCoordinatorTicket({ ...valid, tickets: [{ id: "", title: "t", description: "d", requirements: "r", state: "ready" }] }),
       /every ticket must carry/,
@@ -287,7 +291,11 @@ describe("single-ticket coordinator runtime", () => {
       const counts = freshCounts();
       const tickets = [ticket("T-001", "ready")];
       const result: CoordinatorTicketResult = await runCoordinatorTicket(
-        baseInput(counts, { tickets, reviewDecision: decision, reviewFeedback: "Fix it." }),
+        baseInput(counts, {
+          tickets,
+          reviewDecision: decision,
+          ...(decision === "changes_requested" ? { reviewFeedback: "Fix it." } : {}),
+        }),
       );
       assert.equal(result.outcome, "completed");
       const states: WorkflowState[] =
@@ -365,9 +373,10 @@ describe("single-ticket coordinator runtime", () => {
         "../providers/result",
         "../workflow/states",
         "../workflow/transitions",
+        "./review-decision",
         "./roles",
       ],
-      "existing execution/workflow seams plus the role seam only",
+      "existing execution/workflow seams plus the role and decision seams only",
     );
     assert.ok(!/child_process|spawn|exec\(|shell|relay\.mjs|specify|opencode|github|npx/i.test(code), "no provider commands or processes");
     assert.ok(!/\bgit\b|commit|merge|branch/i.test(code), "no git");

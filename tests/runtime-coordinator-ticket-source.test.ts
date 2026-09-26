@@ -65,8 +65,10 @@ function baseInput(overrides: {
     openCodeAgent: fakeStringAgent(overrides.log ?? { prompts: [] }),
     project_root: "/proj",
     timeout_ms: 5000,
-    reviewDecision: overrides.reviewDecision ?? "approved",
-    ...(overrides.reviewFeedback !== undefined ? { reviewFeedback: overrides.reviewFeedback } : {}),
+    decideReview: async () => ({
+      decision: overrides.reviewDecision ?? "approved",
+      ...(overrides.reviewFeedback !== undefined ? { feedback: overrides.reviewFeedback } : {}),
+    }),
   };
 }
 

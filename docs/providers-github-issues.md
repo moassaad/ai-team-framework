@@ -116,16 +116,24 @@ sprint, never retries, never loops.
 
 - Configuration comes from `.ai-team/config.yaml`
   (`providers.github` with `owner`, `repo`, `managedLabel`,
-  `specialty`; review verdict is `approved`, timeout 5 min,
-  project root is the working directory).
+  `specialty`; timeout 5 min, project root is the working
+  directory).
 - The GitHub token is read from stdin — pipe it in
   (`echo "$GITHUB_TOKEN" | ai-team run`). It never appears in
   arguments, history, logs, output, errors, or on disk, and
   there is intentionally no `--token` flag, no environment
   lookup, and no credential discovery.
+- The review verdict is never assumed: after the Senior
+  Reviewer report, `ai-team run` asks once whether to approve
+  (interactive terminal only; `changes_requested` needs
+  verbatim feedback on the spot). Reviewer output stays
+  opaque — never parsed, classified, or scored. A piped
+  (non-interactive) run without a decision mechanism fails
+  safely before `technical_approval` instead of
+  auto-approving; reviewer and decision steps never retry.
 - Exit codes: `completed` and `no-work` exit 0;
   `conflict`, `implementer-failed`, `reviewer-failed`,
-  `sync-failed`, configuration failures, credential
-  failures, and unexpected errors exit 1 with a bounded
-  single-line message. `sync-failed` states explicitly that
+  `decision-failed`, `sync-failed`, configuration failures,
+  credential failures, and unexpected errors exit 1 with a
+  bounded single-line message. `sync-failed` states explicitly that
   workflow execution advanced but synchronization failed.

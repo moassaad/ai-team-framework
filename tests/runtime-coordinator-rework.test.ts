@@ -87,8 +87,10 @@ function baseInput(
     },
     project_root: "/proj",
     timeout_ms: 5000,
-    reviewDecision: overrides.reviewDecision ?? "approved",
-    ...(overrides.reviewFeedback !== undefined ? { reviewFeedback: overrides.reviewFeedback } : {}),
+    decideReview: async () => ({
+      decision: overrides.reviewDecision ?? "approved",
+      ...(overrides.reviewFeedback !== undefined ? { feedback: overrides.reviewFeedback } : {}),
+    }),
   };
 }
 
@@ -136,7 +138,11 @@ describe("rework cycle", () => {
       const counts = freshCounts();
       const tickets = [reworkTicket("T-007")];
       const result = await runCoordinatorTicket(
-        baseInput(counts, { tickets, reviewDecision: decision, reviewFeedback: "One more nit." }),
+        baseInput(counts, {
+          tickets,
+          reviewDecision: decision,
+          ...(decision === "changes_requested" ? { reviewFeedback: "One more nit." } : {}),
+        }),
       );
       assert.equal(result.outcome, "completed");
       assert.ok(result.outcome === "completed" && result.ticket_id === "T-007");
@@ -222,15 +228,14 @@ describe("rework cycle", () => {
     assert.deepEqual({ implementer: counts.implementer, reviewer: counts.reviewer }, { implementer: 1, reviewer: 1 }, "no second Implementer");
   });
 
-  it("missing re-review feedback rejects before the transition", async () => {
+  it("missing re-review feedback becomes a bounded decision failure", async () => {
     const counts = freshCounts();
     const tickets = [reworkTicket("T-001")];
-    await assert.rejects(
-      runCoordinatorTicket(baseInput(counts, { tickets, reviewDecision: "changes_requested" })),
-      /reviewFeedback is required/,
-    );
-    assert.deepEqual({ implementer: counts.implementer, reviewer: counts.reviewer }, { implementer: 0, reviewer: 0 });
-    assert.equal(tickets[0].state, "changes_requested");
+    const result = await runCoordinatorTicket(baseInput(counts, { tickets, reviewDecision: "changes_requested" }));
+    assert.equal(result.outcome, "decision-failed");
+    assert.ok(result.outcome === "decision-failed" && result.final_state === "implementation_review");
+    assert.deepEqual({ implementer: counts.implementer, reviewer: counts.reviewer }, { implementer: 1, reviewer: 1 });
+    assert.equal(tickets[0].state, "implementation_review");
   });
 
   it("rework Implementer failure records failed without reviewing", async () => {
