@@ -213,6 +213,41 @@ rest. In particular: the Coordinator never decides scope, the PM
 never decides implementation, the Implementer never approves, and
 the Reviewer never edits.
 
+## Operating model (M22 T-001)
+
+The canonical operating model is declared in
+`src/roles/operating-model.ts` on top of the five contracts in
+`src/roles/`. Per role: owns → does not own → scoped authority →
+output it must be able to hand off (the handoff schema itself is
+later work, not implemented here).
+
+| Role | Scoped authority | Hands off |
+|---|---|---|
+| Coordinator | workflow and orchestration | planning/orchestration direction |
+| Project Manager | requirements, scope, business | requirements/scope/acceptance/business plan |
+| Technical Lead | technical architecture/decomposition | technical plan/decomposition/constraints |
+| Implementer | implementation within approved scope | implementation result + tests/evidence |
+| Senior Reviewer | implementation review | review result + actionable feedback |
+
+Approved handoff directions (definition only — no handoff mechanism
+is implemented in T-001):
+
+```text
+Coordinator → Project Manager, Technical Lead
+Project Manager → Technical Lead, Coordinator
+Technical Lead → Implementer, Project Manager, Coordinator
+Implementer → Senior Reviewer, Technical Lead
+Senior Reviewer → Implementer, Technical Lead
+```
+
+Every role is directly invocable (`User → <role>` for any of the
+five); invoking one role never automatically invokes another, and
+the full team chain is one possible composition, not a dependency.
+Boundary behavior: surface problems to the owning authority through
+the workflow — the Implementer never silently rewrites requirements
+or becomes the Technical Lead, the Reviewer never silently redefines
+scope, and PM and TL never silently replace each other.
+
 ## Practical example (conceptual)
 
 ```text
