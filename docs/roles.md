@@ -357,6 +357,23 @@ information becomes explicit questions, not answers. Nobody is
 invoked automatically — PM planning (T-007) consumes the handoff
 later, manually or delegated.
 
+## Project Manager Planning (M23 T-007)
+
+PM planning (`runPmPlanning` in `src/runtime/pm-planning.ts`) is
+distinct from PM/User Testing: it takes the validated Coordinator
+→ PM handoff plus caller-structured business content and produces
+a frozen PM plan (requirements, in/out scope, acceptance criteria,
+business rules, business constraints, unresolved questions) with
+an opaque provider report that is never parsed. With no open
+questions it also emits a validated PM → Technical Lead handoff —
+requirements to requirements, acceptance to acceptance criteria,
+scope and rules as labeled business context, business constraints
+to constraints, questions to notes; with open questions it returns
+`clarification-required` and no TL handoff instead of pretending
+readiness. Business meaning never becomes technical prescription,
+one provider call happens at most once, and nobody is invoked —
+TL planning (T-008) consumes the handoff later.
+
 ## Practical example (conceptual)
 
 ```text
