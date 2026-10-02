@@ -388,6 +388,21 @@ an Implementer handoff — those belong to M24. Open questions return
 `clarification-required` with the partial plan; one provider call
 happens at most once; nobody is invoked.
 
+## Planning Artifact (M23 T-009)
+
+The Planning Artifact (`src/runtime/planning-artifact.ts`) is the
+shared canonical planning data model: a Coordinator section
+(request plus explicit objective, context, requirements,
+constraints, questions), the PM plan reused verbatim, and the TL
+plan reused verbatim — with business and technical constraints
+kept separate. Every section is optional, so planning grows
+incrementally (Coordinator, then +PM, then +TL) with absence
+meaning not-yet-planned, never placeholder text. Construction and
+pure `withX` composition validate, copy, and freeze everything;
+provider reports are excluded, questions stay questions, and no
+task, sprint, approval, persistence, or orchestration exists here —
+those belong to M24 and later.
+
 ## Practical example (conceptual)
 
 ```text
