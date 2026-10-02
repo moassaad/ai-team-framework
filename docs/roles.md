@@ -339,6 +339,24 @@ handoff travels on the outcome as provenance. This establishes
 invocability only: planning, decomposition, CLI commands, modes,
 and orchestration remain future work.
 
+## Coordinator Planning (M23 T-006)
+
+Planning and ticket execution are separate Coordinator
+capabilities: `runCoordinatorTicket` keeps running tickets, while
+`runCoordinatorPlanning` (`src/runtime/coordinator-planning.ts`)
+handles a user request before PM planning. Given an explicit
+Coordinator identity and caller-structured content, it builds a
+validated Coordinator → Project Manager handoff — objective,
+verbatim request and context, explicit requirements/constraints,
+unresolved questions as notes, and a descriptive PM next action —
+then invokes the Coordinator planning agent exactly once and
+returns the frozen handoff plus the provider's opaque report
+(never parsed). Nothing is invented: no requirements, technology,
+acceptance criteria, or tasks are filled in, and missing
+information becomes explicit questions, not answers. Nobody is
+invoked automatically — PM planning (T-007) consumes the handoff
+later, manually or delegated.
+
 ## Practical example (conceptual)
 
 ```text
