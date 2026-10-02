@@ -321,6 +321,24 @@ works identically for manual paste today and delegated transport
 later. Reports stay opaque and nothing executes: rendering is
 presentation only, and the retry/rework mechanism is untouched.
 
+## Independent Role Execution (M22 T-005)
+
+Each role is invocable alone through a thin boundary
+(`src/roles/independent-execution.ts`) over its existing execution
+seam — Coordinator over the ticket runtime, Project Manager over
+PM/User Testing, Technical Lead over TL review, Implementer over
+ticket execution, Senior Reviewer over review. The caller supplies
+an explicit identity (mismatches fail before anything runs), the
+complete seam input, and optionally a validated handoff addressing
+that role; direct execution without a handoff is fully supported.
+Exactly one underlying provider call happens per invocation — no
+retry, no fallback — and no other role is ever invoked, so
+delegate-skills is not required and handoff transport stays
+separate. Results preserve the seam's own outcome; a supplied
+handoff travels on the outcome as provenance. This establishes
+invocability only: planning, decomposition, CLI commands, modes,
+and orchestration remain future work.
+
 ## Practical example (conceptual)
 
 ```text
