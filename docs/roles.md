@@ -301,6 +301,26 @@ structurally valid.
 > `src/workflow/retry-handoff.ts`); their direction sets are not
 > required to be identical.
 
+## Handoff Validation (M22 T-004)
+
+`validateAgentHandoff` (`src/roles/handoff-validation.ts`) enforces
+the full contract: canonical sender and receiver, distinct
+endpoints, an approved operating-model direction (a structurally
+valid pair such as `coordinator → implementer` is still rejected),
+and bounded fields. Invalid input throws — nothing is coerced or
+redirected — and the result is frozen with defensive copies.
+
+## Human-readable Handoff Rendering (M22 T-004)
+
+`renderAgentHandoff` validates first, then produces one deterministic
+artifact: the `=== AI TEAM HANDOFF ===` header, `From`/`To`, and the
+objective plus only the sections present, in fixed order, with lists
+numbered in caller order and all content verbatim. The text is plain
+and copyable — no JSON, commands, IDs, or provider syntax — and
+works identically for manual paste today and delegated transport
+later. Reports stay opaque and nothing executes: rendering is
+presentation only, and the retry/rework mechanism is untouched.
+
 ## Practical example (conceptual)
 
 ```text
