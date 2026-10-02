@@ -1,23 +1,10 @@
 # AI Team Framework — Project Plan
 
-> **Document status:** Approved baseline plan  
-> **Current phase:** 0.1.0 released
-> **M0:** COMPLETE  
-> **M1:** COMPLETE  
-> **M2:** COMPLETE  
-> **M3:** COMPLETE  
-> **M4:** COMPLETE  
-> **M5:** COMPLETE  
-> **M6:** COMPLETE  
-> **M7:** COMPLETE  
-> **M8:** COMPLETE  
-> **M9:** COMPLETE  
-> **M10:** COMPLETE
-> **M11:** COMPLETE
-> **M12:** COMPLETE
-> **M13:** COMPLETE
+> **Document status:** Approved active project plan  
+> **Current phase:** Post-`0.1.0` modernization and integration architecture  
 > **Implementation started:** Yes  
-> **Target:** First usable release (MVP / `0.1.0`)
+> **Baseline:** Release `0.1.0` completed  
+> **Current target:** Release `0.2.0`
 
 ## 1. Project Goal
 
@@ -478,7 +465,7 @@ Workflow Engine → Execution states and transitions
 
 # 9. Providers and Integrations
 
-Provider integrations must be isolated behind interfaces so the core framework does not depend directly on one external tool.
+External tools must remain isolated behind provider/integration boundaries so the core framework owns the team workflow and does not become coupled to a specific external implementation.
 
 ## 9.1 Required Initial Provider
 
@@ -486,9 +473,9 @@ Provider integrations must be isolated behind interfaces so the core framework d
 OpenCode
 ```
 
-OpenCode is the initial execution provider.
+OpenCode is the initial execution provider for the `0.1.0` baseline. Its integration is still isolated behind a provider boundary even though execution depends on it by default.
 
-## 9.2 Optional Providers
+## 9.2 Optional Integrations
 
 ```text
 Spec Kit
@@ -496,20 +483,51 @@ delegate-skills
 GitHub Issues
 ```
 
-## 9.3 delegate-skills
+Optional means:
 
-`delegate-skills` is an optional delegation provider, not a role.
+- the framework can run without the integration when the requested workflow does not require it;
+- absence must not break the core workflow unnecessarily;
+- the integration is discovered and reported explicitly;
+- enablement is a user/configuration decision, not an implicit side effect.
 
-The integration must:
+## 9.3 Integration Architecture
 
-- remain optional
-- detect availability
-- require explicit enablement
-- avoid making the framework dependent on it
-- provide a safe fallback when unavailable
-- document the external setup clearly
+The framework owns the workflow. Integrations provide capabilities.
 
----
+```text
+                    AI Team Framework
+                           |
+                   Owns the workflow
+                           |
+                  Integration / Provider
+                           |
+        +------------------+------------------+
+        |                  |                  |
+     Spec Kit        delegate-skills      GitHub Issues
+     capability          capability          capability
+```
+
+The integration layer must be extensible, but it must not become a large generic framework before a real second/third integration proves the need.
+
+## 9.4 delegate-skills
+
+`delegate-skills` is an optional delegation capability, not a role and not a required dependency.
+
+The framework must not depend on a historical executable contract such as `delegate-skills` being available on `PATH`. The current upstream project is a Skills package with delegate skills and relay scripts, so the adapter must target the currently supported interface rather than preserve the old executable assumption.
+
+## 9.5 Spec Kit
+
+Spec Kit is an optional specification/planning capability, not the team manager and not the workflow engine.
+
+The framework may use Spec Kit for specification, clarification, planning, tasks, or analysis when enabled, but the resulting work must flow back into the framework's own ticket and approval workflow.
+
+## 9.6 Integration Ownership Rules
+
+- The framework owns workflow state, ticket lifecycle, approvals, and review gates.
+- Integrations own only their external capability and provider-specific mechanics.
+- No integration may bypass the Senior Reviewer or configured approval gates.
+- Provider-specific implementation must remain outside core role contracts.
+- Integration absence must be represented explicitly rather than simulated as success.
 
 # 10. GitHub Issues
 
@@ -629,270 +647,689 @@ This structure is an implementation baseline, not a license to create every dire
 
 # 14. Milestones and Tickets
 
-## M0 — Discovery and Specification
+This section supersedes the original pre-release milestone status and defines the modernization work after release `0.1.0`.
+
+## M0–M13 — Release 0.1.0 Baseline
 
 Status: **COMPLETE**
 
-```text
-M0-001 Product Scope
-M0-002 MVP Definition
-M0-003 Role Contracts
-M0-004 Workflow Specification
-M0-005 Configuration Specification
-M0-006 Provider Boundaries
-M0-007 Release 0.1.0 Definition of Done
-```
+The original M0–M13 milestones are treated as the completed `0.1.0` baseline.
 
-## M1 — Repository Foundation
-
-Status: **COMPLETE**
+Key baseline results:
 
 ```text
-F-001 Initialize repository
-F-002 Configure TypeScript
-F-003 Add build/test/lint scripts
-F-004 Add basic CLI entry point
-F-005 Add README and contribution guide
-F-006 Add license
+- Core roles and contracts implemented
+- Sequential ticket workflow implemented
+- Manual approval default preserved
+- OpenCode provider implemented
+- GitHub Issues provider implemented as optional
+- Initial Spec Kit adapter implemented
+- Initial delegate-skills adapter implemented as optional
+- Configuration validation implemented
+- Project discovery implemented
+- Execution/review safety implemented
+- End-to-end tests completed
+- Documentation and release artifacts completed
+- Release 0.1.0 prepared/released in repository state
 ```
 
-## M2 — Configuration and Workspace
-
-Status: **COMPLETE**
+Important baseline limitations retained for modernization:
 
 ```text
-C-001 Define configuration schema
-C-002 Add configuration loader
-C-003 Validate configuration
-C-004 Initialize .ai-team directory
-C-005 Add default configuration
-C-006 Add configuration documentation
+- Spec Kit integration model must be updated to the current upstream interface
+- P-006 (Spec Kit usage documentation) remains unresolved until the new integration is completed
+- Historical delegate-skills adapter assumes an executable contract that no longer matches current upstream
+- Real role orchestration still needs to be completed beyond provider/role selection plumbing
 ```
 
-## M3 — Role Contracts
+## M14 — Integration Foundation
 
-Status: **COMPLETE**
+Status: **NEXT**
+
+Purpose: introduce only the minimum reusable integration foundation required by the real project, then validate it immediately against the existing OpenCode path before expanding it.
+
+Design rules:
 
 ```text
-R-001 Define role contract format
-R-002 Define Coordinator contract
-R-003 Define Project Manager contract
-R-004 Define Technical Lead contract
-R-005 Define Implementer contract
-R-006 Define Senior Reviewer contract
-R-007 Define role selection rules
+- Capability-based, not feature-maximal
+- detect is required
+- version/install/configure are optional capabilities
+- status is derived by the framework, not trusted as an external source of truth
+- setup is confirmation-based and non-destructive
+- stored configuration is desired state + last-known state, not proof of reality
+- every abstraction must have a real usage test before the next abstraction is added
 ```
 
-## M4 — Workflow Engine
-
-Status: **COMPLETE**
+### I-001 — Define Minimal Integration Contract
 
 ```text
-W-001 Define state machine
-W-002 Define valid transitions
-W-003 Add approval configuration
-W-004 Add manual approval flow
-W-005 Add automatic approval flow
-W-006 Add blocked and user-input states
-W-007 Add retry and handoff rules
-W-008 Add ticket completion rules
+Required capability:
+- detect()
+
+Optional capabilities:
+- version()
+- install()
+- configure()
+- healthCheck() when genuinely needed
 ```
 
-## M5 — CLI and Role Invocation
-
-Status: **COMPLETE**
+Acceptance criteria:
 
 ```text
-CLI-001 Implement default Coordinator command
-CLI-002 Implement explicit --role selection
-CLI-003 Implement --specialty for Implementer
-CLI-004 Implement prompt-based role selection
-CLI-005 Define slash-command alias contract
-CLI-006 Implement slash-command aliases where host-supported
-CLI-007 Add help and discoverability
+- Core contract does not require install/configure/version on every integration
+- Contract represents capabilities explicitly
+- Provider-specific details are excluded from the core contract
+- Existing OpenCode integration can remain compatible or be adapted without unnecessary redesign
+- Tests cover required and optional capability combinations
 ```
 
-## M6 — Project Discovery
+### I-002 — Add Minimal Integration Registry
 
-Status: **COMPLETE**
-
-M6 provides discovery contracts, stack detection, package/build detection, testing detection, project conventions detection, an aggregated analysis report, Laravel and React examples, and safe unknown-stack behavior.
+Acceptance criteria:
 
 ```text
-A-001 Define discovery contract ✅
-A-002 Detect project stack ✅
-A-003 Detect package/build tools ✅
-A-004 Detect testing tools ✅
-A-005 Detect project conventions ✅
-A-006 Generate analysis report ✅
-A-007 Laravel analysis example ✅
-A-008 React analysis example ✅
-A-009 Handle unknown stack safely ✅
+- Registry owns the supported integration descriptors
+- Integrations are registered in one place
+- Registry does not perform provider-specific work itself
+- Adding a second integration does not require changing Coordinator workflow logic
+- No speculative plugin framework is introduced
 ```
 
-## M7 — OpenCode Provider
+### I-003 — Add Framework-Owned Detection and State Resolution
 
-Status: **COMPLETE**
-
-M7 provides a generic agent provider interface, an isolated OpenCode provider, role prompt rendering, a shared execution result format, timeout/failure handling, and OpenCode usage documentation.
+Define the separation:
 
 ```text
-O-001 Define agent provider interface ✅
-O-002 Add OpenCode provider ✅
-O-003 Add role prompt rendering ✅
-O-004 Add execution result format ✅
-O-005 Add timeout/failure handling ✅
-O-006 Document OpenCode usage ✅
+Integration detect()
+        |
+        v
+Detection Result
+        |
+        +----> User Configuration / Desired State
+        |
+        v
+Framework Integration State
 ```
 
-## M8 — Planning and Ticket Generation
-
-Status: **COMPLETE**
-
-M8 provides a generic specification provider interface, a Spec Kit adapter, a fallback provider, requirements-to-plan mapping, and plan-to-ticket decomposition.
+Minimum state must distinguish at least:
 
 ```text
-P-001 Define specification provider interface ✅
-P-002 Add Spec Kit adapter ✅
-P-003 Map requirements to plans ✅
-P-004 Map plans to tickets ✅
-P-005 Add fallback when Spec Kit is unavailable ✅
-P-006 Document Spec Kit usage
+detected
+installed/available when this can be established
+enabled
+ready
+lastKnownState
 ```
 
-## M9 — Implementation and Review Flow
-
-Status: **COMPLETE**
-
-M9 provides Implementer execution, Senior Reviewer execution, the changes-requested loop, technical approval, PM review, and completion reporting over the W-002 and W-008 contracts.
+Acceptance criteria:
 
 ```text
-IR-001 Implementer execution flow ✅
-IR-002 Senior Reviewer execution flow ✅
-IR-003 Changes-requested loop ✅
-IR-004 Technical approval flow ✅
-IR-005 PM review flow ✅
-IR-006 Completion reporting ✅
+- Fresh detection is possible at runtime
+- Stored state cannot override a failed fresh detection
+- enabled is independent from detected/installed
+- ready is derived from actual checks
+- unknown state is represented explicitly
 ```
 
-## M10 — GitHub Issues
+### I-004 — Validate the Foundation with OpenCode
 
-Status: **COMPLETE**
+This is the M14 proof gate before introducing the new optional integrations.
 
-M10 provides a generic issue provider interface, a GitHub Issues adapter with creation, update, and completion operations, ticket-state mapping, issue metadata extraction, and a local-only fallback provider.
+Acceptance criteria:
 
 ```text
-G-001 Define issue provider interface ✅
-G-002 Add GitHub Issues provider ✅
-G-003 Map ticket states ✅
-G-004 Add issue creation ✅
-G-005 Add issue update ✅
-G-006 Add issue completion ✅
-G-007 Add local-only fallback ✅
+- Existing OpenCode provider works through the new integration model where applicable
+- No regression in existing CLI/runtime behavior
+- Existing tests remain green
+- At least one integration status output is based on fresh detection
+- No unnecessary new dependency is introduced
 ```
 
-## M11 — Optional delegate-skills Integration
-
-Status: **COMPLETE**
-
-M11 provides a generic delegation provider contract, isolated availability detection, an optional delegate-skills adapter, an explicit opt-in configuration setting, a safety-confirmation seam, a failure-fallback boundary, and installation documentation. See the documented adapter-protocol limitation in `docs/providers-delegate-skills.md`.
+M14 exit gate:
 
 ```text
-D-001 Define delegate provider contract ✅
-D-002 Detect delegate-skills availability ✅
-D-003 Add optional delegate adapter ✅
-D-004 Add explicit enablement setting ✅
-D-005 Add safety confirmation ✅
-D-006 Add delegate failure fallback ✅
-D-007 Document optional installation ✅
+Contract -> Registry -> Detection/State -> Real OpenCode proof
 ```
 
-## M12 — Testing and Safety
+Only after this gate passes should M15 begin.
 
-Status: **COMPLETE**
+## M15 — Modern Spec Kit Integration
 
-M12 adds test-only coverage over the approved contracts: a shared isolation helper, workflow transition, configuration validation, role selection, provider failure, discovery robustness, execution safety, an end-to-end sample project, and installation verification. No production behavior changed.
+Status: **PENDING**
+
+Purpose: replace the historical Spec Kit adapter assumptions with a current, project-safe integration.
+
+Current upstream reference points used for this plan:
 
 ```text
-T-001 Unit test foundation ✅
-T-002 Workflow transition tests ✅
-T-003 Configuration validation tests ✅
-T-004 Role selection tests ✅
-T-005 Provider failure tests ✅
-T-006 Project discovery tests ✅
-T-007 Safe execution tests ✅
-T-008 End-to-end sample project ✅
-T-009 Installation verification ✅
+- specify CLI
+- specify init / --integration
+- integration management commands
+- project-local Spec Kit assets and agent integration
+- specification / clarification / planning / tasks / analysis workflow
 ```
 
-M12 closeout (2026-09-24): 581/581 tests passing; build, lint, and diff-check clean.
+The framework must not blindly delegate the full `/speckit-implement` flow because AI Team Framework owns ticket-by-ticket implementation, review, and approval.
 
-## M13 — Documentation and Release
-
-Status: **COMPLETE**
+### S-001 — Audit Existing Spec Kit Adapter
 
 ```text
-REL-001 Quick start ✅
-REL-002 Installation guide ✅
-REL-003 Configuration guide ✅
-REL-004 Roles guide ✅
-REL-005 Workflow guide ✅
-REL-006 Providers guide ✅
-REL-007 Troubleshooting ✅
-REL-008 Existing-project example ✅
-REL-009 Laravel + React example ✅
-REL-010 Final README ✅
-REL-011 Release checklist ✅
-REL-012 Release 0.1.0 ✅
+Classify each existing piece as:
+- keep
+- adapt
+- remove
+- replace
 ```
 
-M13 closeout (2026-09-24): 581/581 tests passing; build, lint, and
-diff-check clean; 0.1.0 released from this repository. No registry
-publication was performed (no registry configured, no credentials)
-and no git tag was created (no established tag convention); see the
-REL-012 report for the exact scope.
+Must explicitly resolve P-006.
+
+### S-002 — Implement Spec Kit Detection
+
+Detection must establish, where possible:
+
+```text
+- specify availability
+- installed version
+- target project initialized state
+- expected agent integration state
+- compatibility/readiness
+```
+
+No successful detection may be inferred only from the config file.
+
+### S-003 — Add Optional Installation Capability
+
+The integration may expose installation through the Framework when the environment supports the upstream installation path.
+
+Rules:
+
+```text
+Detect -> Explain -> Ask for confirmation -> Install -> Verify
+```
+
+No automatic installation merely because `ai-team setup` was executed.
+
+### S-004 — Handle Existing Projects Safely
+
+The adapter must support existing projects without assuming a clean directory.
+
+Any initialization/merge behavior must be explicit, documented, and non-destructive.
+
+### S-005 — Map Spec Kit Outputs into AI Team Artifacts
+
+```text
+Spec Kit specification / plan / tasks
+              |
+              v
+AI Team mapping layer
+              |
+              v
+AI Team tickets
+              |
+              v
+Implementer -> Senior Reviewer -> Approval
+```
+
+### S-006 — Spec Kit Failure and Fallback Behavior
+
+Cover:
+
+```text
+not installed
+not enabled
+wrong integration
+unsupported environment
+command failure
+invalid project state
+```
+
+Fallback must preserve the core workflow where possible.
+
+### S-007 — Spec Kit Usage Documentation
+
+Update:
+
+```text
+provider/integration documentation
+configuration documentation
+troubleshooting
+existing-project guidance
+```
+
+M15 exit gate:
+
+```text
+Spec Kit is optional, detected correctly, installable only with confirmation,
+usable through the Framework, and cannot bypass the Framework workflow.
+```
+
+## M16 — Modern delegate-skills Integration
+
+Status: **PENDING**
+
+Purpose: replace the old executable-based delegate integration with an adapter for the current Skills/relay model.
+
+### D-101 — Audit Historical Delegate Adapter
+
+Review all existing D-001–D-007 behavior and explicitly identify obsolete assumptions.
+
+The historical assumption:
+
+```text
+spawn("delegate-skills", ...)
+```
+
+must not survive merely for backward compatibility unless current upstream evidence proves the executable contract is still supported.
+
+### D-102 — Detect the Current Skills Installation
+
+Detection should establish, where possible:
+
+```text
+- delegate skill package available
+- requested delegate skill available
+- relay script available
+- required implementer CLI available
+- implementer authentication/readiness when observable safely
+```
+
+### D-103 — Optional Installation Capability
+
+Installation may be exposed through Framework setup where the environment can safely support the upstream Skills installation flow.
+
+Rules remain:
+
+```text
+Detect -> Explain -> Confirm -> Install -> Verify
+```
+
+### D-104 — Delegate Provider v2
+
+The provider must adapt the current delegate skill/relay behavior into the framework's existing `DelegateProvider` contract without leaking relay arguments or skill paths into role contracts.
+
+### D-105 — Result Mapping
+
+Current external result information may include status, exit information, final report, touched files, and session metadata when available.
+
+Map only what the framework genuinely needs into `DelegateResult`; do not duplicate the upstream result schema unnecessarily.
+
+### D-106 — Workflow and Commit Boundary
+
+The delegate path must preserve:
+
+```text
+Ticket
+ -> Delegation
+ -> Implementation result
+ -> Senior Reviewer
+ -> Approval
+ -> Next ticket
+```
+
+Delegation must not become a second workflow engine.
+
+### D-107 — Safe Failure/Fallback
+
+Cover:
+
+```text
+not installed
+not enabled
+missing implementer
+missing model/configuration
+relay failure
+external CLI failure
+```
+
+M16 exit gate:
+
+```text
+Delegate Skills is optional and usable internally without requiring the user
+or role prompts to know its installation or relay implementation details.
+```
+
+## M17 — Setup and Status UX
+
+Status: **PENDING**
+
+Purpose: give the user one framework-level interface for dependency/integration discovery and setup.
+
+### I-201 — Add `ai-team setup`
+
+Expected behavior:
+
+```text
+Detect
+  -> Show current state
+  -> Explain optional actions
+  -> Ask for explicit confirmation
+  -> Install/configure only selected integrations
+  -> Verify
+  -> Persist desired + last-known state
+```
+
+Setup must not silently install or modify external tools.
+
+### I-202 — Add `ai-team status`
+
+Status should report framework-derived state, for example:
+
+```text
+Integration      Detected   Enabled   Ready
+--------------------------------------------
+OpenCode            yes        yes      yes
+Spec Kit             yes         no      yes
+Delegate Skills      no         no       no
+GitHub               yes        yes      no
+```
+
+The exact terminal presentation is an implementation detail; the semantic fields are the source of truth.
+
+### I-203 — Configuration Model for Integrations
+
+Configuration must express:
+
+```yaml
+integrations:
+  <id>:
+    enabled: false
+    last_known:
+      detected: false
+      version: null
+      ready: false
+```
+
+The concrete field names may change during implementation if the final schema is simpler, but the separation must remain:
+
+```text
+desired configuration != observed runtime state
+```
+
+### I-204 — Idempotent and Non-Destructive Setup
+
+Repeated setup/status runs must not:
+
+```text
+- duplicate configuration
+- overwrite unrelated project files
+- reinstall working integrations unnecessarily
+- erase user changes
+```
+
+### I-205 — Integration Selection and Confirmation
+
+The setup flow must make clear which action is about to change the user's environment.
+
+Default policy:
+
+```text
+No installation/configuration without explicit confirmation.
+```
+
+M17 exit gate:
+
+```text
+User can discover, enable, install, and verify integrations from AI Team
+Framework without needing to learn the underlying external commands.
+```
+
+## M18 — Real Coordinator and Role Runtime
+
+Status: **PENDING**
+
+Purpose: complete the product workflow so integrations support the product rather than becoming the product.
+
+### R-101 — Coordinator Runtime
+
+### R-102 — Project Manager Runtime
+
+### R-103 — Technical Lead Runtime
+
+### R-104 — Implementer Runtime
+
+### R-105 — Senior Reviewer Runtime
+
+### R-106 — Provider/Integration Selection
+
+Selection must consider:
+
+```text
+configured intent
+capability availability
+readiness
+workflow rules
+```
+
+### R-107 — Workflow Enforcement
+
+External providers cannot directly mutate workflow states outside approved transition rules.
+
+M18 exit gate:
+
+```text
+User -> Coordinator -> PM/TL -> Ticket -> Implementer -> Senior Reviewer
+      -> Technical/PM checks -> Approval -> Next Ticket
+```
+
+## M19 — Integration End-to-End Validation
+
+Status: **PENDING**
+
+M19 is intentionally test-heavy rather than abstraction-heavy.
+
+### E-101 — Clean Environment
+
+Test without optional integrations.
+
+### E-102 — Setup and Status
+
+Test:
+
+```text
+not installed
+installed
+installed + disabled
+enabled + missing
+installed + broken
+```
+
+### E-103 — Existing Project
+
+Use a real existing-project fixture and verify non-destructive behavior.
+
+### E-104 — Spec Kit Flow
+
+```text
+User request
+ -> Spec Kit capability
+ -> Framework artifacts
+ -> Tickets
+ -> Implementation/review workflow
+```
+
+### E-105 — Delegate Flow
+
+```text
+Ticket
+ -> Delegate capability
+ -> Implementation result
+ -> Senior Reviewer
+```
+
+### E-106 — No-Integration Flow
+
+Core workflows must remain usable when an optional integration is unavailable and the requested task does not require it.
+
+### E-107 — Regression Matrix
+
+Existing `0.1.0` tests must remain green after modernization, with new integration-state and runtime tests added as needed.
+
+M19 exit gate:
+
+```text
+The new integrations are proved through real end-to-end scenarios,
+not only interface/unit tests.
+```
+
+## M20 — npm Distribution
+
+Status: **PENDING**
+
+Purpose: publish the framework publicly on npm with a clean, reproducible release path.
+
+### N-101 — Package Audit
+
+Verify:
+
+```text
+package name
+version
+bin
+files
+runtime dependencies
+README
+LICENSE
+build output
+```
+
+### N-102 — Clean Consumer Installation
+
+Verify both:
+
+```bash
+npm install -g <package>
+```
+
+and:
+
+```bash
+npm install <package>
+```
+
+with real consumer commands.
+
+### N-103 — npm Package Contents
+
+Use:
+
+```bash
+npm pack --dry-run
+```
+
+and verify no source-only/test-only/internal files are accidentally published.
+
+### N-104 — Public Package Publish
+
+The package is intended to be public/free to install. Publishing itself is not part of the runtime dependency model.
+
+### N-105 — Automated Release Publishing
+
+Prefer a secure CI publishing path such as npm Trusted Publishing when the repository/registry setup supports it.
+
+CI may use a newer Node/npm toolchain than the user's local runtime; that is acceptable because publishing environment requirements are separate from package runtime requirements.
+
+M20 exit gate:
+
+```text
+A fresh user can install the published package and run `ai-team --help`
+without cloning the repository.
+```
+
+## M21 — Release 0.2.0
+
+Status: **PENDING**
+
+### REL-101 — Documentation Refresh
+
+Update:
+
+```text
+README
+quick start
+installation
+configuration
+providers
+integrations
+workflow
+troubleshooting
+examples
+```
+
+### REL-102 — Release Checklist
+
+### REL-103 — Version and Tag
+
+```text
+v0.2.0
+```
+
+### REL-104 — GitHub Release
+
+### REL-105 — npm Release
+
+```text
+<package-name>@0.2.0
+```
 
 ---
 
 # 15. Dependencies
 
-The major dependency chain is:
+The post-`0.1.0` dependency chain is deliberately staged to avoid speculative architecture:
 
 ```text
-M0
- ↓
-M1
- ↓
-M2
- ↓
-M3
- ↓
-M4
- ↓
-M5
- ↓
-M6
- ↓
-M7
- ↓
-M8
- ↓
-M9
- ↓
-M10 / M11
- ↓
-M12
- ↓
-M13
+M14
+ |
+ +--> I-001 Integration Contract
+ |       |
+ |       v
+ +--> I-002 Registry
+ |       |
+ |       v
+ +--> I-003 Detection / State
+ |       |
+ |       v
+ +--> I-004 OpenCode Proof Gate
+ |
+ v
+M15 Spec Kit
+ |
+ v
+M16 delegate-skills
+ |
+ v
+M17 setup/status UX
+ |
+ v
+M18 real role runtime
+ |
+ v
+M19 end-to-end validation
+ |
+ v
+M20 npm distribution
+ |
+ v
+M21 release 0.2.0
 ```
 
-Some tickets may be developed in parallel once their contracts are stable, but the Coordinator should still present work to the implementation agent as one focused ticket at a time.
+Important planning rule:
+
+```text
+Do not complete the abstraction for its own sake.
+Each milestone must prove the new layer through a real project path before the next
+layer becomes mandatory.
+```
+
+The original one-ticket-at-a-time implementation rule remains unchanged.
 
 ---
 
 # 16. MVP Scope for Release 0.1.0
 
-## Included
+The `0.1.0` MVP scope remains historically fixed by the completed baseline. The modernization plan must not silently redefine what `0.1.0` meant.
+
+## Included in 0.1.0 Baseline
 
 - Coordinator
 - Project Manager
@@ -913,16 +1350,22 @@ Some tickets may be developed in parallel once their contracts are stable, but t
 - local workflow state
 - OpenCode provider
 - basic GitHub Issues provider
-- basic Spec Kit adapter
+- initial Spec Kit adapter
 - optional delegate-skills adapter
 - tests
 - beginner-oriented documentation
 - Laravel + React example
 - project-agnostic behavior
 
-## Explicitly Out of Scope
+## Explicitly Out of Scope for 0.1.0
 
-- Web dashboard
+- modernized external integration management
+- framework-level `ai-team setup`
+- framework-level `ai-team status`
+- fully autonomous integration installation
+- complete current-upstream Spec Kit workflow integration
+- complete current-upstream delegate-skills integration
+- web dashboard
 - complex parallel orchestration
 - permanent specialized agent fleet
 - multi-user authorization system
@@ -935,31 +1378,28 @@ Some tickets may be developed in parallel once their contracts are stable, but t
 
 ---
 
-# 17. Definition of Done for 0.1.0
+# 17. Definition of Done for Release 0.2.0
 
-Release `0.1.0` is considered complete when a new user can:
+Release `0.2.0` is complete when a user can:
 
-1. Install the framework.
-2. Initialize it in a new or existing project.
+1. Install the framework from npm.
+2. Initialize it in a new or existing project without destructive setup behavior.
 3. Run the Coordinator.
-4. Select a role through CLI, prompt, or supported slash command.
-5. Analyze an existing project before implementation.
-6. Produce a requirements/technical plan.
-7. Produce small implementation tickets.
-8. Execute one ticket.
-9. Run review.
-10. Request user approval when configured.
-11. Continue to the next ticket.
-12. Track work locally and optionally in GitHub Issues.
-13. Use OpenCode as the execution provider.
-14. Run without delegate-skills when it is not installed.
-15. Understand the workflow from the README without prior knowledge of the repository.
+4. Use the existing role interfaces without learning provider-specific commands.
+5. Run `ai-team status` and understand which integrations are detected, enabled, and ready.
+6. Run `ai-team setup` and explicitly approve any environment-changing installation/configuration step.
+7. Use Spec Kit through the framework when enabled.
+8. Use delegate-skills through the framework when enabled and supported.
+9. Continue to use the core workflow when optional integrations are unavailable and not required.
+10. Maintain the ticket-by-ticket Implementer -> Senior Reviewer -> approval workflow.
+11. Preserve existing-project files and conventions.
+12. Install the published npm package in a fresh consumer project and run the CLI successfully.
 
 ---
 
 # 18. Master Agent Prompt
 
-The following prompt is the baseline instruction for an AI Agent working on this repository.
+The following prompt is the baseline instruction for AI agents working on the repository after the `0.1.0` baseline.
 
 ```text
 You are working on the AI Team Framework repository.
@@ -972,33 +1412,37 @@ Before making any change:
 2. Read the relevant AI Team specification and current project state.
 3. Read the assigned ticket and all acceptance criteria.
 4. Inspect only the project files required to understand the ticket.
-5. Do not assume that a framework, architecture, test setup, provider, or tool exists.
+5. Do not assume that an external integration, provider, CLI, skill, or authentication method exists.
 6. Preserve existing conventions.
 7. Do not modify files outside the ticket scope unless the ticket explicitly requires it.
 8. Do not introduce unnecessary dependencies.
 9. Do not invent missing requirements.
-10. Stop and request user input when a requirement is ambiguous or a sensitive decision is required.
+10. Stop and request user input when a requirement is ambiguous or when an environment-changing action requires confirmation.
 
 Execution rules:
 
 - Work on one ticket at a time.
-- Keep the implementation simple and maintainable.
-- Follow the approved AI Team specifications.
-- Keep provider-specific logic isolated.
-- Do not couple the core framework unnecessarily to OpenCode, Spec Kit, GitHub, or delegate-skills.
-- Add or update tests when required.
+- Keep implementation simple and maintainable.
+- Prefer the smallest abstraction that solves the current ticket.
+- Keep provider/integration-specific logic isolated.
+- The core framework owns workflow state, tickets, review gates, and approvals.
+- External tools provide capabilities; they do not own the workflow.
+- `detect()` is the minimum integration capability; install/configure/version are optional.
+- Runtime detection is stronger than stored configuration state.
+- Do not install or configure external tools without explicit user confirmation through the approved setup flow.
+- Preserve non-destructive behavior for existing projects.
+- Add/update tests when required.
 - Run relevant validation commands.
 - Fix failures related to the current ticket only.
 - Do not mark the ticket complete unless all acceptance criteria are satisfied.
 - Do not move to another ticket unless the workflow explicitly allows it.
 
-Role selection may come from:
+When integrating Spec Kit or delegate-skills:
 
-- CLI flags
-- natural-language prompts
-- optional slash commands such as /project-manager or /technical-lead
-
-These interfaces must invoke the same underlying role contracts.
+- Follow the current upstream interface verified for the ticket.
+- Do not preserve obsolete executable assumptions without evidence.
+- Hide upstream command/skill/relay mechanics behind the integration adapter.
+- Do not bypass the Senior Reviewer or configured approval gates.
 
 Before finishing, report:
 
@@ -1020,49 +1464,60 @@ Before finishing, report:
 
 | Milestone | Status | Notes |
 |---|---|---|
-| M0 Discovery & Specification | **COMPLETE** | Specifications accepted; M0 closed |
-| M1 Repository Foundation | **COMPLETE** | F-001 through F-006 accepted |
-| M2 Configuration & Workspace | **COMPLETE** | C-001 through C-006 accepted |
-| M3 Role Contracts | **COMPLETE** | R-001 through R-007 accepted |
-| M4 Workflow Engine | **COMPLETE** | W-001 through W-008 accepted |
-| M5 CLI & Role Invocation | **COMPLETE** | CLI-001 through CLI-007 accepted |
-| M6 Project Discovery | **COMPLETE** | A-001 through A-009 accepted |
-| M7 OpenCode Provider | **COMPLETE** | O-001 through O-006 accepted |
-| M8 Planning & Ticket Generation | **COMPLETE** | P-001 through P-005 accepted |
-| M9 Implementation & Review | **COMPLETE** | IR-001 through IR-006 accepted |
-| M10 GitHub Issues | **COMPLETE** | G-001 through G-007 accepted |
-| M11 delegate-skills | **COMPLETE** | D-001 through D-007 accepted |
-| M12 Testing & Safety | **COMPLETE** | T-001 through T-009 accepted; 581/581 tests passing |
-| M13 Documentation & Release | **COMPLETE** | REL-001 through REL-012 accepted; 0.1.0 released |
+| M0–M13 | **COMPLETE** | `0.1.0` baseline completed; modernization starts after this baseline |
+| M14 Integration Foundation | **NEXT** | Minimal capability contract, registry, detection/state, then OpenCode proof gate |
+| M15 Modern Spec Kit | PENDING | Replace historical adapter assumptions and resolve P-006 |
+| M16 Modern delegate-skills | PENDING | Replace historical executable-based assumption with current Skills/relay adapter |
+| M17 Setup / Status UX | PENDING | Add `ai-team setup` and `ai-team status` with explicit confirmation |
+| M18 Real Role Runtime | PENDING | Complete actual Coordinator/PM/TL/Implementer/Senior Reviewer orchestration |
+| M19 Integration E2E | PENDING | Real integration and regression validation |
+| M20 npm Distribution | PENDING | Publish public package and verify clean consumer installation |
+| M21 Release 0.2.0 | PENDING | Final documentation, tag, GitHub Release, npm release |
+
+### Baseline Notes
+
+```text
+- 581/581 tests were passing at the 0.1.0 baseline validation point.
+- That result does not prove the new post-0.1.0 integrations are complete.
+- Historical delegate-skills implementation must be treated as obsolete until replaced by the current integration model.
+- Historical P-006 Spec Kit usage documentation remains open until M15 closes it.
+```
 
 ---
 
 # 20. Next Steps
 
-M0, M1, M2, M3, M4, M5, M6, M7, M8, M9, M10, M11, M12, and M13 are complete (F-001 through F-006, C-001 through C-006, R-001 through R-007, W-001 through W-008, CLI-001 through CLI-007, A-001 through A-009, O-001 through O-006, P-001 through P-005, IR-001 through IR-006, G-001 through G-007, D-001 through D-007, T-001 through T-009, and REL-001 through REL-012 accepted). Version 0.1.0 is released; no further milestones are defined.
-
-### M0 checklist
+The next work item is:
 
 ```text
-[done] Approve product direction
-[done] Approve core roles
-[done] Approve project-agnostic principle
-[done] Approve .ai-team isolation
-[done] Approve one-ticket-at-a-time default
-[done] Approve CLI role selection
-[done] Approve prompt role selection
-[done] Approve optional slash-command role selection
-[done] Approve manual approval as default
-[done] Approve optional providers
-[done] Finalize Product Scope specification
-[done] Finalize Role Contract specification
-[done] Finalize Workflow specification
-[done] Finalize Configuration specification
-[done] Finalize Provider boundaries
-[done] Finalize 0.1.0 Definition of Done
+M14 / I-001 — Define Minimal Integration Contract
 ```
 
-No further milestones are defined. Version 0.1.0 is released.
+I-001 must answer only the minimum contract questions required to support the current project:
+
+```text
+- What is required for every integration?
+- Which capabilities are optional?
+- How are capabilities advertised?
+- What result does detect() return?
+- How does the registry represent an integration without coupling to its implementation?
+```
+
+I-001 must not implement Spec Kit, delegate-skills, `ai-team setup`, or `ai-team status` yet.
+
+The immediate sequence is:
+
+```text
+I-001
+  ↓
+I-002
+  ↓
+I-003
+  ↓
+I-004 OpenCode proof gate
+  ↓
+M15
+```
 
 ---
 
@@ -1074,7 +1529,42 @@ When a new decision is made:
 
 1. Update the relevant section.
 2. Update the affected milestone/ticket status.
-3. Record the decision in the project documentation.
+3. Record the decision in the project documentation when it changes a stable contract.
 4. Do not silently change the scope.
+5. Prefer extending the smallest existing abstraction over introducing a new framework layer.
+6. Require a real usage test before expanding an abstraction that is not yet proven by the product.
 
-Any future change that affects the MVP scope, role responsibilities, workflow, or provider boundaries must be explicitly identified as a plan change.
+The following decisions are now recorded as approved plan constraints:
+
+```text
+1. Spec Kit, delegate-skills, and GitHub are optional integrations/capabilities, not core dependencies.
+2. The core framework owns workflow state, tickets, reviews, and approvals.
+3. Integration contracts are capability-based.
+4. detect() is required; install/configure/version are optional capabilities.
+5. Integration status is derived by the Framework from detection + configuration; stored state is not proof of current reality.
+6. Setup is confirmation-based and non-destructive by default.
+7. Users should interact with AI Team Framework commands rather than provider-specific commands wherever the Framework can safely encapsulate them.
+8. Abstractions must be justified by real usage and proven incrementally.
+9. Optional integration failure must not break unrelated core workflows.
+10. The modernization target is release 0.2.0 and npm distribution.
+```
+
+---
+
+# 22. Current Verified External References
+
+These references were used to align the modernization plan with the current upstream integration models:
+
+```text
+Spec Kit
+https://github.com/github/spec-kit
+https://github.com/github/spec-kit/blob/main/docs/installation.md
+https://github.com/github/spec-kit/blob/main/docs/reference/core.md
+https://github.com/github/spec-kit/blob/main/docs/reference/integrations.md
+
+Delegate Skills
+https://github.com/amElnagdy/delegate-skills
+https://github.com/amelnagdy/delegate-skills/blob/master/skills/opencode-delegate/SKILL.md
+```
+
+The references establish the upstream command/skill shapes; implementation tickets must still verify the exact behavior against the version/environment available during implementation rather than assuming that a future upstream release is identical.

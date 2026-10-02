@@ -74,8 +74,8 @@ function packFileList(): string[] {
 describe("installation verification", () => {
   it("declares the documented package metadata contract", () => {
     const pkg = readPackageJson();
-    assert.equal(pkg.name, "ai-team-framework");
-    assert.equal(pkg.version, "0.1.0");
+    assert.equal(pkg.name, "@moassaad/ai-team-framework");
+    assert.equal(pkg.version, "0.2.0");
     assert.match(String(pkg.version), /^\d+\.\d+\.\d+$/);
     assert.equal(pkg.main, "dist/index.js");
     assert.deepEqual(pkg.bin, { "ai-team": "dist/index.js" });
@@ -106,11 +106,15 @@ describe("installation verification", () => {
 
       const version = runCli(["--version"], dir);
       assert.equal(version.exitCode, 0);
-      assert.equal(version.stdout, "0.1.0\n");
+      assert.equal(version.stdout, "0.2.0\n");
 
-      const coordinator = runCli(["run"], dir);
-      assert.equal(coordinator.exitCode, 0);
-      assert.ok(coordinator.stdout.includes("Coordinator"));
+      const missingConfig = runCli(["run"], dir);
+      assert.equal(missingConfig.exitCode, 1);
+      assert.equal(missingConfig.stdout, "");
+      assert.ok(
+        missingConfig.stderr.includes("run error: Configuration file not found"),
+        "bare run fails bounded without services, credentials, or hangs",
+      );
     });
   });
 

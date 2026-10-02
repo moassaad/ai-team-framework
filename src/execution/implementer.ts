@@ -16,7 +16,7 @@ import { ExecutionFailureKind, ProviderExecutionError, executeWithTimeout } from
 import { ExecutionResult } from "../providers/result";
 import { renderRolePrompt } from "../providers/prompt";
 import { IMPLEMENTER_ROLE } from "../roles/implementer";
-import { ImplementerSpecialty, isImplementerSpecialty } from "../roles/contract";
+import { ImplementerSpecialty, RoleId, isImplementerSpecialty } from "../roles/contract";
 import { isValidTransition } from "../workflow/transitions";
 
 export interface ImplementerExecutionInput {
@@ -29,6 +29,14 @@ export interface ImplementerExecutionInput {
   };
   /** Already-resolved canonical specialty. Aliases rejected. */
   readonly specialty: ImplementerSpecialty;
+  /**
+   * Explicit role identity from the validated role reference
+   * (R-015). Must be "implementer": the seam stamps it into
+   * the provider invocation so role context survives the
+   * execution boundary as structured data. Never inferred;
+   * a mismatch fails before any provider invocation.
+   */
+  readonly role: RoleId;
   /** Target project root; becomes the provider working directory. */
   readonly project_root: string;
   /** Pre-computed discovery summary, when available. */
@@ -95,6 +103,9 @@ export function validateImplementerInput(data: unknown): ImplementerExecutionInp
   if (!isImplementerSpecialty(raw.specialty)) {
     fail(`unknown specialty ${JSON.stringify(raw.specialty)}`);
   }
+  if (raw.role !== "implementer") {
+    fail(`role must be "implementer", got ${JSON.stringify(raw.role)}`);
+  }
   const project_root = nonEmptyString(raw.project_root, "project_root");
   if (!isAgentProvider(raw.provider)) {
     fail("provider must satisfy the agent provider contract");
@@ -108,6 +119,7 @@ export function validateImplementerInput(data: unknown): ImplementerExecutionInp
   const input: ImplementerExecutionInput = {
     ticket: Object.freeze(validatedTicket),
     specialty: raw.specialty,
+    role: raw.role,
     project_root,
     provider,
     timeout_ms: raw.timeout_ms,
@@ -154,7 +166,7 @@ export async function executeImplementerTicket(
   try {
     const result = await executeWithTimeout(
       validated.provider,
-      { prompt, project_root: validated.project_root },
+      { prompt, project_root: validated.project_root, role: validated.role },
       { timeout_ms: validated.timeout_ms },
     );
     if (!isValidTransition("in_progress", "implementation_review")) {

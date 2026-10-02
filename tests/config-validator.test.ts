@@ -36,7 +36,7 @@ describe("config validator", () => {
         },
         workflow: { execution: "sequential", default_state: "ready" },
         providers: {
-          github: { enabled: true, owner: "acme", repo: "shop" },
+          github: { enabled: true, owner: "acme", repo: "shop", managedLabel: "ai-team", specialty: "backend" },
           delegate: { enabled: true },
         },
       }),
@@ -52,7 +52,7 @@ describe("config validator", () => {
         providers: {
           opencode: { enabled: true },
           speckit: { enabled: false },
-          github: { enabled: true, owner: "acme", repo: "shop" },
+          github: { enabled: true, owner: "acme", repo: "shop", managedLabel: "ai-team", specialty: "backend" },
           delegate: { enabled: true },
         },
       },
@@ -139,6 +139,47 @@ describe("config validator", () => {
       providers: { github: { owner: "acme" } },
     });
     assert.deepEqual(validated.providers?.github, { enabled: false, owner: "acme" });
+  });
+
+  it("enforces the github managedLabel/specialty condition only when enabled (R-012)", () => {
+    const base = { enabled: true, owner: "acme", repo: "shop", specialty: "backend" };
+    assert.throws(
+      () => validateConfig({ version: 1, providers: { github: base } }),
+      /config\.providers\.github\.managedLabel: required non-empty string/,
+    );
+    assert.throws(
+      () =>
+        validateConfig({
+          version: 1,
+          providers: { github: { ...base, managedLabel: "ai-team", specialty: "wizard" } },
+        }),
+      /config\.providers\.github\.specialty: unknown specialty "wizard"/,
+    );
+    assert.throws(
+      () =>
+        validateConfig({
+          version: 1,
+          providers: { github: { enabled: true, owner: "acme", repo: "shop", managedLabel: "ai-team" } },
+        }),
+      /config\.providers\.github\.specialty: required non-empty string/,
+    );
+    const enabled = validateConfig({
+      version: 1,
+      providers: { github: { ...base, managedLabel: "ai-team" } },
+    });
+    assert.deepEqual(enabled.providers?.github, {
+      enabled: true,
+      owner: "acme",
+      repo: "shop",
+      managedLabel: "ai-team",
+      specialty: "backend",
+    });
+    // Disabled github needs neither key, but passes them through when present.
+    const disabled = validateConfig({
+      version: 1,
+      providers: { github: { managedLabel: "ai-team" } },
+    });
+    assert.deepEqual(disabled.providers?.github, { enabled: false, managedLabel: "ai-team" });
   });
 
   it("rejects wrong provider field types", () => {

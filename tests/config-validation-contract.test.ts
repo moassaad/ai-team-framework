@@ -24,7 +24,7 @@ const FULL_VALID = {
   providers: {
     opencode: { enabled: true },
     speckit: { enabled: true },
-    github: { enabled: true, owner: "acme", repo: "shop" },
+    github: { enabled: true, owner: "acme", repo: "shop", managedLabel: "ai-team", specialty: "backend" },
     delegate: { enabled: true },
   },
 };
@@ -213,6 +213,8 @@ describe("configuration validation contract", () => {
           "    enabled: true",
           "    owner: acme",
           "    repo: shop",
+          "    managedLabel: ai-team",
+          "    specialty: backend",
           "  delegate:",
           "    enabled: true",
           "",

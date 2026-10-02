@@ -15,6 +15,7 @@ import { ExecutionFailureKind, ProviderExecutionError, executeWithTimeout } from
 import { ExecutionResult } from "../providers/result";
 import { renderRolePrompt } from "../providers/prompt";
 import { SENIOR_REVIEWER_ROLE } from "../roles/senior-reviewer";
+import { RoleId } from "../roles/contract";
 
 export interface ReviewerExecutionInput {
   /** Ticket under review; shape-checked locally, planning contracts untouched. */
@@ -26,6 +27,15 @@ export interface ReviewerExecutionInput {
   };
   /** Implementation result text under review (e.g. an IR-001 outcome). */
   readonly implementation_result: string;
+  /**
+   * Explicit role identity from the validated role reference
+   * (R-015). Must be "senior-reviewer": the seam stamps it
+   * into the provider invocation so role context survives the
+   * execution boundary as structured data. Never inferred;
+   * a mismatch fails before any provider invocation. The
+   * reviewer receives no Implementer specialty.
+   */
+  readonly role: RoleId;
   /** Target project root; becomes the provider working directory. */
   readonly project_root: string;
   /** Pre-computed discovery summary, when available. */
@@ -90,6 +100,9 @@ export function validateReviewerInput(data: unknown): ReviewerExecutionInput {
     requirements: nonEmptyString(ticket.requirements, "ticket.requirements"),
   };
   const implementation_result = nonEmptyString(raw.implementation_result, "implementation_result");
+  if (raw.role !== "senior-reviewer") {
+    fail(`role must be "senior-reviewer", got ${JSON.stringify(raw.role)}`);
+  }
   const project_root = nonEmptyString(raw.project_root, "project_root");
   if (!isAgentProvider(raw.provider)) {
     fail("provider must satisfy the agent provider contract");
@@ -103,6 +116,7 @@ export function validateReviewerInput(data: unknown): ReviewerExecutionInput {
   const input: ReviewerExecutionInput = {
     ticket: Object.freeze(validatedTicket),
     implementation_result,
+    role: raw.role,
     project_root,
     provider,
     timeout_ms: raw.timeout_ms,
@@ -153,7 +167,7 @@ export async function executeReviewerTicket(
   try {
     const result = await executeWithTimeout(
       validated.provider,
-      { prompt, project_root: validated.project_root },
+      { prompt, project_root: validated.project_root, role: validated.role },
       { timeout_ms: validated.timeout_ms },
     );
     return Object.freeze({

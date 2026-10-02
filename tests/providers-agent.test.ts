@@ -65,7 +65,8 @@ describe("agent provider contract", () => {
     assert.ok(!/opencode/i.test(code), "no OpenCode coupling");
     assert.ok(!/child_process|execSync|spawn|fetch\(|http:|https:|node:/.test(code), "no transport");
     assert.ok(!/\bmodel\b|\btoken\b|temperature|api[_-]?key/i.test(code), "no offering specifics");
-    assert.ok(!/RoleId|responsib|workflow|approval/i.test(code), "no role/workflow embedding");
+    assert.ok(!/responsib|workflow|approval/i.test(code), "no role/workflow embedding");
+    assert.ok(/RoleId/.test(code), "R-015 exception: only the role identity type is referenced");
   });
 
   it("embeds no prompt rendering, result expansion, timeout, or retry", async () => {

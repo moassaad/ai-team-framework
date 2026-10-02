@@ -95,6 +95,8 @@ providers.speckit.enabled                  boolean
 providers.github.enabled                   boolean
 providers.github.owner                     string
 providers.github.repo                      string
+providers.github.managedLabel              string
+providers.github.specialty                 backend | frontend | integration | database | testing | documentation
 providers.delegate.enabled                 boolean
 ```
 
@@ -111,6 +113,11 @@ No other fields or values are supported.
 - Provider `enabled` values must be booleans when present.
 - `github.owner` and `github.repo` must be non-empty strings when
   `github.enabled` is `true`. When GitHub is disabled, neither is required.
+- `github.managedLabel` (managed-issue label, no default) and
+  `github.specialty` (Implementer specialty staffing production
+  runs, never inferred) must be present and valid when
+  `github.enabled` is `true`; they are required by `ai-team run`
+  (R-012). When GitHub is disabled, neither is required.
 - Unknown **top-level** keys are rejected.
 - Unknown **provider** keys (directly under `providers`) are rejected.
 - There is no blanket policy for unknown keys deeper inside sections;
@@ -187,7 +194,8 @@ delegate     disabled by default (optional, never auto-enabled)
 
 This is configuration only. Provider execution lives in the
 provider modules (`src/providers/`) and is documented separately
-(`docs/providers-opencode.md`, `docs/providers-delegate-skills.md`).
+(`docs/providers-opencode.md`, `docs/providers-speckit.md`,
+`docs/providers-delegate-skills.md`).
 
 ## 11. Approval and workflow values
 
@@ -223,6 +231,8 @@ providers:
     enabled: true
     owner: "acme"
     repo: "shop"
+    managedLabel: "ai-team"
+    specialty: "backend"
 ```
 
 Opt-in delegation alongside disabled-everything-else. Intent only:

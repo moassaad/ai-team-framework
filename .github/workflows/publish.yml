@@ -1,0 +1,67 @@
+# Release publish workflow (M20 NPM-003 preparation).
+#
+# Triggered only by a published GitHub release; never by push
+# or pull_request, and never executed as part of ordinary
+# development or testing. Performs no registry write until
+# the final explicit publish step, which itself runs only
+# after checkout, toolchain setup, clean install, build,
+# full test suite, and artifact verification all succeed.
+#
+# Identity: `@moassaad/ai-team-framework@0.2.0` (approved
+# M21 identity). The unscoped `ai-team-framework` name
+# remains owned by another publisher and is never used.
+# The executable stays `ai-team` regardless. Because this
+# is a scoped public package, the publish step below uses
+# `--access public`, as npm requires on initial scoped
+# publication.
+#
+# Trusted publishing: no npm token lives here or anywhere in
+# the repository. With `id-token: write` and an npm trusted
+# publisher configured for this repository/package (an
+# external npmjs.com configuration owned by the publisher,
+# explicitly out of scope for this ticket), npm 11.5.1+
+# exchanges the OIDC token automatically. Provenance
+# attestations are therefore generated, never disabled.
+# No package-manager cache is enabled, keeping the release
+# build uncontaminated.
+
+name: Publish to npm
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out release source
+        uses: actions/checkout@v4
+
+      - name: Set up Node for publishing
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.14.0
+          registry-url: https://registry.npmjs.org/
+
+      - name: Meet the trusted-publishing toolchain floor
+        run: npm install -g npm@^11.5.1
+
+      - name: Clean install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      - name: Verify package artifact
+        run: npm pack --dry-run
+
+      - name: Publish to npm
+        run: npm publish --access public

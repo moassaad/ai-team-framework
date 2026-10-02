@@ -1,9 +1,8 @@
 {
-  "name": "ai-team-framework",
-  "version": "0.1.0",
+  "name": "@moassaad/ai-team-framework",
+  "version": "0.2.0",
   "description": "A reusable, project-agnostic AI team framework for software development.",
   "license": "MIT",
-  "private": true,
   "type": "commonjs",
   "main": "dist/index.js",
   "bin": {
@@ -12,6 +11,16 @@
   "files": [
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moassaad/ai-team-framework.git"
+  },
+  "bugs": {
+    "url": "https://github.com/moassaad/ai-team-framework/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "tsc",
     "test": "tsc -p tsconfig.test.json && node --test dist-test/tests/",

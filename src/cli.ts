@@ -15,18 +15,60 @@ export interface CliResult {
 }
 
 const HELP_TEXT = `AI Team Framework CLI
-Minimal command-line entry point. Framework orchestration is not implemented yet.
+Minimal command-line entry point.
 
 Usage:
   ai-team [options]
-  ai-team run
+  ai-team run [--review-decision approved | --review-decision changes_requested --review-feedback "..."]
   ai-team run --role <role>
   ai-team run --role implementer --specialty <specialty>
   ai-team run "<prompt text>"
   ai-team run "/<slash command>"
+  ai-team sprint [--review-decision ...] [--tl-decision ...] [--pm-decision ...] [--final-decision ...]
+  ai-team status
+  ai-team setup <integration> [--yes]
 
 Commands:
-  run                  Select the Coordinator (default).
+  run                  Execute one production Coordinator ticket:
+                       read managed GitHub issues once, run at most
+                       one ticket, synchronize it once. The GitHub
+                       token is read from stdin (pipe it in). The
+                       review decision is never assumed: pass it
+                       explicitly with --review-decision
+                       (changes_requested needs --review-feedback),
+                       or decide interactively at the prompt after
+                       the reviewer report (terminal only).
+                       Non-interactive runs without explicit
+                       decision arguments fail safely. Never runs
+                       a sprint, never retries.
+                        With --role, prompt text, or a slash command,
+                        only presents the selected role contract;
+                        role execution stays unimplemented there.
+   sprint             Execute one production sprint traversal:
+                        read managed GitHub issues once, run the
+                        sprint workflow once (Coordinator, then
+                        Technical Lead, PM/User Testing, and final
+                        Coordinator approval reviews), synchronize
+                        explicitly approved tickets once. Same
+                        configuration and stdin token as run, plus
+                        one explicit decision per review stage
+                        (--review-decision keeps its run meaning;
+                        --tl-decision, --pm-decision, and
+                        --final-decision cover the later stages),
+                        or decide interactively at the TTY prompts.
+                        Non-interactive runs without a needed
+                        decision fail safely. Never retries, never
+                        re-enters: reenterable outcomes exit
+                        non-success for an explicit later call.
+  status               Show integration status (read-only).
+                       Reports desired state separately from fresh
+                       detection. Never installs, configures, or
+                       modifies anything; setup is a separate concern.
+  setup <integration> [--yes]
+                       Set up one integration: explain, ask, then
+                       install/configure once and verify. Without
+                       --yes asks first; --yes confirms explicitly.
+                       Reads configuration, never writes it.
 
 Options:
   -h, --help           Show this help message and exit.

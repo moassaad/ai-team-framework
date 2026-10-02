@@ -45,22 +45,51 @@ npm test        # full suite; expect 581/581 passing
 
 ## First run
 
-Verify the installation and meet the Coordinator:
+Verify the installation:
 
 ```bash
 node dist/index.js --help
 node dist/index.js --version
-node dist/index.js run
 ```
 
-`run` with no arguments selects the Coordinator and prints its
-contract:
+Bare `node dist/index.js run` executes one production
+Coordinator ticket against managed GitHub issues (it needs
+`providers.github` with `owner`, `repo`, `managedLabel`, and
+`specialty` in `.ai-team/config.yaml`, plus the GitHub token
+on stdin) — so meet the Coordinator through role selection
+first:
 
-```text
-Coordinator (coordinator)
-Default user-facing role: receive user requests, route work to the appropriate roles, and communicate status and results.
-Role execution is not implemented yet.
+```bash
+node dist/index.js run --role technical-lead
 ```
+
+```bash
+node dist/index.js run --role technical-lead
+```
+
+prints the Technical Lead contract. Role selection only presents
+contracts (`Role execution is not implemented yet` there); only
+bare `ai-team run` executes, via the production GitHub runtime.
+
+`ai-team sprint` executes one production sprint traversal
+through the same configuration and stdin token: it reads the
+managed issues once, runs the sprint workflow once
+(Coordinator, then Technical Lead, PM/User Testing, and final
+Coordinator approval reviews), and synchronizes explicitly
+approved tickets once. Each review stage needs its own explicit
+decision — `--review-decision` (same meaning as `run`),
+`--tl-decision`, `--pm-decision`, `--final-decision` — or an
+interactive TTY prompt per stage when the flags are absent:
+
+```bash
+echo "$GITHUB_TOKEN" | node dist/index.js sprint --review-decision approved --tl-decision approved --pm-decision approved --final-decision approved
+```
+
+Exit `0` means final synchronization succeeded; any other exit
+means the sprint stopped (work remaining, corrections created,
+changes required, or a failure) with a bounded message. The
+command never retries or re-enters: invoke it again explicitly
+when the follow-up work has landed.
 
 The last line is honest scoping: the CLI currently presents role
 contracts and resolves role selection. Full role execution is wired

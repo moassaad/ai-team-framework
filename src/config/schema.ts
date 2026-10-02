@@ -69,6 +69,19 @@ export interface GitHubProviderConfig {
    * `enabled` is true — enforced by C-003.
    */
   repo?: string;
+  /**
+   * Managed-issue label selecting AI Team tickets (R-011). No
+   * default — never assumed. Required (non-empty) when
+   * `enabled` is true.
+   */
+  managedLabel?: string;
+  /**
+   * Implementer specialty staffing the production runtime
+   * (R-012). No default and never inferred — the CLI fails
+   * with a bounded missing-input error when it is absent.
+   * Required (a valid specialty) when `enabled` is true.
+   */
+  specialty?: string;
 }
 
 export interface DelegateProviderConfig {

@@ -1,14 +1,47 @@
 # Installation Guide
 
 How to install the AI Team Framework and reach a working CLI.
-Only the paths below exist; registry installation has not been
-verified and is labeled as such. For first use after installing,
+The approved public release is `@moassaad/ai-team-framework@0.2.0`;
+registry publication is pending owner two-factor
+authentication (see below). For first use after installing,
 see `docs/quick-start.md`.
+
+The package is tested from the generated npm artifact: the
+suite packs the real tarball, installs it with npm into a
+temporary consumer, and runs the installed `ai-team`
+binary there — including a registry-backed installation
+check for the released version.
+
+## Release identity (M21 release, publication pending owner 2FA)
+
+- Final package identity: `@moassaad/ai-team-framework@0.2.0`.
+- The unscoped `ai-team-framework` name is owned by another
+  publisher and was never used for this project's release.
+- The `ai-team` CLI binary is unchanged; package name and
+  executable remain separate contracts.
+- Publication pending: the first `npm publish --access
+  public` attempt was refused with HTTP 403 — the
+  `moassaad` account requires two-factor authentication
+  (or a granular token with 2FA bypass) to publish. The
+  owner must complete the 2FA/OTP step or configure the
+  npm trusted publisher, then re-run publish plus the
+  registry verifications below. Nothing was published;
+  no partial state exists (the scoped name still 404s).
+
+The release workflow (`.github/workflows/publish.yml`) is prepared for
+npm Trusted Publishing over OIDC — no tokens in the
+repository, `id-token: write` plus `contents: read`, Node
+22.14.0 with npm 11.5.1+, build → test → artifact check →
+explicit `npm publish --access public` on release publication.
+The first release goes out by direct authenticated
+publication (`moassaad` session) once the 2FA step clears; the workflow remains the
+Trusted Publishing path for future releases once the
+matching trusted publisher is configured on npmjs.com.
 
 ## Prerequisites
 
-- Node.js 18+ (verified on v18.19.1; `package.json` declares no
-  narrower `engines` range, so treat 18 as the floor).
+- Node.js 18+ (verified on v18.19.1; `package.json` declares
+  `engines: { "node": ">=18" }`, so treat 18 as the floor).
 - npm 9+ (verified on 9.2.0). It is needed for dependency
   installation and for running the `build`/`test`/`lint` scripts.
 - No global TypeScript installation: `typescript`, `eslint`, and
@@ -50,11 +83,15 @@ The published artifact therefore contains `dist/`, `package.json`,
 `tests/installation-verification.test.ts`). Installing that artifact
 still requires its one runtime dependency (`yaml`), so a registry or
 tarball install needs network access for dependency resolution.
-Registry installation itself was **not** executed during
-verification; do not treat it as tested.
 
-Global installation (`npm install -g`) is not part of the verified
-path and no `sudo` step is documented or required. Do not invent one.
+```bash
+npm install -g @moassaad/ai-team-framework   # after publication lands
+ai-team --help
+ai-team --version   # 0.2.0
+```
+
+Global installation needs no `sudo` step beyond the user's own npm
+setup. Do not invent one.
 
 ## Build behavior
 
@@ -89,9 +126,12 @@ node dist/index.js run
 ```
 
 Once installed as a package binary the same invocation is
-`ai-team run`. The CLI currently presents role contracts and
-resolves role selection; it reports `Role execution is not
-implemented yet` rather than executing autonomously. First-use
+`ai-team run`. Role selection (`run --role ...`, prompt text,
+slash commands) presents role contracts and reports
+`Role execution is not implemented yet` rather than executing
+autonomously; bare `ai-team run` instead executes one
+production Coordinator ticket via the GitHub runtime
+(`providers.github` configured, token on stdin). First-use
 workflow: `docs/quick-start.md`.
 
 ## Network and registry boundaries

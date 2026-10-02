@@ -34,6 +34,13 @@ progress and results — including relaying your explicit approval
 decisions. It is not an implementation role: it writes no code and
 never replaces the Technical Lead on technical decisions.
 
+Final Coordinator approval (`runFinalApproval`) requires explicit
+PM/User Testing approval first, then one explicit Coordinator
+decision over the current ticket snapshot with the opaque PM
+report as evidence. It mutates nothing and creates nothing —
+translating approval into ticket state transitions belongs to
+later orchestration work.
+
 ## Project Manager
 
 Owns requirements, scope, and business acceptance. It collects
@@ -41,6 +48,15 @@ requirements, turns them into plans, asks when requirements are
 missing, and later checks whether the implementation matches what
 was agreed. It is not the low-level implementation authority — that
 belongs to the Technical Lead's tickets and the Implementer.
+
+PM/User Testing is an explicit sprint-level boundary
+(`runPmUserTestingReview`) that runs only after explicit
+Technical Lead approval: one provider invocation under the
+`project-manager` identity over the current ticket snapshot,
+an opaque report, and an explicit verdict (`approved` or
+`changes-required`). It is report-opaque and non-mutating —
+it creates no correction tickets and performs no final
+Coordinator approval.
 
 ## Technical Lead
 
@@ -51,6 +67,22 @@ constraints and conventions, splits work into small tickets,
 assigns Implementer specialties, decides rework-or-proceed after
 review, and escalates technical decisions it cannot resolve. It
 never invents requirements; those stay with the Project Manager.
+
+After Coordinator work is ready (no executable, in-flight,
+blocked, failed, or invalid tickets remain), the Technical Lead
+reviews the sprint as a separate runtime stage
+(`runTechnicalLeadReview`): one provider invocation under the
+explicit `technical-lead` identity, an opaque report, and an
+explicit verdict (`approved` or `corrections-required`). The
+review never mutates tickets and never creates correction
+tickets itself — those belong to a later stage — and it never
+invokes PM or user review.
+
+Technical Lead corrections produce one generic aggregated
+correction ticket through `IssueProvider`
+(`createTechnicalLeadCorrectionTicket`): the affected ticket
+IDs plus verbatim notes, never a parsed report or per-ticket
+fan-out.
 
 ## Implementer
 
