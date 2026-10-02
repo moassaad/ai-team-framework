@@ -374,6 +374,20 @@ readiness. Business meaning never becomes technical prescription,
 one provider call happens at most once, and nobody is invoked —
 TL planning (T-008) consumes the handoff later.
 
+## Technical Lead Planning (M23 T-008)
+
+TL planning (`runTechnicalLeadPlanning` in `src/runtime/tl-planning.ts`)
+is distinct from TL sprint review: it takes the validated PM → TL
+handoff plus caller-structured technical content and returns a frozen
+TL plan (architecture, decomposition strategy, technical constraints,
+dependencies, unresolved questions) with an opaque provider report
+that is never parsed. The PM handoff stays the untouched business
+source; technical content comes only from explicit caller input, and
+the decomposition strategy never becomes tasks, sprints, issues, or
+an Implementer handoff — those belong to M24. Open questions return
+`clarification-required` with the partial plan; one provider call
+happens at most once; nobody is invoked.
+
 ## Practical example (conceptual)
 
 ```text
