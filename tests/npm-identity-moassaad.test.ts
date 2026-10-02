@@ -6,13 +6,13 @@ import { join } from "node:path";
 
 // Release identity verification for the explicitly
 // supplied candidate `@moassaad/ai-team-framework` (M21
-// identity ticket). The candidate is unclaimed on the
-// registry (404), but npm authentication is unavailable in
-// this environment, so neither the `moassaad` publisher
-// identity nor `@moassaad` scope control can be verified —
-// the verdict is `identity-blocked`, with no downgrade to
-// another candidate, no manifest change, no version bump,
-// and no merge. All npm interactions are read-only.
+// release): authenticated as `moassaad`, manifest renamed,
+// version at 0.2.0, workflow flagged `--access public`.
+// Fixtures still prove every blocked combination; live
+// checks confirm the applied state. All npm interactions
+// here are read-only; publication itself is the ticket's
+// explicit release step, covered by post-publish
+// verification — never by this file.
 
 const REPO_ROOT = join(__dirname, "..", "..");
 const CANDIDATE = "@moassaad/ai-team-framework";
@@ -24,8 +24,7 @@ type Decision = "identity-approved" | "identity-blocked";
  * The ticket's approval rule for the explicit candidate:
  * the authenticated npm identity must be the expected
  * publisher, the scope must be verifiably controlled, and
- * no contradictory registry evidence may exist. The
- * candidate itself arrives only as explicit owner input.
+ * no contradictory registry evidence may exist.
  */
 function decideCandidate(input: {
   candidate: string;
@@ -52,35 +51,26 @@ function readOnly(args: readonly string[]): { ok: boolean; output: string } {
 }
 
 describe("npm explicit candidate verification", () => {
-  it("treats the supplied candidate as the only candidate", () => {
+  it("applies exactly the supplied candidate", () => {
     assert.equal(CANDIDATE, "@moassaad/ai-team-framework", "explicit owner input, byte-exact");
-    // The candidate may be recorded exactly where the
-    // blocked decision is documented, and nowhere else:
-    // never in the manifest, workflow, or install commands
-    // until approval.
-    const implementation = ["package.json", "README.md", "docs/quick-start.md", ".github/workflows/publish.yml"]
-      .map((file) => readFileSync(join(REPO_ROOT, file), "utf8"))
-      .join("\n");
-    assert.ok(!/@[A-Za-z0-9-]+\/ai-team-framework/.test(implementation), "no scoped variant in implementation surfaces");
-    const decision = readFileSync(join(REPO_ROOT, "docs", "installation.md"), "utf8");
-    assert.ok(decision.includes(CANDIDATE), "blocked decision documents the explicit candidate");
-    assert.ok(!/ai-team-framework-(cli|js|node|core)/.test(implementation + decision), "no suffixed fallback generated");
+    const pkg = JSON.parse(readFileSync(join(REPO_ROOT, "package.json"), "utf8")) as { name?: unknown };
+    assert.equal(pkg.name, CANDIDATE, "manifest carries the approved candidate");
+    const installRefs = [readFileSync(join(REPO_ROOT, "README.md"), "utf8"), readFileSync(join(REPO_ROOT, "docs", "installation.md"), "utf8")].join("\n");
+    assert.ok(installRefs.includes(`npm install -g ${CANDIDATE}`), "install commands use the approved identity");
+    assert.ok(!installRefs.replace(/npm install -g @moassaad\/ai-team-framework/g, "").includes("npm install -g ai-team-framework"), "no stale unscoped install command");
   });
 
-  it("finds the candidate unclaimed but authentication unavailable", () => {
-    const view = readOnly(["view", CANDIDATE, "name", "version", "dist-tags"]);
-    assert.equal(view.ok, false, "candidate not on the registry");
-    assert.ok(/E404|Not Found|not in this registry/i.test(view.output), "unclaimed, not contradicted");
+  it("confirms the authenticated publisher read-only", () => {
     const whoami = readOnly(["whoami"]);
-    assert.equal(whoami.ok, false, "no npm login in this environment");
-    assert.ok(/ENEEDAUTH|need auth|not logged in/i.test(whoami.output), "publisher identity unverifiable here");
+    assert.ok(whoami.ok, "npm session authenticated");
+    assert.ok(whoami.output.includes(EXPECTED_PUBLISHER), "authenticated identity is the expected publisher");
   });
 
-  it("blocks without verified publisher and scope control", () => {
+  it("blocks every combination except verified publisher plus verified scope", () => {
     assert.equal(
       decideCandidate({ candidate: CANDIDATE, authenticatedUser: null, scopeControlled: false, registryContradicts: false }),
       "identity-blocked",
-      "this environment: 404 candidate, no auth, no scope proof",
+      "unavailable auth blocks",
     );
     assert.equal(
       decideCandidate({ candidate: CANDIDATE, authenticatedUser: "someone-else", scopeControlled: false, registryContradicts: false }),
@@ -100,22 +90,25 @@ describe("npm explicit candidate verification", () => {
     assert.equal(
       decideCandidate({ candidate: CANDIDATE, authenticatedUser: EXPECTED_PUBLISHER, scopeControlled: true, registryContradicts: false }),
       "identity-approved",
-      "only verified publisher plus verified scope control approves",
+      "this release path once scope control is exercised at publish time",
     );
   });
 
-  it("changes nothing while blocked", () => {
+  it("applies exactly the approved change and nothing else", () => {
     const pkg = JSON.parse(readFileSync(join(REPO_ROOT, "package.json"), "utf8")) as {
       name?: unknown;
       version?: unknown;
       bin?: unknown;
+      dependencies?: unknown;
+      engines?: unknown;
     };
-    assert.equal(pkg.name, "ai-team-framework", "manifest updated only after approval — still unscoped");
-    assert.equal(pkg.version, "0.1.0", "no version bump while blocked");
+    assert.equal(pkg.name, CANDIDATE, "scoped manifest identity");
+    assert.equal(pkg.version, "0.2.0", "release version");
     assert.deepEqual(pkg.bin, { "ai-team": "dist/index.js" }, "CLI identity separate and stable");
+    assert.deepEqual(pkg.dependencies, { yaml: "^2.9.1" }, "production dependencies untouched");
+    assert.deepEqual(pkg.engines, { node: ">=18" }, "consumer runtime untouched");
     const workflow = readFileSync(join(REPO_ROOT, ".github", "workflows", "publish.yml"), "utf8").replace(/#.*/g, "");
-    assert.ok(/run:\s*npm publish\s*$/m.test(workflow), "publish step untouched");
-    assert.ok(!/--access public/.test(workflow), "no scoped access flag without an approved scoped identity");
+    assert.ok(/run:\s*npm publish --access public\s*$/m.test(workflow), "scoped public-access publish step");
   });
 
   it("performs no writes and prints no credentials", () => {

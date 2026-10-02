@@ -16,8 +16,8 @@ import { join } from "node:path";
 // artifact validation.
 
 const REPO_ROOT = join(__dirname, "..", "..");
-const EXPECTED_VERSION = "0.1.0";
-const TARBALL_NAME = `ai-team-framework-${EXPECTED_VERSION}.tgz`;
+const EXPECTED_VERSION = "0.2.0";
+const TARBALL_NAME = `moassaad-ai-team-framework-${EXPECTED_VERSION}.tgz`;
 
 function npm(args: readonly string[], cwd: string): string {
   return execFileSync("npm", [...args], { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
@@ -50,7 +50,7 @@ function setupConsumer(): { workdir: string; consumer: string; tarball: string }
 }
 
 function installedRoot(consumer: string): string {
-  return join(consumer, "node_modules", "ai-team-framework");
+  return join(consumer, "node_modules", "@moassaad", "ai-team-framework");
 }
 
 describe("npm consumer installation and smoke test", () => {
@@ -60,7 +60,7 @@ describe("npm consumer installation and smoke test", () => {
       const root = installedRoot(consumer);
       assert.ok(existsSync(join(root, "package.json")), "consumer gets the package under its expected name");
       const installed = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as Record<string, unknown>;
-      assert.equal(installed.name, "ai-team-framework", "installed name matches");
+      assert.equal(installed.name, "@moassaad/ai-team-framework", "installed name matches");
       assert.equal(installed.version, EXPECTED_VERSION, "installed version matches the tarball and repo manifest");
       assert.deepEqual(installed.bin, { "ai-team": "dist/index.js" }, "bin mapping survives installation");
       assert.deepEqual(installed.dependencies, { yaml: "^2.9.1" }, "production dependencies survive installation");
@@ -99,26 +99,34 @@ describe("npm consumer installation and smoke test", () => {
   });
 
   it("registry read check is read-only and never gates local validation", { timeout: 60000 }, () => {
-    // Classification only: "registered" means the name is
-    // taken on the registry (ownership unverified — this
-    // repository has never published, so a listed 0.1.0 is
-    // not our artifact); "unpublished" means the name is
-    // free; "unavailable" means no registry access. All
-    // three keep local artifact validation green.
+    // Classification only, stable before and after release:
+    // "released" means the registry lists our exact
+    // identity and version; "unclaimed" means the 404
+    // pre-publish state; "unavailable" means no registry
+    // access. All three keep local artifact validation
+    // green — this check observes, never gates.
     let status = "unavailable";
     let detail = "registry unreachable or npm view failed";
     try {
-      const raw = execFileSync("npm", ["view", "ai-team-framework", "versions", "--json"], {
+      const raw = execFileSync("npm", ["view", "@moassaad/ai-team-framework", "name", "version", "--json"], {
         encoding: "utf8",
         stdio: ["ignore", "pipe", "pipe"],
       });
-      const versions = JSON.parse(raw) as unknown;
-      const list = Array.isArray(versions) ? versions.map(String) : [String(versions)];
-      status = list.length > 0 ? "registered" : "unpublished";
-      detail = `registry lists: ${list.join(", ")}`;
-    } catch {
-      status = "unavailable";
+      const metadata = JSON.parse(raw) as { name?: unknown; version?: unknown };
+      if (metadata.name === "@moassaad/ai-team-framework" && metadata.version === EXPECTED_VERSION) {
+        status = "released";
+        detail = "registry reports the released identity and version";
+      } else {
+        status = "unclaimed";
+        detail = `registry reports: ${raw.slice(0, 120)}`;
+      }
+    } catch (error) {
+      const stderr = String((error as { stderr?: unknown }).stderr ?? "");
+      status = /E404|404/.test(stderr) ? "unclaimed" : "unavailable";
+      detail = status === "unclaimed"
+        ? "candidate not on the registry (pre-publish state)"
+        : "registry unreachable or npm view failed";
     }
-    assert.ok(["registered", "unpublished", "unavailable"].includes(status), `registry check classified: ${status} (${detail})`);
+    assert.ok(["released", "unclaimed", "unavailable"].includes(status), `registry check classified: ${status} (${detail})`);
   });
 });

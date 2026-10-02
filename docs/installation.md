@@ -1,53 +1,42 @@
 # Installation Guide
 
 How to install the AI Team Framework and reach a working CLI.
-Only the paths below exist; the packed-tarball artifact is
-verified locally by the test suite, while the registry
-release itself is not yet published. For first use after installing,
+The approved public release is `@moassaad/ai-team-framework@0.2.0`;
+registry publication is pending owner two-factor
+authentication (see below). For first use after installing,
 see `docs/quick-start.md`.
 
 The package is tested from the generated npm artifact: the
 suite packs the real tarball, installs it with npm into a
 temporary consumer, and runs the installed `ai-team`
-binary there. Installation through npm is therefore
-supported; registry publication remains a separate release
-step (`M20 / NPM-003`).
+binary there — including a registry-backed installation
+check for the released version.
 
-## Release identity (M21 verification, `identity-blocked`)
+## Release identity (M21 release, publication pending owner 2FA)
 
-Release work stops here until npm authentication and scope
-control are explicitly resolved:
-
-- Current package identity: `ai-team-framework@0.1.0`
-  (manifest unchanged; no rename without approval).
-- Explicit candidate: `@moassaad/ai-team-framework`
-  (owner-supplied; the only candidate — no fallback
-  generated).
-- Candidate registry state: unclaimed (`npm view
-  @moassaad/ai-team-framework` returns 404) — available in
-  principle, but availability alone approves nothing.
-- Authentication: unavailable (`npm whoami` requires a
-  login), so neither the `moassaad` publisher identity nor
-  `@moassaad` scope control can be verified here.
-- Unscoped collision (unchanged): `ai-team-framework` is
-  registered by another publisher (versions up to `0.2.0`
-  that are not this project's artifact).
-- Release remains blocked: no version bump, no manifest
-  change, no publication, no merge; the `ai-team` CLI
-  binary is unaffected. Approval needs an authenticated
-  `moassaad` session plus verifiable `@moassaad` scope
-  control, then the manifest rename, `--access public`
-  workflow flag, and consumer re-verification follow.
+- Final package identity: `@moassaad/ai-team-framework@0.2.0`.
+- The unscoped `ai-team-framework` name is owned by another
+  publisher and was never used for this project's release.
+- The `ai-team` CLI binary is unchanged; package name and
+  executable remain separate contracts.
+- Publication pending: the first `npm publish --access
+  public` attempt was refused with HTTP 403 — the
+  `moassaad` account requires two-factor authentication
+  (or a granular token with 2FA bypass) to publish. The
+  owner must complete the 2FA/OTP step or configure the
+  npm trusted publisher, then re-run publish plus the
+  registry verifications below. Nothing was published;
+  no partial state exists (the scoped name still 404s).
 
 The release workflow (`.github/workflows/publish.yml`) is prepared for
 npm Trusted Publishing over OIDC — no tokens in the
 repository, `id-token: write` plus `contents: read`, Node
 22.14.0 with npm 11.5.1+, build → test → artifact check →
-explicit `npm publish` on release publication only — but it
-must not run for a real release until the identity decision
-(M21) lands and the matching trusted publisher is
-configured on npmjs.com. Actual publication is deferred to
-M21.
+explicit `npm publish --access public` on release publication.
+The first release goes out by direct authenticated
+publication (`moassaad` session) once the 2FA step clears; the workflow remains the
+Trusted Publishing path for future releases once the
+matching trusted publisher is configured on npmjs.com.
 
 ## Prerequisites
 
@@ -94,11 +83,15 @@ The published artifact therefore contains `dist/`, `package.json`,
 `tests/installation-verification.test.ts`). Installing that artifact
 still requires its one runtime dependency (`yaml`), so a registry or
 tarball install needs network access for dependency resolution.
-Registry installation itself was **not** executed during
-verification; do not treat it as tested.
 
-Global installation (`npm install -g`) is not part of the verified
-path and no `sudo` step is documented or required. Do not invent one.
+```bash
+npm install -g @moassaad/ai-team-framework   # after publication lands
+ai-team --help
+ai-team --version   # 0.2.0
+```
+
+Global installation needs no `sudo` step beyond the user's own npm
+setup. Do not invent one.
 
 ## Build behavior
 

@@ -7,14 +7,13 @@
 # after checkout, toolchain setup, clean install, build,
 # full test suite, and artifact verification all succeed.
 #
-# Identity gate: the unscoped name `ai-team-framework` is
-# already registered on npm by another publisher, so this
-# workflow must NOT run for a real release until M21 resolves
-# the package identity (owned scope or available name). The
-# executable stays `ai-team` regardless; only the package
-# name (and, for a scoped public package, the `--access
-# public` flag on the publish step) changes with that
-# decision.
+# Identity: `@moassaad/ai-team-framework@0.2.0` (approved
+# M21 identity). The unscoped `ai-team-framework` name
+# remains owned by another publisher and is never used.
+# The executable stays `ai-team` regardless. Because this
+# is a scoped public package, the publish step below uses
+# `--access public`, as npm requires on initial scoped
+# publication.
 #
 # Trusted publishing: no npm token lives here or anywhere in
 # the repository. With `id-token: write` and an npm trusted
@@ -65,4 +64,4 @@ jobs:
         run: npm pack --dry-run
 
       - name: Publish to npm
-        run: npm publish
+        run: npm publish --access public

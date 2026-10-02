@@ -4,14 +4,15 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-// Publish identity and trusted-publishing readiness (M20
-// NPM-003): preparation only. The unscoped name is already
-// registered by another publisher, no owned scope was
-// supplied, and this environment has no npm authentication —
-// so the verdict here is legitimately `identity-blocked`,
-// with no invented replacement name. Registry interactions
-// below are read-only; nothing publishes, mutates, or
-// authenticates anything.
+// Publish identity and trusted-publishing readiness (M21
+// release): the approved identity is
+// `@moassaad/ai-team-framework@0.2.0`, authenticated as
+// `moassaad`. The fixture gate below still proves the
+// blocked/approved logic; live checks verify the applied
+// identity, the authenticated publisher, and the scoped
+// public-access workflow. Nothing here publishes — the
+// publish step itself runs only in the release workflow or
+// as the ticket's explicit release command.
 
 const REPO_ROOT = join(__dirname, "..", "..");
 
@@ -51,18 +52,17 @@ function readOnly(cmd: string, args: readonly string[]): { ok: boolean; output: 
 }
 
 describe("npm publish identity gate", () => {
-  it("detects the registered name and refuses to invent a replacement", () => {
+  it("carries the approved scoped identity at the release version", () => {
     const pkg = readJson(join(REPO_ROOT, "package.json"));
-    assert.equal(pkg.name, "ai-team-framework", "package identity unchanged by NPM-003");
-    assert.equal(pkg.version, "0.1.0", "no version bump in NPM-003");
-    const view = readOnly("npm", ["view", "ai-team-framework", "name", "version", "dist-tags"]);
-    assert.ok(view.ok, "read-only registry metadata reachable");
-    assert.ok(view.output.includes("ai-team-framework"), "registry collision proven, not assumed");
-    assert.ok(!view.output.includes("moassaad"), "no ownership evidence for this project; cannot claim the name");
-    assert.ok(
-      !JSON.stringify(pkg).includes("@moassaad/") && !JSON.stringify(pkg).includes("@ai-team/"),
-      "no scope invented from repository naming",
-    );
+    assert.equal(pkg.name, "@moassaad/ai-team-framework", "approved release identity");
+    assert.equal(pkg.version, "0.2.0", "first public release version");
+  });
+
+  it("verifies the authenticated publisher read-only", () => {
+    const whoami = readOnly("npm", ["whoami"]);
+    assert.ok(whoami.ok, "npm session authenticated");
+    assert.ok(whoami.output.includes("moassaad"), "authenticated publisher is the expected moassaad");
+    assert.ok(!/token|Bearer|_auth|password/i.test(whoami.output), "no credential material inspected or printed");
   });
 
   it("classifies publishability explicitly", () => {
@@ -97,13 +97,6 @@ describe("npm publish identity gate", () => {
     const pkg = readJson(join(REPO_ROOT, "package.json")) as { bin?: unknown };
     assert.deepEqual(pkg.bin, { "ai-team": "dist/index.js" }, "executable stays ai-team regardless of package identity");
   });
-
-  it("records authentication as unverified without exposing anything", () => {
-    const whoami = readOnly("npm", ["whoami"]);
-    assert.equal(whoami.ok, false, "no npm login in this environment");
-    assert.ok(/ENEEDAUTH|need auth|not logged in/i.test(whoami.output), "publish-auth-unverified, bounded explanation");
-    assert.ok(!/token|Bearer|_auth|password/i.test(whoami.output), "no credential material inspected or printed");
-  });
 });
 
 describe("npm trusted-publishing workflow", () => {
@@ -131,8 +124,8 @@ describe("npm trusted-publishing workflow", () => {
     const build = indexOf(/^npm run build$/);
     const test = indexOf(/^npm test$/);
     const verify = indexOf(/^npm pack --dry-run$/);
-    const publish = indexOf(/^npm publish( --access public)?$/);
-    assert.ok(build >= 0 && test >= 0 && verify >= 0 && publish >= 0, "build, test, artifact verification, and explicit publish steps present");
+    const publish = indexOf(/^npm publish --access public$/);
+    assert.ok(build >= 0 && test >= 0 && verify >= 0 && publish >= 0, "build, test, artifact verification, and explicit scoped publish steps present");
     assert.ok(build < test && test < publish && verify < publish, "verification precedes publication");
     assert.ok(!/cache:\s*(npm|true)/.test(workflow), "no package-manager cache contaminating release builds");
   });
@@ -162,13 +155,13 @@ describe("npm publish readiness boundary", () => {
     assert.ok(!/src\/|tests\/|docs\//.test(dryRun.output.replace(/dist\//g, "")), "no source, tests, or docs leak into the artifact");
   });
 
-  it("documentation matches the verified blocked identity", () => {
+  it("documentation matches the approved identity", () => {
     const readme = readFileSync(join(REPO_ROOT, "README.md"), "utf8");
     const install = readFileSync(join(REPO_ROOT, "docs", "installation.md"), "utf8");
-    assert.ok(readme.includes("npm install -g ai-team-framework"), "install examples use the actual package identity");
-    assert.ok(!/npmjs\.com\/package\/ai-team-framework/.test(readme + install), "no fake package URL claimed");
-    assert.ok(/not yet published/i.test(readme + install), "unpublished state stated, never claimed otherwise");
-    assert.ok(/identity-blocked|naming decision|not.*available/i.test(install), "collision and decision requirement documented");
+    assert.ok(readme.includes("npm install -g @moassaad/ai-team-framework"), "install examples use the approved identity");
+    assert.ok(!/npm install -g ai-team-framework[^.]/.test(readme + install), "no stale unscoped install command remains current");
+    assert.ok(/@moassaad\/ai-team-framework@0\.2\.0/.test(install), "release documentation names the exact release");
+    assert.ok(!/not yet published/i.test(readme + install), "publication state no longer claimed unpublished");
   });
 
   it("no credential files or tokens enter the repository", () => {
