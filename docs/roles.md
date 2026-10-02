@@ -248,6 +248,36 @@ the workflow — the Implementer never silently rewrites requirements
 or becomes the Technical Lead, the Reviewer never silently redefines
 scope, and PM and TL never silently replace each other.
 
+## Agent Identity (M22 T-002)
+
+An agent acting as a role holds an **Agent Identity** (declared in
+`src/roles/identity.ts`): exactly one canonical role, validated and
+frozen for one invocation. The five canonical identities are the
+`RoleId` values — `coordinator`, `project-manager`,
+`technical-lead`, `implementer`, `senior-reviewer` — and nothing
+else: no sixth role, no `user` identity, no provider or model names.
+
+```text
+Identity:  technical-lead        ← WHO performs this invocation
+Invocation: ticket/sprint context + role-specific task  ← WHAT is given
+Provider:   some AgentProvider   ← HOW it executes
+```
+
+Identity is **explicit**: it is supplied and validated
+(`validateAgentIdentity`), never inferred from prompt words,
+provider names, or apparent task simplicity — `pm`, `tl`,
+`reviewer`, and `sr` are presentation-layer conveniences resolved
+before validation and are rejected as identities. Identity is
+**immutable** per invocation: a different role means a new identity,
+never a mid-invocation change, and an identity satisfies only its
+own role — a Senior Reviewer identity never passes a Technical Lead
+check, with no silent reuse. Every identity stands alone: a
+`project-manager` identity never requires a Coordinator invocation
+to exist. An identity selects exactly one existing role contract
+(`getRoleContract` returns the shared contract object); it never
+redefines responsibilities — those stay in `src/roles/` and the
+operating model above.
+
 ## Practical example (conceptual)
 
 ```text
