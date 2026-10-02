@@ -278,6 +278,29 @@ to exist. An identity selects exactly one existing role contract
 redefines responsibilities — those stay in `src/roles/` and the
 operating model above.
 
+## Canonical Handoff (M22 T-003)
+
+Work moves between roles as a canonical **Agent Handoff**
+(`src/roles/handoff.ts`, built with `createAgentHandoff`): sender,
+receiver, the receiver's objective, and bounded supporting
+information — optional context, requirements, acceptance criteria,
+constraints, artifact references, notes, and the expected next
+action. Requirements stay verbatim and separate from constraints;
+acceptance criteria stay optional; notes never double as approvals
+(there is no approval field); next actions describe, never command.
+
+Handoffs are frozen on creation — including their collections —
+deterministic, free of IDs, timestamps, provider metadata, workflow
+states, and report parsing. The same object works for manual
+copy/paste today and delegated transport later. A permitted
+direction never forces execution: it only says the transfer is
+structurally valid.
+
+> The canonical role-to-role handoff contract is distinct from the
+> existing retry/rework handoff mechanism (`createHandoff` in
+> `src/workflow/retry-handoff.ts`); their direction sets are not
+> required to be identical.
+
 ## Practical example (conceptual)
 
 ```text
