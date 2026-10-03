@@ -434,6 +434,23 @@ Planning Artifact, and generates nothing — decomposition (T-013),
 ticket mapping (T-014), and persistence (T-015) build on it
 later.
 
+## Task Model (M24 T-012)
+
+A Task (`src/runtime/task-model.ts`) is one actionable
+implementation unit: caller-supplied stable `id` plus the
+ticket-compatible `title`, `description`, and `requirements`
+(required, so T-014 can map tasks onto tickets without inventing
+content), with optional `acceptance_criteria`, `dependencies`
+(ordered identifier references, no graph engine), `specialty`
+(one of the six canonical Implementer specialties; absent means
+a generic Implementer), and `sprint` (identifier reference only,
+so both models stay independently constructible). Pure,
+validated, deeply frozen, verbatim preservation — with no
+lifecycle state (workflow states belong to tickets), no roles,
+no estimates, no timestamps, no issue fields, and no generation,
+decomposition, mapping, or persistence. Those belong to
+T-013/T-014/T-015.
+
 ## Practical example (conceptual)
 
 ```text
