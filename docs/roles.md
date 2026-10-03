@@ -484,6 +484,21 @@ model). Tickets stay unfrozen so the workflow can advance state;
 no transport, persistence, execution, or orchestration happens
 here — the IssueProvider and T-015 consume the output later.
 
+## Task Persistence and Readback (M24 T-015)
+
+Persistence (`src/runtime/task-persistence.ts`) stores one
+validated sprint plan (`{ sprint, tasks }` as JSON) per sprint
+at `<projectRoot>/.ai-team/plans/<sprint-id>.json` — the
+existing planning workspace, no new directories — and reads it
+back through the canonical T-011/T-012 validators, so stored
+data round-trips into identical frozen domain objects.
+Validation precedes every write (duplicates, mismatched links,
+and path-unsafe IDs rejected); missing or corrupt files throw
+loudly, never silent empties; re-persisting replaces wholesale
+with no merging. Caller data is never mutated, reads never
+cache, project roots never share data, and no transport,
+execution, orchestration, or issue-tracker contact exists here.
+
 ## Practical example (conceptual)
 
 ```text
