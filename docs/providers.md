@@ -121,6 +121,28 @@ transport (parse error vs dispatch error) while the valid-handoff
 meaning stays identical. No fallback (T-025), no detection
 (T-024), no modes, no re-entry, no orchestration.
 
+## Delegation Capability Detection (M26 T-024)
+
+`checkDelegateCapability({ integration, isEnabled })`
+(`src/providers/delegate-capability.ts`) reports whether
+delegation is usable without dispatching, installing, or
+configuring anything. It composes existing contracts only:
+D-102 skill detection (skill descriptor + relay presence plus
+read-only implementer/git version probes) supplies `detected`,
+the caller's `isEnabled` function (production reads
+`providers.delegate.enabled`, default false, never
+auto-enabled) supplies `enabled`, and the M17 status seam
+derives `ready` as the conjunction — `detection failed:` stays
+distinct from unavailable. The result adds one capability fact
+to the M17 state: `supportedDestinations: ["implementer"]`
+(T-022 transports implementation work only). No new registry,
+no new states, no executable/skill/installation behavior beyond
+the existing detector; the production `ai-team status`
+registry is untouched (no configuration names a skill, so
+delegate stays out of it by design). Authentication is not
+probed — availability carries that limitation explicitly.
+Fallback remains T-025's work.
+
 ## OpenCode (required execution boundary)
 
 OpenCode (`"opencode"`) is the initial execution provider. It
