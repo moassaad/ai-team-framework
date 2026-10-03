@@ -451,6 +451,23 @@ no estimates, no timestamps, no issue fields, and no generation,
 decomposition, mapping, or persistence. Those belong to
 T-013/T-014/T-015.
 
+## TL Task Decomposition (M24 T-013)
+
+Task decomposition (`runTechnicalLeadTaskDecomposition` in
+`src/runtime/tl-decomposition.ts`) turns an approved plan into
+one Sprint plus its Task list: explicit TL identity, a T-009
+artifact, and a T-010 `approved` result covering exactly that
+artifact are all required up front. Sprint and task structures
+are caller-supplied and built through the canonical T-011/T-012
+constructors, with the sprint↔task link assigned by construction
+(task IDs in order, every task naming the sprint); the provider
+is invoked once for opaque considerations whose text never
+becomes structure (no parsing, no JSON-in-text protocols).
+Artifacts are never mutated, business intent is never rewritten,
+and no tickets, persistence, execution, or orchestration happen
+here — mapping (T-014) and storage (T-015) build on the output
+later.
+
 ## Practical example (conceptual)
 
 ```text
