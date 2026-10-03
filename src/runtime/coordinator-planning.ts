@@ -117,7 +117,14 @@ function optionalTextList(value: unknown, field: string): string[] | undefined {
   return [...(value as string[])];
 }
 
-function planningTaskText(request: string, objective: string, context: string | undefined): string {
+function planningTaskText(
+  request: string,
+  objective: string,
+  context: string | undefined,
+  requirements: string[] | undefined,
+  constraints: string[] | undefined,
+  questions: string[] | undefined,
+): string {
   return [
     "Coordinator planning session: understand the user request and prepare it for Project Manager planning.",
     "",
@@ -125,6 +132,9 @@ function planningTaskText(request: string, objective: string, context: string | 
     "",
     `User request: ${request}`,
     ...(context !== undefined ? ["", `Known context: ${context}`] : []),
+    ...(requirements !== undefined ? ["", `Explicit requirements: ${requirements.join("\n")}`] : []),
+    ...(constraints !== undefined ? ["", `Explicit constraints: ${constraints.join("\n")}`] : []),
+    ...(questions !== undefined ? ["", `Open questions: ${questions.join("\n")}`] : []),
     "",
     "Establish nothing beyond what is stated above. Do not invent requirements, technology, acceptance criteria, or tasks.",
   ].join("\n");
@@ -175,7 +185,7 @@ export async function runCoordinatorPlanning(
 
   const prompt = renderRolePrompt({
     role: COORDINATOR_ROLE,
-    task: planningTaskText(request, objective, context),
+    task: planningTaskText(request, objective, context, requirements, constraints, questions),
     project: { root: project_root },
   });
   try {

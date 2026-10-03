@@ -543,6 +543,22 @@ persistence, no clipboard, no delegation. Paired with
 `--show-handoff`, the full manual loop (execute → copy → paste
 → resume) works transport-free until M26.
 
+## Role-Specific Context Isolation (M25 T-019)
+
+Each role receives sufficient explicit context and nothing
+else: prompts are built from named fields only (ticket,
+evidence, request, handoff slices), validators strip unknown
+fields, and provider invocations carry just prompt, project
+root, and role identity. Upstream context flows where
+contracted (requirements to TL/review, feedback to TL/PM
+review, mapped acceptance into ticket descriptions) while
+reviewer notes, planning deliberation, workflow internals,
+provider secrets, and prior reports stay out unless an explicit
+contracted field carries them; handoffs gate but never merge.
+No new managers, helpers, or registries were needed — the
+existing explicit construction already isolates, and the
+executable allowlists pin it. No orchestration is introduced.
+
 ## Practical example (conceptual)
 
 ```text
