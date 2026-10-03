@@ -420,6 +420,20 @@ artifact copy on its frozen result, mutates nothing, and is
 entirely separate from R-020 final approval. M24 starts only
 from an approved planning artifact.
 
+## Sprint Model (M24 T-011)
+
+A Sprint (`src/runtime/sprint-model.ts`) is a bounded planned
+execution container: a caller-supplied stable `id`, a required
+`goal`, and optional `scope` (in/out, the repository's
+established shape), `tasks` (task-identifier references only —
+the full Task Model belongs to T-012), `dependencies`, and
+`acceptance_criteria`. Construction is pure, validated, and
+deeply frozen with verbatim preservation. A sprint carries no
+status, dates, approval, provider, or issue fields, embeds no
+Planning Artifact, and generates nothing — decomposition (T-013),
+ticket mapping (T-014), and persistence (T-015) build on it
+later.
+
 ## Practical example (conceptual)
 
 ```text
