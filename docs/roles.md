@@ -616,7 +616,13 @@ no clipboard API is involved. Where a delegate-skills transport
 is configured, the same handoff can travel through
 `createDelegateSkillsHandoffTransport` instead (implementer
 destinations only; brief rendered from canonical fields; no
-fallback) — see `docs/providers.md`.
+fallback) — see `docs/providers.md`. Parity between the two
+transports is proven, not assumed: identical field semantics
+(multiline/unicode/order/presence preserved), direction approval
+shared, hostile content unable to retarget either path, receipts
+kept out of handoff meaning. Unsupported delegate destinations
+fail explicitly with the handoff untouched; manual transport
+stays independently usable after any delegate failure.
 
 Direct role execution uses the existing command surface only:
 

@@ -87,6 +87,40 @@ contract later. Skill/relay mechanics are skill-specific and may
 evolve — the adapter depends on the repository's relay contract,
 not on upstream prose.
 
+## Manual/Delegate Parity (M26 T-023)
+
+Manual and delegated transport are interchangeable at the
+`AgentHandoff` semantic boundary: same canonical handoff,
+different transport representation. Proven hermetically in
+`tests/manual-delegate-parity.test.ts` (no production changes
+were needed). Field mapping, from actual implementation:
+
+| AgentHandoff field    | Manual path                  | Delegate path                        |
+| --------------------- | ---------------------------- | ------------------------------------ |
+| `from`                | `From:` line, parsed back    | brief provenance header              |
+| `to`                  | `To:` line, parsed back      | implementer gate (others unsupported)|
+| `objective`           | `Objective:` section verbatim| brief head verbatim                  |
+| `context`             | `Context:` section verbatim  | `DelegationRequest.context` verbatim |
+| `requirements`        | numbered list, order kept    | `Requirements:` section, order kept  |
+| `acceptance_criteria` | numbered list, order kept    | `Acceptance criteria:` section, order|
+| `constraints`         | numbered list, order kept    | `Constraints:` section, order kept   |
+| `artifacts`           | numbered list, order kept    | `Artifacts:` section, order kept     |
+| `notes`               | `Notes:` section verbatim    | `Notes:` brief section verbatim      |
+| `next_action`         | `Next Action:` verbatim      | `Next action:` brief section verbatim|
+
+Notes: multiline, unicode, markdown-like, and whitespace-
+sensitive values travel verbatim on both paths; absent optionals
+stay absent on both. Structurally ambiguous text (e.g. a blank
+line followed by a heading-like line inside a value) is safely
+rejected by manual parse while the brief carries the bytes as
+data — a safe-reject difference, never a meaning change.
+Unsupported delegate destinations are a capability limitation,
+not a semantic change: the handoff is untouched. Receipts are
+transport-specific and outside parity; failures differ by
+transport (parse error vs dispatch error) while the valid-handoff
+meaning stays identical. No fallback (T-025), no detection
+(T-024), no modes, no re-entry, no orchestration.
+
 ## OpenCode (required execution boundary)
 
 OpenCode (`"opencode"`) is the initial execution provider. It
