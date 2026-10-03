@@ -575,6 +575,63 @@ Technical Lead / PM → continue per the configured workflow and approval mode
 Conceptual: it shows how the roles divide one request, not behavior
 the CLI performs autonomously today.
 
+## Manual full-team flow (M25 T-020)
+
+The five roles compose into one feature flow with the human as
+the workflow coordinator. No delegation, no automatic chaining,
+no modes: every arrow below is a person copying output from one
+step into the next step's explicit input.
+
+```text
+1. Run Coordinator planning (request in, Coordinator → PM handoff out)
+2. Copy the Coordinator → PM handoff text
+3. Run PM planning with that handoff (PM → TL handoff out)
+4. Copy the PM → TL handoff text
+5. Run TL planning with that handoff (technical plan out)
+6. Assemble the PlanningArtifact (coordinator + PM + TL sections)
+7. Record an explicit Planning Approval decision (approved or
+   changes-required, with a PM or TL identity)
+8. Decompose the approved artifact into one Sprint plus Tasks
+   (caller-structured: you supply sprint fields and task inputs)
+9. Map the chosen Task to a Ticket representation (no GitHub call)
+10. Persist the Sprint + Tasks, then read them back and use the
+    read-back models for everything downstream
+11. Run the Implementer independently for the selected read-back Task
+12. Author the Implementer → Reviewer handoff from the ticket plus
+    the implementation result (canonical fields only — the
+    Implementer emits no handoff of its own, so `--show-handoff`
+    has nothing to print there) and copy its rendered text
+13. Run the Senior Reviewer independently with that handoff supplied
+    via `--handoff-stdin`
+14. Handle any changes-required report yourself: nothing re-invokes
+    the Implementer automatically (richer re-entry arrives in M28)
+```
+
+Handoffs move through the copy-ready loop only: `renderAgentHandoff`
+prints the text, the human copies it, `--handoff-stdin` feeds it to
+the next role, and parse plus validation reject anything malformed
+or misaddressed before the destination role runs. Handoffs gate;
+they never merge into role inputs, are never written to disk, and
+no clipboard API is involved.
+
+Direct role execution uses the existing command surface only:
+
+```text
+ai-team role implementer --id T-101 --title TITLE --description TEXT --requirements TEXT --specialty backend
+ai-team role implementer --id T-101 ... --show-handoff
+ai-team role senior-reviewer --id T-101 --title TITLE --description TEXT --requirements TEXT --result TEXT --handoff-stdin < handoff.txt
+```
+
+Planning, artifact assembly, approval, decomposition, ticket
+mapping, and persistence are runtime API calls (see
+`tests/manual-full-team-flow.test.ts`, which walks the whole flow
+hermetically). A `changes-required` approval, a failed
+decomposition, a persistence error, or an implementer failure all
+stop the flow with an explicit result — later steps simply have no
+input to consume. This flow is the complete M25 milestone: M26
+adds optional agent-to-agent delegation, M27 modes, M28 re-entry,
+M29 orchestration.
+
 ## Where to go next
 
 - `docs/quick-start.md` — run these commands yourself.
