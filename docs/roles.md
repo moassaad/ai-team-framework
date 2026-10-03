@@ -657,6 +657,28 @@ speed settings; the flags describe composition and enforce
 nothing. No execution, persistence, configuration, or CLI
 belongs to the contract.
 
+## FAST Path (M27 T-027, first mode path)
+
+`runFast` (`src/runtime/fast-path.ts`) executes the `fast`
+composition and nothing else: one `executeIndependentImplementer`
+call, then — only on Implementer success — one
+`executeIndependentSeniorReviewer` call built from explicit
+fields (same ticket plus the implementation result text), then
+the caller-supplied `ReviewDecisionResolver` exactly once.
+Terminal results reuse existing vocabularies: `completed` on
+`approved`, `changes-required` with verbatim feedback on
+`changes_requested` (the path stops; M28 owns re-entry),
+`failed` with a stage marker (`implementer`/`reviewer`/
+`decision`) on any failure. FAST takes a ticket in the
+Implementer's existing shape (no Task conversion, no mapper),
+invents no handoff, and skips planning, sprints, approvals,
+Coordinator/PM/TL, persistence, retry, and local re-execution.
+It is provider-neutral — the injected provider is used as
+supplied, never selected or dispatched — and runtime-only
+(no CLI). STANDARD (T-028) and FULL (T-029) build on this
+precedent; recommendation (T-030) and guardrails (T-031) come
+later.
+
 Direct role execution uses the existing command surface only:
 
 ```text
