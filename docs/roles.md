@@ -623,6 +623,12 @@ shared, hostile content unable to retarget either path, receipts
 kept out of handoff meaning. Unsupported delegate destinations
 fail explicitly with the handoff untouched; manual transport
 stays independently usable after any delegate failure.
+When delegation fails, `createManualFallback` exposes the same
+canonical handoff as copy-ready manual text — same destination,
+same meaning, user decides whether to continue. No retry, no
+alternate transport, no automatic local execution, no new
+commands: the existing `--handoff-stdin` resume path is the
+fallback path.
 
 Direct role execution uses the existing command surface only:
 

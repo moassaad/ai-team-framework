@@ -143,6 +143,36 @@ delegate stays out of it by design). Authentication is not
 probed — availability carries that limitation explicitly.
 Fallback remains T-025's work.
 
+## Delegate Failure Fallback (M26 T-025)
+
+When delegated dispatch fails, `createManualFallback({ failure })`
+(`src/runtime/delegate-fallback.ts`) exposes explicit manual
+continuation — and nothing else:
+
+```text
+delegate fails
+  ↓ success → continue through delegation (unchanged)
+  ↓ failure → { transport: "manual", handoff, renderedHandoff }
+  ↓ human copies the rendering into --handoff-stdin
+```
+
+Fallback is explicit (invoking the helper is the opt-in) and
+covers every failure kind — unsupported, unavailable relay,
+launch failure, malformed result, authentication, generic
+transport error — because each failed dispatch already carries
+a validated canonical handoff. The rendering is byte-equal to
+`renderAgentHandoff(failure.handoff)` and resumes through the
+unchanged T-018 path. Fallback is not retry (one attempt stays
+one attempt), not alternate transport, and never local role
+execution: destination, handoff, and error are preserved
+exactly; nothing is persisted, configured, or detected. The
+failure stays transport-level — never a task, workflow,
+approval, or review decision. This completes M26 (5/5):
+manual transport independent, dispatcher transport-independent,
+adapter optional, detection read-only, failure → manual
+continuation available, automatic retry/execution/routing
+absent.
+
 ## OpenCode (required execution boundary)
 
 OpenCode (`"opencode"`) is the initial execution provider. It
