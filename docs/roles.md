@@ -632,6 +632,20 @@ input to consume. This flow is the complete M25 milestone: M26
 adds optional agent-to-agent delegation, M27 modes, M28 re-entry,
 M29 orchestration.
 
+## Delegated transport (M26 T-021, optional)
+
+Manual handoff movement has a transport twin: `dispatchHandoff`
+carries the same canonical `AgentHandoff` through an explicitly
+selected `HandoffTransport` instead of through a human clipboard.
+Same semantics (validated, approved direction, never mutated,
+never retargeted), same destination (`handoff.to`), one attempt,
+bounded `dispatched`/`failed` result, no retry, no fallback, no
+local execution. The dispatcher is runtime-only with no CLI, and
+core works identically when no transport exists — delegation is
+transport, not workflow ownership. The delegate-skills adapter
+(T-022), capability detection (T-023), and failure fallback (T-025)
+build on this contract later.
+
 ## Where to go next
 
 - `docs/quick-start.md` — run these commands yourself.

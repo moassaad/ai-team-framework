@@ -39,6 +39,25 @@ specific behavior. Four categories exist — no others:
   provider may serve both roles. Role identity is not a delegate
   skill and never implies model, session, or fleet routing.
 
+## Generic Handoff Dispatcher (M26 T-021, optional transport)
+
+`dispatchHandoff` (`src/runtime/handoff-dispatcher.ts`) routes one
+already-decided canonical `AgentHandoff` through one explicitly
+selected `HandoffTransport` (`{ name, dispatch(handoff) }`). It is
+transport, not orchestration: it never selects the next role (the
+destination is `handoff.to`, already decided), never approves,
+plans, persists, retries, or falls back — a transport rejection
+yields a bounded `failed` result, and manual transport (render →
+human copy → `--handoff-stdin` → parse → validate) keeps working
+identically with no transport installed. The handoff is validated
+(canonical shape, approved direction), never mutated, never
+retargeted; an optional explicit destination must equal
+`handoff.to` exactly. The dispatcher imports no delegation
+implementation and names no external tool — the delegate-skills
+handoff adapter arrives in T-022, capability detection in T-023,
+and failure fallback in T-025. No CLI yet: this ticket is
+runtime-only.
+
 ## OpenCode (required execution boundary)
 
 OpenCode (`"opencode"`) is the initial execution provider. It
