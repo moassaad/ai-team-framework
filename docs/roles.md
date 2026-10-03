@@ -612,7 +612,11 @@ prints the text, the human copies it, `--handoff-stdin` feeds it to
 the next role, and parse plus validation reject anything malformed
 or misaddressed before the destination role runs. Handoffs gate;
 they never merge into role inputs, are never written to disk, and
-no clipboard API is involved.
+no clipboard API is involved. Where a delegate-skills transport
+is configured, the same handoff can travel through
+`createDelegateSkillsHandoffTransport` instead (implementer
+destinations only; brief rendered from canonical fields; no
+fallback) — see `docs/providers.md`.
 
 Direct role execution uses the existing command surface only:
 

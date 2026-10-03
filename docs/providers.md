@@ -58,6 +58,35 @@ handoff adapter arrives in T-022, capability detection in T-023,
 and failure fallback in T-025. No CLI yet: this ticket is
 runtime-only.
 
+## delegate-skills Handoff Adapter (M26 T-022, optional transport)
+
+`createDelegateSkillsHandoffTransport({ provider })`
+(`src/providers/delegate-handoff-transport.ts`) presents
+delegate-skills as a T-021 `HandoffTransport` named
+`"delegate-skills"`. The caller supplies an already-configured
+`DelegateProvider` (e.g. a relay provider built with an explicit
+skill root and project root); the adapter performs no discovery,
+installation, setup, or detection. Each dispatch validates the
+handoff, renders it to a self-contained brief (objective head,
+labeled requirements/acceptance/constraints/artifacts/notes/next-
+action sections, context as delegation context — every canonical
+field mapped, nothing invented, no report text used), delegates
+exactly once, and resolves with the relay's opaque outcome as its
+receipt. Only `implementer` destinations dispatch; any other
+target rejects with a structured `unsupported` kind (no
+retargeting, no wrong-role execution, no local fallback). Relay
+temp files, no-shell invocation, project-root cwd, and cleanup
+stay inside the relay provider; the structured `result.json`
+contract is consumed as machine data. Dispatch never installs
+anything (`delegate-setup` and the Skills CLI stay manual
+prerequisites), never retries, never persists under `.ai-team`,
+and never touches GitHub, workflow state, modes, or re-entry.
+Manual transport remains available without it; capability
+detection (T-024) and failure fallback (T-025) build on this
+contract later. Skill/relay mechanics are skill-specific and may
+evolve — the adapter depends on the repository's relay contract,
+not on upstream prose.
+
 ## OpenCode (required execution boundary)
 
 OpenCode (`"opencode"`) is the initial execution provider. It
