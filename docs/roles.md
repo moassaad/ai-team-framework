@@ -468,6 +468,22 @@ and no tickets, persistence, execution, or orchestration happen
 here — mapping (T-014) and storage (T-015) build on the output
 later.
 
+## Plan-to-Ticket Mapper (M24 T-014)
+
+The mapper (`src/runtime/plan-ticket-mapper.ts`) is the pure,
+side-effect-free boundary from planning to execution tickets:
+one validated Task becomes one `CoordinatorTicket` (identity
+preserved, title/description/requirements verbatim, state
+`ready` as the lifecycle entry point) and one `IssueRequest`
+(same content, no identifier — issue identity stays
+provider-assigned). Acceptance criteria ride as a labeled
+description section per the repository's established append
+convention; dependencies, specialty, and sprint stay with their
+owning layers (decomposition, runtime RoleResolver, Sprint
+model). Tickets stay unfrozen so the workflow can advance state;
+no transport, persistence, execution, or orchestration happens
+here — the IssueProvider and T-015 consume the output later.
+
 ## Practical example (conceptual)
 
 ```text
