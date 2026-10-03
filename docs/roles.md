@@ -499,6 +499,21 @@ with no merging. Caller data is never mutated, reads never
 cache, project roots never share data, and no transport,
 execution, orchestration, or issue-tracker contact exists here.
 
+## Direct Role Execution CLI (M25 T-016)
+
+`ai-team role <role>` (`src/cli-role.ts`, routed in
+`src/index.ts`) executes exactly one role directly through the
+T-005 independent-execution contract — no orchestration, modes,
+delegation, or persistence. Each role takes explicit flags for
+its runtime input (ticket fields for all; plus `--specialty`,
+`--result`, `--state`, or `--review-decision` per role);
+single-evidence TL/PM invocations are the CLI boundary while
+the runtime API supports full arrays. Outcomes render the role,
+ticket, and exposed reports verbatim with repository exit codes
+(0 completed, 1 otherwise); invalid input and missing TTY
+decisions fail safely before execution. `run --role` still only
+presents contracts; manual handoff I/O arrives in T-017/T-018.
+
 ## Practical example (conceptual)
 
 ```text
