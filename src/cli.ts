@@ -68,7 +68,9 @@ Commands:
                         Role inputs are explicit flags; run
                         "ai-team role" without a role for usage.
                         Exactly one underlying role execution, never
-                        a second role.
+                        a second role. Append --show-handoff to print
+                        the canonical handoff carried by the result
+                        for manual copying.
   status               Show integration status (read-only).
                        Reports desired state separately from fresh
                        detection. Never installs, configures, or

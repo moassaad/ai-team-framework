@@ -43,6 +43,8 @@ import { loadConfig } from "./config/loader";
 import { validateConfig } from "./config/validator";
 import { AgentProvider } from "./providers/agent";
 import { ExecutionResult } from "./providers/result";
+import { AgentHandoff } from "./roles/handoff";
+import { validateAgentHandoff, renderAgentHandoff } from "./roles/handoff-validation";
 import { ImplementerSpecialty, isImplementerSpecialty } from "./roles/contract";
 import { resolveRole } from "./roles/selection";
 import { isWorkflowState } from "./workflow/states";
@@ -122,9 +124,14 @@ project-manager, technical-lead, implementer, senior-reviewer
 
 Without an explicit --review-decision, the coordinator asks once at
 a TTY prompt; non-interactive runs without one fail safely.
+
+Append --show-handoff to any role invocation to print exactly the
+canonical handoff carried by its result (nothing else) for manual
+copying; when the execution produced no handoff, the command
+reports that instead of inventing one.
 `;
 
-function parseFlags(argv: string[], allowed: readonly string[]): Record<string, string> {
+function parseFlags(argv: string[], allowed: readonly string[], booleans: readonly string[] = []): Record<string, string> {
   const flags: Record<string, string> = {};
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index];
@@ -136,6 +143,10 @@ function parseFlags(argv: string[], allowed: readonly string[]): Record<string, 
     }
     if (flags[token] !== undefined) {
       fail(`duplicate flag ${JSON.stringify(token)}`);
+    }
+    if (booleans.includes(token)) {
+      flags[token] = "true";
+      continue;
     }
     const value = argv[index + 1];
     if (value === undefined || value.startsWith("--")) {
@@ -194,6 +205,33 @@ function parseCoordinatorDecision(flags: Record<string, string>): ReviewDecision
   );
   const frozen = Object.freeze({ ...resolution });
   return async () => frozen;
+}
+
+/**
+ * Copy-ready handoff output (M25 T-017). When `--show-handoff`
+ * was passed and the execution completed, stdout becomes exactly
+ * the canonical T-004 rendering of the outcome's handoff — no
+ * wrapper, no metadata, directly copyable. The handoff is
+ * re-validated before rendering (an executor returning an
+ * invalid direction fails here through the outer boundary).
+ * Completed executions without a handoff report that explicitly;
+ * failed executions keep their failure rendering regardless of
+ * the flag.
+ */
+function withHandoffOutput(
+  role: string,
+  showHandoff: boolean,
+  outcome: { readonly execution: { readonly outcome: string }; readonly handoff?: unknown },
+  normal: CliResult,
+): CliResult {
+  if (!showHandoff || outcome.execution.outcome !== "completed") {
+    return normal;
+  }
+  if (outcome.handoff === undefined) {
+    return commandError(`role error: no handoff available for role ${JSON.stringify(role)} in this execution.\n`);
+  }
+  const validated: AgentHandoff = validateAgentHandoff(outcome.handoff);
+  return ok(renderAgentHandoff(validated));
 }
 
 function describeImplementer(result: Awaited<ReturnType<typeof executeIndependentImplementer>>): CliResult {
@@ -290,27 +328,27 @@ export async function runRoleCommand(deps: RoleCommandDeps, argv: string[]): Pro
     const timeout_ms = ROLE_TIMEOUT_MS;
     switch (selection.role) {
       case "implementer": {
-        const flags = parseFlags(rest, ["--id", "--title", "--description", "--requirements", "--specialty"]);
+        const flags = parseFlags(rest, ["--id", "--title", "--description", "--requirements", "--specialty", "--show-handoff"], ["--show-handoff"]);
         const ticket = ticketFlags(flags);
         const specialty = specialtyFlag(flags);
         const outcome = await deps.executeImplementer({
           identity: { role: "implementer" },
           input: { ticket, specialty, role: "implementer", project_root: deps.projectRoot, provider, timeout_ms },
         });
-        return describeImplementer(outcome);
+        return withHandoffOutput("implementer", flags["--show-handoff"] !== undefined, outcome, describeImplementer(outcome));
       }
       case "senior-reviewer": {
-        const flags = parseFlags(rest, ["--id", "--title", "--description", "--requirements", "--result"]);
+        const flags = parseFlags(rest, ["--id", "--title", "--description", "--requirements", "--result", "--show-handoff"], ["--show-handoff"]);
         const ticket = ticketFlags(flags);
         const implementation_result = requiredFlag(flags, "--result");
         const outcome = await deps.executeSeniorReviewer({
           identity: { role: "senior-reviewer" },
           input: { ticket, implementation_result, role: "senior-reviewer", project_root: deps.projectRoot, provider, timeout_ms },
         });
-        return describeReviewer(outcome);
+        return withHandoffOutput("senior-reviewer", flags["--show-handoff"] !== undefined, outcome, describeReviewer(outcome));
       }
       case "technical-lead": {
-        const flags = parseFlags(rest, ["--id", "--title", "--description", "--requirements", "--state"]);
+        const flags = parseFlags(rest, ["--id", "--title", "--description", "--requirements", "--state", "--show-handoff"], ["--show-handoff"]);
         const ticket = ticketFlags(flags);
         const state = requiredFlag(flags, "--state");
         if (!isWorkflowState(state)) {
@@ -326,10 +364,10 @@ export async function runRoleCommand(deps: RoleCommandDeps, argv: string[]): Pro
             timeout_ms,
           },
         });
-        return describeTechnicalLead(outcome);
+        return withHandoffOutput("technical-lead", flags["--show-handoff"] !== undefined, outcome, describeTechnicalLead(outcome));
       }
       case "project-manager": {
-        const flags = parseFlags(rest, ["--id", "--title", "--description", "--requirements", "--state"]);
+        const flags = parseFlags(rest, ["--id", "--title", "--description", "--requirements", "--state", "--show-handoff"], ["--show-handoff"]);
         const ticket = ticketFlags(flags);
         const state = requiredFlag(flags, "--state");
         if (!isWorkflowState(state)) {
@@ -345,7 +383,7 @@ export async function runRoleCommand(deps: RoleCommandDeps, argv: string[]): Pro
             timeout_ms,
           },
         });
-        return describeProjectManager(outcome);
+        return withHandoffOutput("project-manager", flags["--show-handoff"] !== undefined, outcome, describeProjectManager(outcome));
       }
       case "coordinator": {
         const flags = parseFlags(rest, [
@@ -356,7 +394,8 @@ export async function runRoleCommand(deps: RoleCommandDeps, argv: string[]): Pro
           "--specialty",
           "--review-decision",
           "--review-feedback",
-        ]);
+          "--show-handoff",
+        ], ["--show-handoff"]);
         const base = ticketFlags(flags);
         const specialty = specialtyFlag(flags);
         const decideReview = parseCoordinatorDecision(flags) ?? deps.readReviewDecision;
@@ -373,7 +412,7 @@ export async function runRoleCommand(deps: RoleCommandDeps, argv: string[]): Pro
             decideReview,
           },
         });
-        return describeCoordinator(outcome);
+        return withHandoffOutput("coordinator", flags["--show-handoff"] !== undefined, outcome, describeCoordinator(outcome));
       }
       default:
         return commandError(ROLE_USAGE);

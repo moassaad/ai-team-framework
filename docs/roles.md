@@ -514,6 +514,19 @@ ticket, and exposed reports verbatim with repository exit codes
 decisions fail safely before execution. `run --role` still only
 presents contracts; manual handoff I/O arrives in T-017/T-018.
 
+## Copy-Ready Handoff Output (M25 T-017)
+
+Appending `--show-handoff` to `ai-team role <role>` prints
+exactly the canonical T-004 rendering of the handoff carried by
+that execution — byte-identical, no wrapper, no metadata — for
+direct human copy/paste into the next role. Directions are never
+retargeted, reports are never parsed, and nothing is constructed
+or persisted by the CLI: completed executions without a handoff
+report that explicitly, failed executions keep their failure
+status, and no destination role is invoked. Handoffs reach role
+execution through supply (manual resume arrives in T-018);
+delegation transport arrives in M26.
+
 ## Practical example (conceptual)
 
 ```text
