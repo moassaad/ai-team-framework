@@ -630,6 +630,33 @@ alternate transport, no automatic local execution, no new
 commands: the existing `--handoff-stdin` resume path is the
 fallback path.
 
+## Work Modes (M27 T-026, contract only)
+
+A Work Mode names one workflow composition — how much of the
+team participates — independent of roles, providers, transports,
+approvals, workflow states, and priorities. Three canonical
+modes, lowercase and exact, with no aliases and no default:
+
+- `fast` — minimal implementation/review lifecycle
+  (Implementer → Senior Reviewer). No planning roles, no
+  Sprint/Task generation, no approval gates.
+- `standard` — Coordinator plus Technical Lead planning around
+  implementation/review. Planning participates; Sprint/Task
+  generation and approval gates do not.
+- `full` — the complete planning/business/technical lifecycle
+  through Sprint/Task generation, implementation/review,
+  technical acceptance, PM validation, and Final approval.
+
+The runtime contract (`src/runtime/work-mode.ts`) is identity
+plus a declarative composition policy (`lifecycle` role order
+plus `planning`/`sprints`/`approvals` flags) that later tickets
+consume: T-027/T-028/T-029 implement the paths, T-030 owns
+recommendation (no mode is ranked or preferred here), T-031
+owns guardrails. Modes are not quality tiers, priorities, or
+speed settings; the flags describe composition and enforce
+nothing. No execution, persistence, configuration, or CLI
+belongs to the contract.
+
 Direct role execution uses the existing command surface only:
 
 ```text
