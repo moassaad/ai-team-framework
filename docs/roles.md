@@ -403,6 +403,23 @@ provider reports are excluded, questions stay questions, and no
 task, sprint, approval, persistence, or orchestration exists here —
 those belong to M24 and later.
 
+## Planning Approval (M23 T-010)
+
+Planning Approval (`decidePlanningApproval` in
+`src/runtime/planning-approval.ts`) gates M23 planning from M24
+task generation: one explicit, externally supplied decision
+(`approved` or `changes-required`, with optional notes) by the
+Project Manager or the Technical Lead — the roadmap's Planning →
+PM approval → TL approval chain, recorded one authority at a
+time with no sequencing state and no hierarchy. The artifact must
+be complete (all three sections present; empty content is not
+failure) and question-free to earn `approved`; open questions
+allow only `changes-required`, which never replans or re-enters.
+The operation is synchronous and provider-free, carries a frozen
+artifact copy on its frozen result, mutates nothing, and is
+entirely separate from R-020 final approval. M24 starts only
+from an approved planning artifact.
+
 ## Practical example (conceptual)
 
 ```text
