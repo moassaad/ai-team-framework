@@ -70,7 +70,8 @@ Commands:
                         Exactly one underlying role execution, never
                         a second role. Append --show-handoff to print
                         the canonical handoff carried by the result
-                        for manual copying.
+                        for manual copying; paste it back with
+                        --handoff-stdin to resume into a role.
   status               Show integration status (read-only).
                        Reports desired state separately from fresh
                        detection. Never installs, configures, or

@@ -527,6 +527,22 @@ status, and no destination role is invoked. Handoffs reach role
 execution through supply (manual resume arrives in T-018);
 delegation transport arrives in M26.
 
+## Manual Handoff Resume (M25 T-018)
+
+Pasting canonical handoff text into `ai-team role <role>
+--handoff-stdin` (piped or pasted to stdin, then EOF) resumes
+it: `parseAgentHandoffText` (`src/roles/handoff-parser.ts`)
+accepts only the exact T-004 grammar — ordered sections,
+sequential numbering, duplicates and retargeting rejected —
+validates through T-004, verifies byte-identical re-rendering,
+and hands the handoff to the selected role's T-005 executor as
+gate plus provenance (role inputs still come from flags; no
+field merging is invented). Destination mismatch, malformed
+text, and empty input fail explicitly; no role chains, no
+persistence, no clipboard, no delegation. Paired with
+`--show-handoff`, the full manual loop (execute → copy → paste
+→ resume) works transport-free until M26.
+
 ## Practical example (conceptual)
 
 ```text

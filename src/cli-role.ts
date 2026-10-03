@@ -45,6 +45,7 @@ import { AgentProvider } from "./providers/agent";
 import { ExecutionResult } from "./providers/result";
 import { AgentHandoff } from "./roles/handoff";
 import { validateAgentHandoff, renderAgentHandoff } from "./roles/handoff-validation";
+import { parseAgentHandoffText } from "./roles/handoff-parser";
 import { ImplementerSpecialty, isImplementerSpecialty } from "./roles/contract";
 import { resolveRole } from "./roles/selection";
 import { isWorkflowState } from "./workflow/states";
@@ -75,6 +76,7 @@ export interface RoleCommandDeps {
   readonly loadConfiguration: (projectRoot: string) => FrameworkConfig;
   readonly createAgent: () => AgentProvider<ExecutionResult>;
   readonly readReviewDecision: ReviewDecisionResolver;
+  readonly readStdinText: () => Promise<string>;
   readonly executeImplementer: typeof executeIndependentImplementer;
   readonly executeSeniorReviewer: typeof executeIndependentSeniorReviewer;
   readonly executeTechnicalLead: typeof executeIndependentTechnicalLead;
@@ -90,12 +92,37 @@ export function createProductionRoleDeps(projectRoot: string): RoleCommandDeps {
     loadConfiguration: (root) => validateConfig(loadConfig(root)),
     createAgent: () => agent,
     readReviewDecision: promptReviewDecision,
+    readStdinText: readHandoffFromStdin,
     executeImplementer: executeIndependentImplementer,
     executeSeniorReviewer: executeIndependentSeniorReviewer,
     executeTechnicalLead: executeIndependentTechnicalLead,
     executeProjectManager: executeIndependentProjectManager,
     executeCoordinator: executeIndependentCoordinator,
   };
+}
+
+/**
+ * Read piped or pasted stdin fully as UTF-8 text. Unlike the
+ * single-line credential reader, handoff input is multiline by
+ * nature: the whole stream is the document. Exported for tests;
+ * production EOF (including immediate EOF on empty pipes)
+ * resolves to whatever was received, possibly empty.
+ */
+export function readHandoffFromStdin(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let data = "";
+    process.stdin.setEncoding("utf8");
+    process.stdin.on("data", (chunk: string) => {
+      data += chunk;
+    });
+    process.stdin.on("end", () => {
+      resolve(data);
+    });
+    process.stdin.on("error", (error: Error) => {
+      reject(error);
+    });
+    process.stdin.resume();
+  });
 }
 
 function fail(what: string): never {
@@ -128,7 +155,11 @@ a TTY prompt; non-interactive runs without one fail safely.
 Append --show-handoff to any role invocation to print exactly the
 canonical handoff carried by its result (nothing else) for manual
 copying; when the execution produced no handoff, the command
-reports that instead of inventing one.
+reports that instead of inventing one. Paste copied handoff text
+back via --handoff-stdin (piped or typed to stdin, then EOF) to
+resume it into the selected role: the text is parsed against the
+exact canonical grammar, validated, destination-matched, and
+passed to that role's executor with no other role invoked.
 `;
 
 function parseFlags(argv: string[], allowed: readonly string[], booleans: readonly string[] = []): Record<string, string> {
@@ -218,6 +249,34 @@ function parseCoordinatorDecision(flags: Record<string, string>): ReviewDecision
  * failed executions keep their failure rendering regardless of
  * the flag.
  */
+/**
+ * Manual handoff resume input (M25 T-018). When `--handoff-stdin`
+ * was passed, read the pasted canonical text and parse it into
+ * a validated handoff; otherwise there is no handoff to resume.
+ * Empty input fails explicitly. The handoff gates execution
+ * through T-005 (its destination must equal the selected role)
+ * and travels as provenance — it is never merged into role
+ * execution inputs, which keep coming from the explicit flags.
+ */
+async function readResumeHandoff(
+  deps: RoleCommandDeps,
+  flags: Record<string, string>,
+): Promise<AgentHandoff | undefined> {
+  if (flags["--handoff-stdin"] === undefined) {
+    return undefined;
+  }
+  let text: string;
+  try {
+    text = await deps.readStdinText();
+  } catch {
+    text = "";
+  }
+  if (text.trim().length === 0) {
+    fail("handoff input is empty; pipe or paste the canonical handoff text");
+  }
+  return parseAgentHandoffText(text);
+}
+
 function withHandoffOutput(
   role: string,
   showHandoff: boolean,
@@ -302,6 +361,7 @@ export async function runRoleCommand(deps: RoleCommandDeps, argv: string[]): Pro
       "loadConfiguration",
       "createAgent",
       "readReviewDecision",
+      "readStdinText",
       "executeImplementer",
       "executeSeniorReviewer",
       "executeTechnicalLead",
@@ -328,27 +388,32 @@ export async function runRoleCommand(deps: RoleCommandDeps, argv: string[]): Pro
     const timeout_ms = ROLE_TIMEOUT_MS;
     switch (selection.role) {
       case "implementer": {
-        const flags = parseFlags(rest, ["--id", "--title", "--description", "--requirements", "--specialty", "--show-handoff"], ["--show-handoff"]);
+        const flags = parseFlags(rest, ["--id", "--title", "--description", "--requirements", "--specialty", "--show-handoff", "--handoff-stdin"], ["--show-handoff", "--handoff-stdin"]);
+        const resumeHandoff = await readResumeHandoff(deps, flags);
         const ticket = ticketFlags(flags);
         const specialty = specialtyFlag(flags);
         const outcome = await deps.executeImplementer({
           identity: { role: "implementer" },
+          ...(resumeHandoff !== undefined ? { handoff: resumeHandoff } : {}),
           input: { ticket, specialty, role: "implementer", project_root: deps.projectRoot, provider, timeout_ms },
         });
         return withHandoffOutput("implementer", flags["--show-handoff"] !== undefined, outcome, describeImplementer(outcome));
       }
       case "senior-reviewer": {
-        const flags = parseFlags(rest, ["--id", "--title", "--description", "--requirements", "--result", "--show-handoff"], ["--show-handoff"]);
+        const flags = parseFlags(rest, ["--id", "--title", "--description", "--requirements", "--result", "--show-handoff", "--handoff-stdin"], ["--show-handoff", "--handoff-stdin"]);
+        const resumeHandoff = await readResumeHandoff(deps, flags);
         const ticket = ticketFlags(flags);
         const implementation_result = requiredFlag(flags, "--result");
         const outcome = await deps.executeSeniorReviewer({
           identity: { role: "senior-reviewer" },
+          ...(resumeHandoff !== undefined ? { handoff: resumeHandoff } : {}),
           input: { ticket, implementation_result, role: "senior-reviewer", project_root: deps.projectRoot, provider, timeout_ms },
         });
         return withHandoffOutput("senior-reviewer", flags["--show-handoff"] !== undefined, outcome, describeReviewer(outcome));
       }
       case "technical-lead": {
-        const flags = parseFlags(rest, ["--id", "--title", "--description", "--requirements", "--state", "--show-handoff"], ["--show-handoff"]);
+        const flags = parseFlags(rest, ["--id", "--title", "--description", "--requirements", "--state", "--show-handoff", "--handoff-stdin"], ["--show-handoff", "--handoff-stdin"]);
+        const resumeHandoff = await readResumeHandoff(deps, flags);
         const ticket = ticketFlags(flags);
         const state = requiredFlag(flags, "--state");
         if (!isWorkflowState(state)) {
@@ -356,6 +421,7 @@ export async function runRoleCommand(deps: RoleCommandDeps, argv: string[]): Pro
         }
         const outcome = await deps.executeTechnicalLead({
           identity: { role: "technical-lead" },
+          ...(resumeHandoff !== undefined ? { handoff: resumeHandoff } : {}),
           input: {
             evidence: [{ ...ticket, state }],
             role: "technical-lead",
@@ -367,7 +433,8 @@ export async function runRoleCommand(deps: RoleCommandDeps, argv: string[]): Pro
         return withHandoffOutput("technical-lead", flags["--show-handoff"] !== undefined, outcome, describeTechnicalLead(outcome));
       }
       case "project-manager": {
-        const flags = parseFlags(rest, ["--id", "--title", "--description", "--requirements", "--state", "--show-handoff"], ["--show-handoff"]);
+        const flags = parseFlags(rest, ["--id", "--title", "--description", "--requirements", "--state", "--show-handoff", "--handoff-stdin"], ["--show-handoff", "--handoff-stdin"]);
+        const resumeHandoff = await readResumeHandoff(deps, flags);
         const ticket = ticketFlags(flags);
         const state = requiredFlag(flags, "--state");
         if (!isWorkflowState(state)) {
@@ -375,6 +442,7 @@ export async function runRoleCommand(deps: RoleCommandDeps, argv: string[]): Pro
         }
         const outcome = await deps.executeProjectManager({
           identity: { role: "project-manager" },
+          ...(resumeHandoff !== undefined ? { handoff: resumeHandoff } : {}),
           input: {
             evidence: [{ ...ticket, state }],
             role: "project-manager",
@@ -395,12 +463,15 @@ export async function runRoleCommand(deps: RoleCommandDeps, argv: string[]): Pro
           "--review-decision",
           "--review-feedback",
           "--show-handoff",
-        ], ["--show-handoff"]);
+          "--handoff-stdin",
+        ], ["--show-handoff", "--handoff-stdin"]);
+        const resumeHandoff = await readResumeHandoff(deps, flags);
         const base = ticketFlags(flags);
         const specialty = specialtyFlag(flags);
         const decideReview = parseCoordinatorDecision(flags) ?? deps.readReviewDecision;
         const outcome = await deps.executeCoordinator({
           identity: { role: "coordinator" },
+          ...(resumeHandoff !== undefined ? { handoff: resumeHandoff } : {}),
           input: {
             tickets: [{ ...base, state: "ready" as const }],
             roles: {

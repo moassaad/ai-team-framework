@@ -58,6 +58,7 @@ function fakeDeps(calls: Record<string, unknown[]>, executors: Partial<RoleComma
     loadConfiguration: () => ({} as never),
     createAgent: () => provider,
     readReviewDecision: async () => ({ decision: "approved" as const }),
+    readStdinText: async () => "",
     executeImplementer: spy(calls.implementer ??= [], completedWithHandoff("implementer", undefined)),
     executeSeniorReviewer: spy(calls.reviewer ??= [], {
       role: "senior-reviewer" as const,
