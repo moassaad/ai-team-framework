@@ -729,6 +729,25 @@ executed ticket. Provider-neutral and runtime-only (no CLI);
 delegation never required. Recommendation (T-030) and
 guardrails (T-031) remain deferred.
 
+## Mode Recommendation (M27 T-030, advice only)
+
+`recommendMode` (`src/runtime/mode-recommendation.ts`) advises
+which mode fits caller-asserted facts — it never executes,
+overrides, or permits anything. Explicit boolean signals only
+(all four required, never inferred from text, reports, scope,
+or risk): `needsBusinessPlanning`, `needsSprintDecomposition`,
+or `needsApprovals` recommends `full` (only FULL composes PM
+planning, sprints, and approval gates); otherwise
+`needsTechnicalPlanning` recommends `standard`; otherwise
+`fast` fits the bounded change. The deterministic rationale
+names the supplied signals and the rule applied — nothing
+about size, risk, quality, or preference. An explicit
+`selectedMode` is preserved verbatim: agreement and
+disagreement surface as `matchesSelection`, and disagreement
+alone sets `requiresConfirmation` for the caller to resolve.
+No execution paths, providers, I/O, guardrails (T-031), or
+re-entry are involved.
+
 Direct role execution uses the existing command surface only:
 
 ```text
