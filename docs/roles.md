@@ -701,6 +701,34 @@ stages, retry, fallback, re-entry, and delegation dispatch —
 the path is provider-neutral and runtime-only. FULL (T-029)
 adds the business-planning lifecycle next.
 
+## FULL Path (M27 T-029, complete mode path)
+
+`runFull` (`src/runtime/full-path.ts`) executes the `full`
+composition end to end: Coordinator Planning → PM Planning
+(canonical Coordinator → PM handoff) → TL Planning (canonical
+PM → TL handoff) → PlanningArtifact (all three sections) →
+explicit PM + TL Planning Approval (both required; the TL
+approval feeds decomposition) → caller-structured Sprint/Task
+Decomposition → T-014 mapping of one explicitly selected
+`task_id` (no fan-out, no arbitrary-first) → T-015
+persistence + readback (execution uses readback models) →
+Implementer → Senior Reviewer → explicit review decision →
+Technical Acceptance (explicit TL resolver over tickets the
+runner advances along canonical W-002 edges on its own
+copies: ready → in_progress → implementation_review →
+technical_approval) → PM Validation (explicit PM resolver,
+gated on TL approval) → R-020 Final Approval (explicit
+coordinator authority + resolver; ticket closes) → Done.
+Every rejection or failure stops the invocation with a
+bounded `completed` / `changes-required` (with stage +
+verbatim feedback) / `failed` (with stage + error) result —
+no retry, fallback, re-entry, or alternate transport. Reports
+stay opaque throughout (no report parsing anywhere);
+structured fields stay caller-owned; acceptance scope is the
+executed ticket. Provider-neutral and runtime-only (no CLI);
+delegation never required. Recommendation (T-030) and
+guardrails (T-031) remain deferred.
+
 Direct role execution uses the existing command surface only:
 
 ```text

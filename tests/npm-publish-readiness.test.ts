@@ -151,7 +151,7 @@ describe("npm publish readiness boundary", () => {
     assert.deepEqual(pkg.files, ["dist"], "artifact boundary unchanged");
     const dryRun = readOnly("npm", ["pack", "--dry-run"]);
     assert.ok(dryRun.ok, "pack dry-run succeeds");
-    assert.ok(/total files:\s*247/.test(dryRun.output), "reproducible 247-file consumer boundary (199 at M21 plus the M22/M23/M24/M25 role, planning, sprint, task, decomposition, mapper, persistence, role-CLI, and handoff-parser modules and their maps, plus the M26 handoff-dispatcher, delegate-handoff-transport, delegate-capability, and delegate-fallback modules and their maps, plus the M27 work-mode, fast-path, and standard-path modules and their maps)");
+    assert.ok(/total files:\s*249/.test(dryRun.output), "reproducible 249-file consumer boundary (199 at M21 plus the M22/M23/M24/M25 role, planning, sprint, task, decomposition, mapper, persistence, role-CLI, and handoff-parser modules and their maps, plus the M26 handoff-dispatcher, delegate-handoff-transport, delegate-capability, and delegate-fallback modules and their maps, plus the M27 work-mode, fast-path, standard-path, and full-path modules and their maps)");
     assert.ok(!/src\/|tests\/|docs\//.test(dryRun.output.replace(/dist\//g, "")), "no source, tests, or docs leak into the artifact");
   });
 
