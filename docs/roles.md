@@ -772,6 +772,25 @@ later-ticket behavior, and it claims nothing about direct
 runtime calls made outside it (M29 owns orchestration-wide
 enforcement).
 
+## Correction Reference (M28 T-032, traceability only)
+
+`createCorrectionReference` /
+`validateCorrectionReference`
+(`src/runtime/correction-reference.ts`) records the link
+between a correction raised by an existing review or approval
+stage and the explicit action expected to address it — source
+(`reviewer`, `technical-lead`, `project-manager`,
+`final-approval`, `planning-approval`), concerned ticket ids,
+verbatim feedback, and a caller-authored action (description
+plus optional existing ticket id). Feedback travels exactly
+as supplied: opaque text is never parsed into requirements,
+and no summary replaces it. Everything relational is
+caller-supplied — a correction without stated feedback is
+rejected rather than guessed — and nothing claims resolution,
+severity, priority, or ownership. Recording is not executing:
+rework handoffs (T-033), re-entry (T-034/T-035/T-036), and all
+execution stay deferred.
+
 Direct role execution uses the existing command surface only:
 
 ```text
