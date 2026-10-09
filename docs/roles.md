@@ -679,6 +679,28 @@ supplied, never selected or dispatched — and runtime-only
 precedent; recommendation (T-030) and guardrails (T-031) come
 later.
 
+## STANDARD Path (M27 T-028, second mode path)
+
+`runStandard` (`src/runtime/standard-path.ts`) executes the
+`standard` composition: Coordinator Planning over the user
+request, Technical Lead evidence review over caller-supplied
+evidence, then the FAST-precedent Implementer → Reviewer →
+explicit decision chain. The coordinator's PM-bound handoff is
+exposed as provenance and never consumed — STANDARD has no PM
+and retargeting is forbidden — and no handoff, plan, or report
+is ever merged into a downstream input: every step runs on
+explicit caller-supplied fields with opaque reports. Terminal
+results mirror FAST (`completed` / `changes-required` with
+verbatim feedback / `failed` with a five-stage marker), each
+carrying the structured coordination, TL, implementation, and
+review results. Excluded per the descriptor (`planning=true`,
+`sprints=false`, `approvals=false`): PM in any form, TL
+planning (it requires a PM handoff), artifact/approval/
+decomposition/sprint/task/mapper/persistence/final-approval
+stages, retry, fallback, re-entry, and delegation dispatch —
+the path is provider-neutral and runtime-only. FULL (T-029)
+adds the business-planning lifecycle next.
+
 Direct role execution uses the existing command surface only:
 
 ```text
