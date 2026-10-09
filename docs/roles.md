@@ -748,6 +748,30 @@ alone sets `requiresConfirmation` for the caller to resolve.
 No execution paths, providers, I/O, guardrails (T-031), or
 re-entry are involved.
 
+## Mode Guardrails (M27 T-031, capability check only)
+
+`checkModeGuardrails` (`src/runtime/mode-guardrails.ts`)
+answers whether an explicitly selected mode satisfies the
+required lifecycle capabilities — advice about permission,
+not permission itself, and never execution. Capability sets
+derive from the live T-026 descriptors: business planning,
+sprint decomposition, or approvals each require `full`;
+technical planning alone requires `standard` or `full`; with
+no needs declared, every mode is compatible. Results are a
+discriminated union — `allow`, `confirmation-required`, or
+`reject` — always carrying the selected and recommended modes
+separately (the selection is never replaced). A compatible
+selection that differs from the recommendation needs explicit
+`{ confirmed: true }` before an allow decision; absent
+confirmation is never approval, and confirmation acknowledges
+the discrepancy only — it can never bypass a missing
+capability. Rejections name every unmet capability in signal
+order. The module evaluates only: no runners, providers,
+approvals, persistence, retry, re-entry, enforcement, or
+later-ticket behavior, and it claims nothing about direct
+runtime calls made outside it (M29 owns orchestration-wide
+enforcement).
+
 Direct role execution uses the existing command surface only:
 
 ```text
