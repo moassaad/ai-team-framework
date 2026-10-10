@@ -1,35 +1,45 @@
-# Release publish workflow (M20 NPM-003 preparation).
+# Release publish workflow (M20 NPM-003 preparation, T-050 follow-up).
 #
-# Triggered only by a published GitHub release; never by push
-# or pull_request, and never executed as part of ordinary
-# development or testing. Performs no registry write until
-# the final explicit publish step, which itself runs only
-# after checkout, toolchain setup, clean install, build,
-# full test suite, and artifact verification all succeed.
+# Triggered only by a version-tag push (v*); never by a GitHub
+# Release, push to a branch, or pull_request, and never executed
+# as part of ordinary development or testing. The tag exists
+# before anything public: the GitHub Release is created manually
+# by the owner only after this workflow publishes to npm and
+# verifies the registry artifact. Performs no registry write
+# until the final explicit publish step, which itself runs only
+# after tag validation, clean install, build, the deterministic
+# test suite, and artifact verification all succeed.
 #
-# Identity: `@moassaad/ai-team-framework@0.2.0` (approved
-# M21 identity). The unscoped `ai-team-framework` name
-# remains owned by another publisher and is never used.
-# The executable stays `ai-team` regardless. Because this
-# is a scoped public package, the publish step below uses
-# `--access public`, as npm requires on initial scoped
+# Identity: `@moassaad/ai-team-framework` at the tagged version
+# (0.3.0 prepared; the workflow derives the version from the tag
+# and package.json rather than hardcoding it). The unscoped
+# `ai-team-framework` name remains owned by another publisher and
+# is never used. The executable stays `ai-team` regardless.
+# Because this is a scoped public package, the publish step below
+# uses `--access public`, as npm requires on initial scoped
 # publication.
 #
 # Trusted publishing: no npm token lives here or anywhere in
 # the repository. With `id-token: write` and an npm trusted
 # publisher configured for this repository/package (an
-# external npmjs.com configuration owned by the publisher,
-# explicitly out of scope for this ticket), npm 11.5.1+
-# exchanges the OIDC token automatically. Provenance
-# attestations are therefore generated, never disabled.
-# No package-manager cache is enabled, keeping the release
-# build uncontaminated.
+# external npmjs.com configuration owned by the publisher),
+# npm 11.5.1+ exchanges the OIDC token automatically inside
+# `npm publish`. Provenance attestations are therefore
+# generated, never disabled. Local `npm whoami` checks are NOT
+# part of this pipeline: whoami requires a token session and
+# cannot mint or verify OIDC, so authentication-dependent tests
+# live behind `npm run test:npm-session` and never gate OIDC
+# publishing. No package-manager cache is enabled, keeping the
+# release build uncontaminated. This workflow never creates a
+# GitHub Release (no `contents: write`); the owner creates it
+# manually after registry verification succeeds.
 
 name: Publish to npm
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "v*"
 
 permissions:
   id-token: write
@@ -39,8 +49,10 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out release source
+      - name: Check out the tagged commit
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
       - name: Set up Node for publishing
         uses: actions/setup-node@v4
@@ -50,6 +62,29 @@ jobs:
 
       - name: Meet the trusted-publishing toolchain floor
         run: npm install -g npm@^11.5.1
+
+      - name: Validate the release tag against package metadata
+        run: |
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          PKG_NAME="$(node -p "require('./package.json').name")"
+          if [ -z "$TAG_VERSION" ] || [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "tag version '$TAG_VERSION' does not match package.json version '$PKG_VERSION'; refusing to publish"
+            exit 1
+          fi
+          if [ "$PKG_NAME" != "@moassaad/ai-team-framework" ]; then
+            echo "package name '$PKG_NAME' is not the approved scoped identity; refusing to publish"
+            exit 1
+          fi
+
+      - name: Fail closed when the version already exists
+        run: |
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          if npm view "@moassaad/ai-team-framework@$PKG_VERSION" version >/dev/null 2>&1; then
+            echo "version $PKG_VERSION already exists in the registry; refusing to republish."
+            echo "Recovery: verify the published artifact matches the tagged source with 'npm view @moassaad/ai-team-framework@$PKG_VERSION dist.integrity' against a local 'npm pack' tarball; if it matches, create the GitHub Release from the existing tag without rerunning publish; if it does not match, a new patch version is required because published versions are immutable."
+            exit 1
+          fi
 
       - name: Clean install
         run: npm ci
@@ -65,3 +100,30 @@ jobs:
 
       - name: Publish to npm
         run: npm publish --access public
+
+      - name: Verify the published version on the registry
+        run: |
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            REPORTED="$(npm view "@moassaad/ai-team-framework@$PKG_VERSION" version 2>/dev/null || true)"
+            if [ "$REPORTED" = "$PKG_VERSION" ]; then
+              echo "registry reports $REPORTED; publication verified"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "registry did not report version $PKG_VERSION after publish; do NOT republish (versions are immutable)."
+          echo "Recovery: inspect 'npm view @moassaad/ai-team-framework versions', compare dist.integrity against the local tarball, and rerun only the verification step."
+          exit 1
+
+      - name: Smoke-test the published CLI in isolation
+        run: |
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          SMOKE_DIR="$(mktemp -d)"
+          npm install "@moassaad/ai-team-framework@$PKG_VERSION" --prefix "$SMOKE_DIR" --no-save
+          REPORTED="$("$SMOKE_DIR/node_modules/.bin/ai-team" --version)"
+          if [ "$REPORTED" != "$PKG_VERSION" ]; then
+            echo "installed CLI reports '$REPORTED', expected '$PKG_VERSION'"
+            exit 1
+          fi
+          echo "installed CLI reports $REPORTED; smoke test passed"

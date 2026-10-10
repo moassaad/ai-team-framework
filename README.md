@@ -37,7 +37,7 @@ Execution, review, recommendation, approval, and state transition are separate r
 ## Current limitations
 
 - The CLI presents role contracts and resolves role selection, but reports `Role execution is not implemented yet` rather than executing autonomously.
-- Registry publication pending: `@moassaad/ai-team-framework@0.2.0` is the approved release identity (the unscoped `ai-team-framework` name is owned by another publisher); the first publish attempt was refused by npm pending owner two-factor authentication, so install from a checkout until the release lands (`docs/installation.md`).
+- Registry publication pending: `@moassaad/ai-team-framework@0.3.0` is the approved release identity (the unscoped `ai-team-framework` name is owned by another publisher); the first publish attempt was refused by npm pending owner two-factor authentication, so install from a checkout until the release lands (`docs/installation.md`).
 - End-user Spec Kit setup documentation is resolved (P-006 closed by `docs/providers-speckit.md` on top of the M15 integration).
 - delegate-skills is an optional Skills/relay integration (M16): detection, explicit skill installation, one-shot relay delegation with result mapping, and fallback-or-bounded-failure when optional/required. It needs Node `>= 22.20.0` for the Skills CLI step, installs nothing automatically, and has no runtime orchestration yet (M17/M18). Full guide: `docs/providers-delegate-skills.md`.
 - `approval.after: sprint` is accepted by validation but unsupported by the approval flows (deferred).

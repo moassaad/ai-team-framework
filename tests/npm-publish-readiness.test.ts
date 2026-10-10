@@ -6,7 +6,7 @@ import { join } from "node:path";
 
 // Publish identity and trusted-publishing readiness (M21
 // release): the approved identity is
-// `@moassaad/ai-team-framework@0.2.0`, authenticated as
+// `@moassaad/ai-team-framework@0.3.0`, authenticated as
 // `moassaad`. The fixture gate below still proves the
 // blocked/approved logic; live checks verify the applied
 // identity, the authenticated publisher, and the scoped
@@ -55,16 +55,14 @@ describe("npm publish identity gate", () => {
   it("carries the approved scoped identity at the release version", () => {
     const pkg = readJson(join(REPO_ROOT, "package.json"));
     assert.equal(pkg.name, "@moassaad/ai-team-framework", "approved release identity");
-    assert.equal(pkg.version, "0.2.0", "first public release version");
+    assert.equal(pkg.version, "0.3.0", "first public release version");
   });
 
-  it("verifies the authenticated publisher read-only", () => {
-    const whoami = readOnly("npm", ["whoami"]);
-    assert.ok(whoami.ok, "npm session authenticated");
-    assert.ok(whoami.output.includes("moassaad"), "authenticated publisher is the expected moassaad");
-    assert.ok(!/token|Bearer|_auth|password/i.test(whoami.output), "no credential material inspected or printed");
-  });
-
+  // Local-session authentication lives in tests/npm-session-auth.ts
+  // (`npm run test:npm-session`): the deterministic suite never
+  // requires a personal npm login. OIDC publish readiness is proven
+  // by the publish operation plus registry verification, never by
+  // a local whoami.
   it("classifies publishability explicitly", () => {
     assert.equal(
       classifyIdentity({ name: "ai-team-framework", registryTaken: true, ownedScope: null, authenticated: false }),
@@ -106,10 +104,10 @@ describe("npm trusted-publishing workflow", () => {
   // prose explaining the no-token design never trips them.
   const workflow = raw.replace(/#.*/g, "");
 
-  it("exists as a release-gated, token-free pipeline", () => {
+  it("exists as a tag-gated, token-free pipeline", () => {
     assert.ok(existsSync(path), "dedicated publish workflow present");
-    assert.ok(/on:\s*\n\s*release:\s*\n\s*types:\s*\[published\]/.test(workflow), "triggered only by a published release");
-    assert.ok(!/\n\s*on:\s*[^\n]*push/.test(workflow), "never runs on push");
+    assert.ok(/push:\s*\n\s*tags:\s*\n\s*-\s*"v\*"/.test(workflow), "triggered only by version-tag pushes");
+    assert.ok(!/release:\s*\n\s*types:\s*\[published\]/.test(workflow), "never waits for a published release first");
     assert.ok(!/pull_request/.test(workflow), "never runs on pull requests");
     assert.ok(/id-token:\s*write/.test(workflow), "OIDC minting for trusted publishing");
     assert.ok(/contents:\s*read/.test(workflow), "minimum repository permission");
@@ -160,7 +158,7 @@ describe("npm publish readiness boundary", () => {
     const install = readFileSync(join(REPO_ROOT, "docs", "installation.md"), "utf8");
     assert.ok(readme.includes("npm install -g @moassaad/ai-team-framework"), "install examples use the approved identity");
     assert.ok(!/npm install -g ai-team-framework[^.]/.test(readme + install), "no stale unscoped install command remains current");
-    assert.ok(/@moassaad\/ai-team-framework@0\.2\.0/.test(install), "release documentation names the exact release");
+    assert.ok(/@moassaad\/ai-team-framework@0\.3\.0/.test(install), "release documentation names the exact release");
     assert.ok(!/not yet published/i.test(readme + install), "publication state no longer claimed unpublished");
   });
 
