@@ -181,6 +181,43 @@ otherwise initialization and generation fail with an
 create `.ai-team/` and its subdirectories, but they never create the
 user's project directory itself.
 
+## 9a. Project Setup Workflow (M30 T-044)
+
+`runProjectSetup({ project_root })` (`src/config/setup.ts`) is the
+dedicated workflow that prepares a target project for framework use.
+It composes the seams above — `initializeWorkspace`, then
+`generateDefaultConfig` when no configuration exists, then
+`loadConfig`/`validateConfig` — and returns one frozen result:
+
+```text
+completed               workspace and/or configuration were created; config valid
+already-configured      workspace and a valid configuration already existed; nothing rewritten
+invalid-configuration   the existing configuration failed loading/validation; kept byte-for-byte, never repaired
+failed                  a configuration write failed after a valid root; partial outcome, never claimed complete
+```
+
+Per-file reports (`created` / `existing` / `invalid`) name the
+workspace directory and `config.yaml`. The result also carries the
+validated configuration, per-provider availability as recorded from
+configuration alone (`detected: "not-checked"` — detection stays with
+`ai-team status`), and notes stating the limits below.
+
+Setup manages `<projectRoot>/.ai-team/` only: existing files are never
+overwritten, merged, deleted, or repaired; project source, tests,
+dependencies, and user-owned files such as `AGENTS.md` are never
+touched (no `AGENTS.md` management exists, and none is added here).
+New and existing projects receive identical setup — no sample
+application is scaffolded and no stack is inferred. No role executes,
+no lifecycle runs, no mode is selected, and no integration is
+installed, enabled, or detected. Repeated runs are safe: an
+already-configured project returns `already-configured` with no
+duplicate files and no rewrites.
+
+This is Project Setup — preparing a project to use the framework. It
+is distinct from the per-integration `ai-team setup <integration>`
+command (unchanged), and from the New/Existing Project Quick Start
+guides (T-045/T-046, not yet written).
+
 ## 10. Providers
 
 Only these provider configuration entries exist:
