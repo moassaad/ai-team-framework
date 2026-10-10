@@ -1,10 +1,13 @@
 # Installation Guide
 
 How to install the AI Team Framework and reach a working CLI.
-The approved public release is `@moassaad/ai-team-framework@0.3.0`;
-registry publication is pending owner two-factor
-authentication (see below). For first use after installing,
-see `docs/quick-start.md`.
+The current release is `@moassaad/ai-team-framework@0.3.0`,
+published on npm (the `latest` dist-tag). Install it with
+`npm install -g @moassaad/ai-team-framework@0.3.0`; contributors
+working from source use the checkout path below. For first use
+after installing, see `docs/quick-start.md` (first-use path),
+`docs/usage.md` (task-oriented manual), and
+`docs/PROJECT_GUIDE.md` (authoritative reference).
 
 The package is tested from the generated npm artifact: the
 suite packs the real tarball, installs it with npm into a
@@ -12,21 +15,19 @@ temporary consumer, and runs the installed `ai-team`
 binary there — including a registry-backed installation
 check for the released version.
 
-## Release identity (M21 release, publication pending owner 2FA)
+## Release identity (published 0.3.0)
 
-- Final package identity: `@moassaad/ai-team-framework@0.3.0`.
+- Released package: `@moassaad/ai-team-framework@0.3.0` (npm
+  `latest`). Verify with `npm view @moassaad/ai-team-framework
+  version dist-tags.latest`.
 - The unscoped `ai-team-framework` name is owned by another
   publisher and was never used for this project's release.
 - The `ai-team` CLI binary is unchanged; package name and
   executable remain separate contracts.
-- Publication pending: the first `npm publish --access
-  public` attempt was refused with HTTP 403 — the
-  `moassaad` account requires two-factor authentication
-  (or a granular token with 2FA bypass) to publish. The
-  owner must complete the 2FA/OTP step or configure the
-  npm trusted publisher, then re-run publish plus the
-  registry verifications below. Nothing was published;
-  no partial state exists (the scoped name still 404s).
+- The pre-publish blocker (owner two-factor authentication on the
+  first publish attempt) was resolved during the 0.3.0 release;
+  history: `docs/release-0.3.0.md`. Publication now goes through
+  the release workflow below.
 
 The release workflow (`.github/workflows/publish.yml`) is prepared for
 npm Trusted Publishing over OIDC — no tokens in the
@@ -34,7 +35,7 @@ repository, `id-token: write` plus `contents: read`, Node
 22.14.0 with npm 11.5.1+, build → test → artifact check →
 explicit `npm publish --access public` on release publication.
 The first release goes out by direct authenticated
-publication (`moassaad` session) once the 2FA step clears; the workflow remains the
+publication (`moassaad` session); the workflow remains the
 Trusted Publishing path for future releases once the
 matching trusted publisher is configured on npmjs.com.
 
@@ -54,11 +55,23 @@ matching trusted publisher is configured on npmjs.com.
 
 ## Installation paths
 
-Two paths exist. They differ only in where you run the commands.
+Two paths exist. The registry path is the primary one for
+normal users; the checkout path is for contributors and
+developers working from source. They differ only in where you
+run the commands.
 
-### Repository checkout (developers and first-time users)
+### Published package (end users)
 
-This is the verified path:
+```bash
+npm install -g @moassaad/ai-team-framework@0.3.0
+ai-team --help
+ai-team --version   # 0.3.0
+```
+
+Global installation needs no `sudo` step beyond the user's own npm
+setup. Do not invent one.
+
+### Repository checkout (contributors and developers)
 
 ```bash
 git clone <repository-url>
@@ -85,13 +98,11 @@ still requires its one runtime dependency (`yaml`), so a registry or
 tarball install needs network access for dependency resolution.
 
 ```bash
-npm install -g @moassaad/ai-team-framework   # after publication lands
+npm install -g @moassaad/ai-team-framework@0.3.0
 ai-team --help
 ai-team --version   # 0.3.0
 ```
 
-Global installation needs no `sudo` step beyond the user's own npm
-setup. Do not invent one.
 
 ## Build behavior
 
@@ -109,7 +120,7 @@ From the repository root, using the built files only:
 
 ```bash
 node dist/index.js --help
-node dist/index.js --version   # prints 0.1.0
+node dist/index.js --version   # prints 0.3.0
 ```
 
 Expected: `--help` prints the usage text starting with
@@ -127,12 +138,12 @@ node dist/index.js run
 
 Once installed as a package binary the same invocation is
 `ai-team run`. Role selection (`run --role ...`, prompt text,
-slash commands) presents role contracts and reports
-`Role execution is not implemented yet` rather than executing
-autonomously; bare `ai-team run` instead executes one
-production Coordinator ticket via the GitHub runtime
-(`providers.github` configured, token on stdin). First-use
-workflow: `docs/quick-start.md`.
+slash commands) only presents role contracts — it reports
+`Role execution is not implemented yet` there and never executes;
+`ai-team role <role>` instead executes exactly one role, and bare
+`ai-team run` executes one production Coordinator ticket via the
+GitHub runtime (`providers.github` configured, token on stdin).
+First-use workflow: `docs/quick-start.md`.
 
 ## Network and registry boundaries
 
@@ -143,8 +154,12 @@ Honest accounting of what each step needs:
   failure mode, packed file listing.
 - Requires network in a real user environment: `npm install`
   (dependency download) and any registry/tarball install.
-- Not verified: registry install end-to-end, global `bin` linking.
-  These are unsupported claims until tested, not failures.
+- Verified for the 0.3.0 release: registry install end-to-end
+  (installed from the registry into an isolated prefix; `ai-team
+  --version` → `0.3.0`).
+- Not verified: system-global (`-g`) bin linking in a user's own
+  npm setup. This is an unsupported claim until tested, not a
+  failure.
 
 ## Troubleshooting
 
