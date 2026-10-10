@@ -919,6 +919,24 @@ acceptance, scaffolding, delegation, or CLI. T-039 owns
 feature lifecycles; T-038 stops at the approved,
 persisted plan.
 
+## FULL Feature Lifecycle (M29 T-039, dedicated entry point)
+
+`runFullFeatureLifecycle`
+(`src/runtime/full-feature-lifecycle.ts`) runs one feature
+through the canonical FULL lifecycle by delegating to the
+`runFull` engine with the mode fixed to `full` — same
+planning, approvals, decomposition, persistence, execution,
+acceptance, validation, and final approval, with the same
+`FullResult` union returned verbatim. Any caller mode field
+is rejected rather than replaced (mode disputes belong to
+the recommendation/guardrail contracts). No second
+sequence, no report parsing, no discovery run (an optional
+`discovery_summary` passes straight through), no re-entry
+loops, delegation, scaffolding, checkpoints, CLI, or
+orchestration framework. STANDARD (T-040) and FAST (T-041)
+lifecycles, parity (T-042), and checkpoints (T-043) remain
+deferred.
+
 Direct role execution uses the existing command surface only:
 
 ```text
