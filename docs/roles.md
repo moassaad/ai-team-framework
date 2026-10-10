@@ -879,6 +879,25 @@ resolution or execution claims. Validation describes intent;
 it authorizes and executes nothing. M28 is complete (5/5);
 M29 orchestration remains deferred.
 
+## New Project Workflow (M29 T-037, planning only)
+
+`runNewProject` (`src/runtime/new-project-workflow.ts`) takes
+a caller project brief through one dedicated planning run:
+Coordinator Planning → PM Planning (canonical handoffs) → TL
+Planning → complete three-section PlanningArtifact → explicit
+PM + TL Planning Approval (both required, same artifact) →
+caller-structured Sprint/Task Decomposition → T-015
+persistence + readback under the caller project root → Done.
+Structured fields stay caller-owned and reports stay opaque
+throughout; any rejection or failure stops the workflow with
+a bounded completed / changes-required / failed result — no
+retry, re-entry, or recovery. The result carries the frozen
+artifact, both approvals, the read-back Sprint/Tasks, and
+the plan path. No Implementer/Reviewer, acceptance,
+validation, final approval, scaffolding, delegation, or CLI:
+feature work belongs to T-039, existing projects to T-038,
+setup to M30.
+
 Direct role execution uses the existing command surface only:
 
 ```text
