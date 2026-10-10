@@ -13,9 +13,10 @@ down. For per-role CLI usage, see
 ## Prerequisites and eligibility
 
 - The framework checkout, built (`npm install`, `npm run build`;
-  see `docs/installation.md`). The npm package is not published yet
-  (publication pending owner 2FA), so all paths below are checkout
-  paths; deep `dist/` imports are the working developer path, not a
+  see `docs/installation.md`). The published npm package covers
+  supported CLI usage; all paths below are checkout paths because
+  this guide's walkthrough uses internal implementation APIs.
+  Deep `dist/` imports are the working developer path, not a
   versioned public API (`package.json` declares no `exports` map).
 - A configured project (`docs/configuration.md`). Delegate is off
   by default and never auto-enabled — not by setup, not by
