@@ -955,6 +955,22 @@ re-entry, delegation, CLI, or orchestration framework. FAST
 bug lifecycle (T-041), parity (T-042), and checkpoints
 (T-043) remain deferred.
 
+## FAST Bug Lifecycle (M29 T-041, dedicated entry point)
+
+`runFastBugLifecycle`
+(`src/runtime/fast-bug-lifecycle.ts`) runs one bug fix
+through the established FAST lifecycle by delegating to the
+`runFast` engine with the mode fixed to `fast` — Implementer
+over the caller ticket, Senior Reviewer plus the explicit
+review decision — with the same `FastResult` union returned
+verbatim. The ticket is preserved as supplied (no
+bug-report schema, severity, priority, or text parsing; the
+project root never proves discovery), and any caller mode
+field is rejected rather than replaced. No second engine,
+planning, approvals, persistence, correction dispatch,
+re-entry, delegation, CLI, or orchestration framework. T-042
+parity, T-043 checkpoints, and M30 remain deferred.
+
 Direct role execution uses the existing command surface only:
 
 ```text
