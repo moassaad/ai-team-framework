@@ -898,6 +898,27 @@ validation, final approval, scaffolding, delegation, or CLI:
 feature work belongs to T-039, existing projects to T-038,
 setup to M30.
 
+## Existing Project Workflow (M29 T-038, planning for existing code)
+
+`runExistingProject`
+(`src/runtime/existing-project-workflow.ts`) plans against a
+project that already exists: it validates the caller context
+(`kind` must be `"existing"` — a bare root proves nothing),
+runs the read-only discovery analysis over the actual root
+(detectors report real findings with coverage metadata; an
+unreadable root fails before any planning call), then
+delegates the full planning sequence to `runNewProject`
+bound to the validated root — one root, no divergence
+between analyzed and persisted state. Results carry the
+`existing-project` tag plus the frozen discovery report, so
+the two workflows never blur. Nothing is invented about the
+project (facts come from detectors or explicit caller
+input), no source file is created or modified (only the
+T-015 plan file is written), and there is no execution,
+acceptance, scaffolding, delegation, or CLI. T-039 owns
+feature lifecycles; T-038 stops at the approved,
+persisted plan.
+
 Direct role execution uses the existing command surface only:
 
 ```text
