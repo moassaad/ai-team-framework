@@ -834,6 +834,29 @@ execution, looping, persistence, or orchestration — creating
 the handoff is not running re-entry, and final-approval
 (T-035), generic re-entry (T-036), and M29 remain deferred.
 
+## Final-Approval Re-entry Handoff (M28 T-035, creation only)
+
+`createFinalApprovalReentryHandoff`
+(`src/runtime/final-approval-reentry-handoff.ts`) turns a
+valid `final-approval` correction reference into the canonical
+`AgentHandoff` from the coordinator authority toward an
+explicit caller-supplied destination — same tested convention
+as T-033/T-034 (objective ← action description, notes ←
+verbatim feedback, artifacts ← every ticket id plus an
+outside action ticket, nothing structured invented), with one
+difference: the destination is required input, never inferred.
+Missing destinations fail; unsupported pairs (coordinator
+reaches project-manager and technical-lead only) are rejected
+by the existing validator, never retargeted. Provenance
+limit: origin `final-approval` plus `from: coordinator`
+reflect the stage literal and the R-020 authority role
+without independently proving a specific approval event —
+the caller must actually hold a final-approval
+changes-required outcome. No execution, dispatch, status
+change, persistence, CLI, retry, re-entry, or orchestration —
+creating the handoff is not running re-entry, and generic
+re-entry (T-036) plus M29 remain deferred.
+
 Direct role execution uses the existing command surface only:
 
 ```text
