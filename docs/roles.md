@@ -993,7 +993,43 @@ lifecycle rejections stop both scenarios identically. NOT
 proven: whole-team workflow parity — lifecycles never route
 through the dispatcher, and delegate transport cannot run
 other roles. Manual mode stays fully usable with delegate
-down. Checkpoints (T-043) remain deferred.
+down. Checkpoints are defined in the next section (T-043).
+
+## User Checkpoints (M29 T-043, request/resolution only)
+
+A user checkpoint is an explicit request for human input
+at one of the six roadmap decision boundaries — approve
+plan, reject plan, change requirements, select work mode,
+approve re-entry, approve sensitive changes — with the user
+as the authority. `createUserCheckpoint` builds a validated
+frozen request (caller-supplied id, boundary, workflow,
+stage, purpose, accepted decisions, verbatim references);
+`resolveUserCheckpoint` matches one explicit response to
+its request by checkpoint id *and* stage and returns a
+frozen `proceed` / `changes-requested` / `stopped`
+resolution. `describeCheckpointBoundary` names, for each
+boundary, the workflows it applies to and the existing
+contract the caller continues through.
+
+Pending request only — no pause/resume: all five entry
+points take their decisions as caller-supplied input in a
+single call, so the caller displays the request, obtains
+the answer, resolves it, and continues through the
+boundary's own contract (for example, supplying the
+matching authority decision to `decidePlanningApproval`).
+The contract never executes a role, dispatches a transport,
+retries, falls back, re-enters, resumes, waits, persists,
+or registers anything.
+
+User confirmation stays generic and is never converted
+into a role-owned approval: a missing response, empty
+string, provider report, or timeout never approves;
+`request-changes` requires feedback and never becomes a
+planning-approval outcome; a `stop` is never a proceed.
+The resolution carries no identity, authority, token, or
+resume — nothing impersonates a PM, TL, Reviewer, or
+Coordinator decision. UI display, durable persistence,
+true pause/resume, and onboarding belong to later work.
 
 Direct role execution uses the existing command surface only:
 
