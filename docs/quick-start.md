@@ -27,20 +27,21 @@ optional integrations, never requirements. Details:
 ## Prerequisites
 
 - Node.js 18+ and npm.
-- A checkout of this repository (registry installation has not been
-  verified; see `tests/installation-verification.test.ts` for what the
-  verified local path covers).
+- The published package (`npm install -g
+  @moassaad/ai-team-framework@0.3.0`) or a built repository
+  checkout for contributors (see `docs/installation.md`).
 - No credentials, external services, or installed providers are needed
   for the first run.
 
 ## Install
 
-From the repository root:
+Package users (`npm install -g …`) skip straight to First run.
+From a contributor checkout, at the repository root:
 
 ```bash
 npm install
 npm run build   # compile TypeScript into dist/
-npm test        # full suite; expect 581/581 passing
+npm test        # full suite; expect a green run
 ```
 
 ## First run
@@ -63,13 +64,10 @@ first:
 node dist/index.js run --role technical-lead
 ```
 
-```bash
-node dist/index.js run --role technical-lead
-```
-
 prints the Technical Lead contract. Role selection only presents
-contracts (`Role execution is not implemented yet` there); only
-bare `ai-team run` executes, via the production GitHub runtime.
+contracts (`Role execution is not implemented yet` there); single
+roles execute via `ai-team role <role>`, and only bare
+`ai-team run` executes, via the production GitHub runtime.
 
 `ai-team sprint` executes one production sprint traversal
 through the same configuration and stdin token: it reads the
@@ -91,10 +89,11 @@ changes required, or a failure) with a bounded message. The
 command never retries or re-enters: invoke it again explicitly
 when the follow-up work has landed.
 
-The last line is honest scoping: the CLI currently presents role
-contracts and resolves role selection. Full role execution is wired
-through the library modules (`src/roles/`, `src/execution/`), not
-yet through autonomous CLI orchestration.
+The last line is honest scoping: `run --role` presents role
+contracts and resolves role selection. Single-role execution runs
+through `ai-team role <role>`; full team orchestration stays an
+explicit, human-driven sequence of such steps, never autonomous
+CLI orchestration.
 
 ## Your first task
 
@@ -151,6 +150,6 @@ framework never imposes its own architecture on your project. See
   integration, including its documented setup and known limitations.
 - `docs/specification/configuration.md` — `providers.*.enabled`
   settings (all optional providers default to disabled).
-- `AI-Team-Framework-Project-Plan.md` — milestone status and what is
-  planned next (M13 documentation tickets cover installation, roles,
-  workflow, providers, and troubleshooting in depth).
+- `AI-Team-Framework-Project-Plan.md` — milestone status and history.
+- `docs/PROJECT_GUIDE.md` — authoritative project guide for release 0.3.0.
+- `docs/usage.md` — practical task-oriented usage manual.
