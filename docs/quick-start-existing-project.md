@@ -41,11 +41,14 @@ of them modifies your application source.
   (the planning example uses an inline stub provider; a real provider
   is a later step).
 
-## 2. Install from the repository checkout
+## 2. Install the framework
 
-The npm package is not published yet (registry publication is pending
-owner two-factor authentication; see `docs/installation.md`), so the
-supported distribution path is a repository checkout:
+The released npm package (`npm install -g
+@moassaad/ai-team-framework@0.3.0`) covers supported CLI usage.
+This guide's walkthrough additionally uses internal TypeScript
+planning APIs (`runProjectSetup`, `generateProjectAnalysis`,
+`runExistingProject`) that are not stable public package imports,
+so it requires a repository checkout with a local build:
 
 ```bash
 git clone https://github.com/moassaad/ai-team-framework.git
