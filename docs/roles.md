@@ -791,6 +791,28 @@ severity, priority, or ownership. Recording is not executing:
 rework handoffs (T-033), re-entry (T-034/T-035/T-036), and all
 execution stay deferred.
 
+## TL→Implementer Rework Handoff (M28 T-033, creation only)
+
+`createTlImplementerReworkHandoff`
+(`src/runtime/tl-implementer-rework-handoff.ts`) turns a valid
+`technical-lead` correction reference into the canonical
+`AgentHandoff` to the Implementer — and stops there. The
+documented mapping: `objective` carries the caller-authored
+action description (what the receiver must do);
+`notes` carries the original feedback byte-identical;
+`artifacts` carries every correction ticket id bare and
+stable, plus the action ticket when it names one outside that
+set; requirements, criteria, constraints, context, and next
+action stay absent (opaque feedback is never structured, and
+nothing is synthesized). Non-TL origins are rejected, never
+reinterpreted; the result passes `validateAgentHandoff`
+(direction approval included), renders with the existing
+renderer, and resumes through the existing manual parser. No
+dispatch, execution, status change, persistence, CLI, retry,
+re-entry, or orchestration — creating a handoff is not
+executing it, and PM→TL (T-034), final-approval (T-035), and
+generic re-entry (T-036) remain deferred.
+
 Direct role execution uses the existing command surface only:
 
 ```text
