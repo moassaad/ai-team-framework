@@ -813,6 +813,27 @@ re-entry, or orchestration — creating a handoff is not
 executing it, and PM→TL (T-034), final-approval (T-035), and
 generic re-entry (T-036) remain deferred.
 
+## PM→TL Re-entry Handoff (M28 T-034, creation only)
+
+`createPmTlReentryHandoff`
+(`src/runtime/pm-tl-reentry-handoff.ts`) turns a valid
+`project-manager` correction reference into the canonical
+`AgentHandoff` to the Technical Lead — same tested convention
+as T-033 (objective ← action description, notes ← verbatim
+feedback, artifacts ← every ticket id plus an outside action
+ticket, nothing structured invented), validated through the
+existing validators including PM→TL direction approval. It
+differs from the PM→TL planning handoff in meaning, not
+direction: planning carries forward-looking business content
+for first-pass design, while re-entry carries
+backward-looking correction content for rework — the fields
+prove which is which, and neither is reused as the other.
+Origin `project-manager` records the PM role as source
+without independently proving the user-testing stage. No TL
+execution, looping, persistence, or orchestration — creating
+the handoff is not running re-entry, and final-approval
+(T-035), generic re-entry (T-036), and M29 remain deferred.
+
 Direct role execution uses the existing command surface only:
 
 ```text

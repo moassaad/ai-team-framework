@@ -151,7 +151,7 @@ describe("npm publish readiness boundary", () => {
     assert.deepEqual(pkg.files, ["dist"], "artifact boundary unchanged");
     const dryRun = readOnly("npm", ["pack", "--dry-run"]);
     assert.ok(dryRun.ok, "pack dry-run succeeds");
-    assert.ok(/total files:\s*257/.test(dryRun.output), "reproducible 257-file consumer boundary (199 at M21 plus the M22/M23/M24/M25 role, planning, sprint, task, decomposition, mapper, persistence, role-CLI, and handoff-parser modules and their maps, plus the M26 handoff-dispatcher, delegate-handoff-transport, delegate-capability, and delegate-fallback modules and their maps, plus the M27 work-mode, fast-path, standard-path, full-path, mode-recommendation, and mode-guardrails modules and their maps, plus the M28 correction-reference and tl-implementer-rework-handoff modules and their maps)");
+    assert.ok(/total files:\s*259/.test(dryRun.output), "reproducible 259-file consumer boundary (199 at M21 plus the M22/M23/M24/M25 role, planning, sprint, task, decomposition, mapper, persistence, role-CLI, and handoff-parser modules and their maps, plus the M26 handoff-dispatcher, delegate-handoff-transport, delegate-capability, and delegate-fallback modules and their maps, plus the M27 work-mode, fast-path, standard-path, full-path, mode-recommendation, and mode-guardrails modules and their maps, plus the M28 correction-reference, tl-implementer-rework-handoff, and pm-tl-reentry-handoff modules and their maps)");
     assert.ok(!/src\/|tests\/|docs\//.test(dryRun.output.replace(/dist\//g, "")), "no source, tests, or docs leak into the artifact");
   });
 
