@@ -23,7 +23,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "tsc -p tsconfig.test.json && node --test dist-test/tests/",
+    "test": "tsc -p tsconfig.test.json && node --test dist-test/tests/*.test.js",
     "test:npm-session": "tsc -p tsconfig.test.json && node --test dist-test/tests/npm-session-auth.js",
     "lint": "eslint src tests",
     "start": "node dist/index.js"

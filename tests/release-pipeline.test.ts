@@ -60,10 +60,17 @@ describe("release pipeline (T-050 follow-up)", () => {
         const code = readFileSync(join(REPO_ROOT, "tests", file), "utf8");
         assert.ok(!/npm", \["whoami"\]|\(\["whoami"\]\)/.test(code), `${file} performs no live whoami`);
       }
+    });
+    it("the default test command discovers compiled test files explicitly, not by directory", () => {
       const pkg = JSON.parse(readFileSync(join(REPO_ROOT, "package.json"), "utf8")) as { scripts?: Record<string, string> };
-      assert.ok(!(pkg.scripts?.test ?? "").includes("npm-session-auth"), "default test command never runs the session file");
+      assert.ok(
+        (pkg.scripts?.test ?? "").includes("node --test dist-test/tests/*.test.js"),
+        "deterministic suite passes explicit compiled-test paths (directory form fails on the release Node toolchain; quoted globs are not expanded by it)",
+      );
+      assert.ok(!(pkg.scripts?.test ?? "").includes("npm-session-auth"), "the glob cannot match the session gate file");
       assert.ok((pkg.scripts?.["test:npm-session"] ?? "").includes("dist-test/tests/npm-session-auth.js"), "explicit session command runs the session file");
     });
+  });
 
     it("all authentication assertions are preserved in the session gate", () => {
       const code = readFileSync(join(REPO_ROOT, "tests", "npm-session-auth.ts"), "utf8");
@@ -122,4 +129,3 @@ describe("release pipeline (T-050 follow-up)", () => {
       assert.ok(existsSync(join(REPO_ROOT, "docs", "release-0.3.0.md")), "manual release notes exist for the owner step");
     });
   });
-});
