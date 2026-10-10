@@ -857,6 +857,28 @@ change, persistence, CLI, retry, re-entry, or orchestration —
 creating the handoff is not running re-entry, and generic
 re-entry (T-036) plus M29 remain deferred.
 
+## Re-entry Request Contract (M28 T-036, unified validation)
+
+`createReentryRequest` / `validateReentryRequest`
+(`src/runtime/reentry-request.ts`) binds one validated
+`CorrectionReference` to one canonical `AgentHandoff` under
+a discriminator naming the established form —
+`tl-implementer`, `pm-technical-lead`, or `final-approval`.
+Pair consistency is proven without duplicating route policy:
+the constructor rebuilds the expected handoff through the
+origin's own T-033/T-034/T-035 constructor and requires
+equivalence with the supplied handoff — origins without a
+form are rejected, and any unrelated or altered handoff
+fails, however canonical it is alone. Source and action
+stay separate, feedback stays verbatim, ticket references
+stay ordered, and nothing is parsed or synthesized. The
+request renders, parses, and revalidates through the
+existing manual grammar per form. Provenance limits carry
+over unchanged: origin category only, no verified event, no
+resolution or execution claims. Validation describes intent;
+it authorizes and executes nothing. M28 is complete (5/5);
+M29 orchestration remains deferred.
+
 Direct role execution uses the existing command surface only:
 
 ```text
