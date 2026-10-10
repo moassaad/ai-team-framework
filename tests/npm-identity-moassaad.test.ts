@@ -1,13 +1,12 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 // Release identity verification for the explicitly
 // supplied candidate `@moassaad/ai-team-framework` (M21
 // release): authenticated as `moassaad`, manifest renamed,
-// version at 0.2.0, workflow flagged `--access public`.
+// version at 0.3.0, workflow flagged `--access public`.
 // Fixtures still prove every blocked combination; live
 // checks confirm the applied state. All npm interactions
 // here are read-only; publication itself is the ticket's
@@ -43,12 +42,9 @@ function decideCandidate(input: {
   return "identity-blocked";
 }
 
-function readOnly(args: readonly string[]): { ok: boolean; output: string } {
-  const result = spawnSync("npm", [...args], { cwd: REPO_ROOT, encoding: "utf8" });
-  const output = `${String(result.stdout ?? "")}\n${String(result.stderr ?? "")}`;
-  assert.ok(!/token|Bearer|_authToken|password/i.test(output), "read-only checks never surface credential material");
-  return { ok: result.status === 0, output };
-}
+// Local-session authentication lives in tests/npm-session-auth.ts
+// (`npm run test:npm-session`); this file keeps the deterministic
+// decision logic and applied-state checks only.
 
 describe("npm explicit candidate verification", () => {
   it("applies exactly the supplied candidate", () => {
@@ -60,12 +56,9 @@ describe("npm explicit candidate verification", () => {
     assert.ok(!installRefs.replace(/npm install -g @moassaad\/ai-team-framework/g, "").includes("npm install -g ai-team-framework"), "no stale unscoped install command");
   });
 
-  it("confirms the authenticated publisher read-only", () => {
-    const whoami = readOnly(["whoami"]);
-    assert.ok(whoami.ok, "npm session authenticated");
-    assert.ok(whoami.output.includes(EXPECTED_PUBLISHER), "authenticated identity is the expected publisher");
-  });
-
+  // Local-session authentication lives in tests/npm-session-auth.ts
+  // (`npm run test:npm-session`). OIDC readiness is proven by
+  // publish plus registry verification, never by a local whoami.
   it("blocks every combination except verified publisher plus verified scope", () => {
     assert.equal(
       decideCandidate({ candidate: CANDIDATE, authenticatedUser: null, scopeControlled: false, registryContradicts: false }),
@@ -103,7 +96,7 @@ describe("npm explicit candidate verification", () => {
       engines?: unknown;
     };
     assert.equal(pkg.name, CANDIDATE, "scoped manifest identity");
-    assert.equal(pkg.version, "0.2.0", "release version");
+    assert.equal(pkg.version, "0.3.0", "release version");
     assert.deepEqual(pkg.bin, { "ai-team": "dist/index.js" }, "CLI identity separate and stable");
     assert.deepEqual(pkg.dependencies, { yaml: "^2.9.1" }, "production dependencies untouched");
     assert.deepEqual(pkg.engines, { node: ">=18" }, "consumer runtime untouched");

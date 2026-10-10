@@ -47,7 +47,7 @@ describe("npm package identity and metadata", () => {
   it("declares a valid public identity with an untouched version", () => {
     const pkg = manifest();
     assert.equal(pkg.name, "@moassaad/ai-team-framework", "approved release identity");
-    assert.equal(pkg.version, "0.2.0", "first public release version");
+    assert.equal(pkg.version, "0.3.0", "first public release version");
     assert.equal(pkg.private, undefined, "public package: private must be absent");
     assert.equal(typeof pkg.description, "string");
     assert.ok((pkg.description as string).length > 0, "description present");
@@ -110,7 +110,7 @@ describe("npm package artifact boundary", () => {
     const workdir = mkdtempSync(join(tmpdir(), "ai-team-pack-"));
     try {
       npm(["pack", "--pack-destination", workdir, "--silent"], REPO_ROOT);
-      const tarball = join(workdir, "moassaad-ai-team-framework-0.2.0.tgz");
+      const tarball = join(workdir, "moassaad-ai-team-framework-0.3.0.tgz");
       assert.ok(existsSync(tarball), "local tarball produced, registry untouched");
       const listing = execFileSync("tar", ["-tzf", tarball], { encoding: "utf8" })
         .split("\n")
@@ -148,7 +148,7 @@ describe("npm installed package invocation", () => {
     try {
       npm(["pack", "--pack-destination", workdir, "--silent"], REPO_ROOT);
       const consumer = join(workdir, "consumer");
-      execFileSync("tar", ["-xzf", join(workdir, "moassaad-ai-team-framework-0.2.0.tgz"), "-C", workdir]);
+      execFileSync("tar", ["-xzf", join(workdir, "moassaad-ai-team-framework-0.3.0.tgz"), "-C", workdir]);
       execFileSync("mv", [join(workdir, "package"), consumer]);
       assert.ok(!existsSync(join(consumer, "src")), "no source beside the artifact");
       assert.ok(!existsSync(join(consumer, "tests")), "no tests beside the artifact");
@@ -162,7 +162,7 @@ describe("npm installed package invocation", () => {
       const help = run(["--help"], workdir);
       assert.ok(help.includes("ai-team sprint"), "installed CLI starts and presents the sprint command");
       const version = run(["--version"], workdir).trim();
-      assert.equal(version, "0.2.0", "self-contained version read from the packed package.json, not the repo");
+      assert.equal(version, "0.3.0", "self-contained version read from the packed package.json, not the repo");
     } finally {
       rmSync(workdir, { recursive: true, force: true });
     }
@@ -173,7 +173,7 @@ describe("npm installed package invocation", () => {
     try {
       npm(["pack", "--pack-destination", workdir, "--silent"], REPO_ROOT);
       const consumer = join(workdir, "package");
-      execFileSync("tar", ["-xzf", join(workdir, "moassaad-ai-team-framework-0.2.0.tgz"), "-C", workdir]);
+      execFileSync("tar", ["-xzf", join(workdir, "moassaad-ai-team-framework-0.3.0.tgz"), "-C", workdir]);
       let stderr = "";
       try {
         execFileSync("node", [join(consumer, "dist", "index.js"), "sprint", "--yes"], {

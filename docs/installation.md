@@ -1,7 +1,7 @@
 # Installation Guide
 
 How to install the AI Team Framework and reach a working CLI.
-The approved public release is `@moassaad/ai-team-framework@0.2.0`;
+The approved public release is `@moassaad/ai-team-framework@0.3.0`;
 registry publication is pending owner two-factor
 authentication (see below). For first use after installing,
 see `docs/quick-start.md`.
@@ -14,7 +14,7 @@ check for the released version.
 
 ## Release identity (M21 release, publication pending owner 2FA)
 
-- Final package identity: `@moassaad/ai-team-framework@0.2.0`.
+- Final package identity: `@moassaad/ai-team-framework@0.3.0`.
 - The unscoped `ai-team-framework` name is owned by another
   publisher and was never used for this project's release.
 - The `ai-team` CLI binary is unchanged; package name and
@@ -87,7 +87,7 @@ tarball install needs network access for dependency resolution.
 ```bash
 npm install -g @moassaad/ai-team-framework   # after publication lands
 ai-team --help
-ai-team --version   # 0.2.0
+ai-team --version   # 0.3.0
 ```
 
 Global installation needs no `sudo` step beyond the user's own npm

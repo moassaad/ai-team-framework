@@ -6,6 +6,7 @@ import { createProductionStatusDeps, runStatusCommand } from "./cli-status";
 import { createProductionSetupDeps, runSetupCommand } from "./cli-setup";
 import { createProductionRunDeps, runRunCommand } from "./cli-run";
 import { createProductionSprintDeps, runSprintCommand } from "./cli-sprint";
+import { createProductionRoleDeps, runRoleCommand } from "./cli-role";
 
 function readVersion(): string {
   try {
@@ -25,7 +26,8 @@ async function main(): Promise<void> {
   const argv = process.argv.slice(2);
   // `status` and `setup` need async detection/installation,
   // `run` (bare or with explicit `--review-decision` arguments)
-  // executes the production Coordinator runtime, and `sprint`
+  // executes the production Coordinator runtime, `role` runs
+  // exactly one independent role executor, and `sprint`
   // executes the production sprint workflow — all of which
   // the synchronous `run` cannot host: route them to the
   // dedicated async commands, which validate their own shapes.
@@ -46,7 +48,9 @@ async function main(): Promise<void> {
           ? await runRunCommand(createProductionRunDeps(process.cwd()), argv)
           : argv.length >= 1 && argv[0] === "sprint"
             ? await runSprintCommand(createProductionSprintDeps(process.cwd()), argv)
-            : run(argv, readVersion());
+            : argv.length >= 1 && argv[0] === "role"
+              ? await runRoleCommand(createProductionRoleDeps(process.cwd()), argv)
+              : run(argv, readVersion());
   if (result.stdout.length > 0) {
     process.stdout.write(result.stdout);
   }

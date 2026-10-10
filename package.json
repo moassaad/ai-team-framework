@@ -1,6 +1,6 @@
 {
   "name": "@moassaad/ai-team-framework",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A reusable, project-agnostic AI team framework for software development.",
   "license": "MIT",
   "type": "commonjs",
@@ -23,7 +23,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "tsc -p tsconfig.test.json && node --test dist-test/tests/",
+    "test": "tsc -p tsconfig.test.json && node --test dist-test/tests/*.test.js",
+    "test:npm-session": "tsc -p tsconfig.test.json && node --test dist-test/tests/npm-session-auth.js",
     "lint": "eslint src tests",
     "start": "node dist/index.js"
   },

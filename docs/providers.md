@@ -39,6 +39,140 @@ specific behavior. Four categories exist — no others:
   provider may serve both roles. Role identity is not a delegate
   skill and never implies model, session, or fleet routing.
 
+## Generic Handoff Dispatcher (M26 T-021, optional transport)
+
+`dispatchHandoff` (`src/runtime/handoff-dispatcher.ts`) routes one
+already-decided canonical `AgentHandoff` through one explicitly
+selected `HandoffTransport` (`{ name, dispatch(handoff) }`). It is
+transport, not orchestration: it never selects the next role (the
+destination is `handoff.to`, already decided), never approves,
+plans, persists, retries, or falls back — a transport rejection
+yields a bounded `failed` result, and manual transport (render →
+human copy → `--handoff-stdin` → parse → validate) keeps working
+identically with no transport installed. The handoff is validated
+(canonical shape, approved direction), never mutated, never
+retargeted; an optional explicit destination must equal
+`handoff.to` exactly. The dispatcher imports no delegation
+implementation and names no external tool — the delegate-skills
+handoff adapter arrives in T-022, capability detection in T-023,
+and failure fallback in T-025. No CLI yet: this ticket is
+runtime-only.
+
+## delegate-skills Handoff Adapter (M26 T-022, optional transport)
+
+`createDelegateSkillsHandoffTransport({ provider })`
+(`src/providers/delegate-handoff-transport.ts`) presents
+delegate-skills as a T-021 `HandoffTransport` named
+`"delegate-skills"`. The caller supplies an already-configured
+`DelegateProvider` (e.g. a relay provider built with an explicit
+skill root and project root); the adapter performs no discovery,
+installation, setup, or detection. Each dispatch validates the
+handoff, renders it to a self-contained brief (objective head,
+labeled requirements/acceptance/constraints/artifacts/notes/next-
+action sections, context as delegation context — every canonical
+field mapped, nothing invented, no report text used), delegates
+exactly once, and resolves with the relay's opaque outcome as its
+receipt. Only `implementer` destinations dispatch; any other
+target rejects with a structured `unsupported` kind (no
+retargeting, no wrong-role execution, no local fallback). Relay
+temp files, no-shell invocation, project-root cwd, and cleanup
+stay inside the relay provider; the structured `result.json`
+contract is consumed as machine data. Dispatch never installs
+anything (`delegate-setup` and the Skills CLI stay manual
+prerequisites), never retries, never persists under `.ai-team`,
+and never touches GitHub, workflow state, modes, or re-entry.
+Manual transport remains available without it; capability
+detection (T-024) and failure fallback (T-025) build on this
+contract later. Skill/relay mechanics are skill-specific and may
+evolve — the adapter depends on the repository's relay contract,
+not on upstream prose.
+
+## Manual/Delegate Parity (M26 T-023)
+
+Manual and delegated transport are interchangeable at the
+`AgentHandoff` semantic boundary: same canonical handoff,
+different transport representation. Proven hermetically in
+`tests/manual-delegate-parity.test.ts` (no production changes
+were needed). Field mapping, from actual implementation:
+
+| AgentHandoff field    | Manual path                  | Delegate path                        |
+| --------------------- | ---------------------------- | ------------------------------------ |
+| `from`                | `From:` line, parsed back    | brief provenance header              |
+| `to`                  | `To:` line, parsed back      | implementer gate (others unsupported)|
+| `objective`           | `Objective:` section verbatim| brief head verbatim                  |
+| `context`             | `Context:` section verbatim  | `DelegationRequest.context` verbatim |
+| `requirements`        | numbered list, order kept    | `Requirements:` section, order kept  |
+| `acceptance_criteria` | numbered list, order kept    | `Acceptance criteria:` section, order|
+| `constraints`         | numbered list, order kept    | `Constraints:` section, order kept   |
+| `artifacts`           | numbered list, order kept    | `Artifacts:` section, order kept     |
+| `notes`               | `Notes:` section verbatim    | `Notes:` brief section verbatim      |
+| `next_action`         | `Next Action:` verbatim      | `Next action:` brief section verbatim|
+
+Notes: multiline, unicode, markdown-like, and whitespace-
+sensitive values travel verbatim on both paths; absent optionals
+stay absent on both. Structurally ambiguous text (e.g. a blank
+line followed by a heading-like line inside a value) is safely
+rejected by manual parse while the brief carries the bytes as
+data — a safe-reject difference, never a meaning change.
+Unsupported delegate destinations are a capability limitation,
+not a semantic change: the handoff is untouched. Receipts are
+transport-specific and outside parity; failures differ by
+transport (parse error vs dispatch error) while the valid-handoff
+meaning stays identical. No fallback (T-025), no detection
+(T-024), no modes, no re-entry, no orchestration.
+
+## Delegation Capability Detection (M26 T-024)
+
+`checkDelegateCapability({ integration, isEnabled })`
+(`src/providers/delegate-capability.ts`) reports whether
+delegation is usable without dispatching, installing, or
+configuring anything. It composes existing contracts only:
+D-102 skill detection (skill descriptor + relay presence plus
+read-only implementer/git version probes) supplies `detected`,
+the caller's `isEnabled` function (production reads
+`providers.delegate.enabled`, default false, never
+auto-enabled) supplies `enabled`, and the M17 status seam
+derives `ready` as the conjunction — `detection failed:` stays
+distinct from unavailable. The result adds one capability fact
+to the M17 state: `supportedDestinations: ["implementer"]`
+(T-022 transports implementation work only). No new registry,
+no new states, no executable/skill/installation behavior beyond
+the existing detector; the production `ai-team status`
+registry is untouched (no configuration names a skill, so
+delegate stays out of it by design). Authentication is not
+probed — availability carries that limitation explicitly.
+Fallback remains T-025's work.
+
+## Delegate Failure Fallback (M26 T-025)
+
+When delegated dispatch fails, `createManualFallback({ failure })`
+(`src/runtime/delegate-fallback.ts`) exposes explicit manual
+continuation — and nothing else:
+
+```text
+delegate fails
+  ↓ success → continue through delegation (unchanged)
+  ↓ failure → { transport: "manual", handoff, renderedHandoff }
+  ↓ human copies the rendering into --handoff-stdin
+```
+
+Fallback is explicit (invoking the helper is the opt-in) and
+covers every failure kind — unsupported, unavailable relay,
+launch failure, malformed result, authentication, generic
+transport error — because each failed dispatch already carries
+a validated canonical handoff. The rendering is byte-equal to
+`renderAgentHandoff(failure.handoff)` and resumes through the
+unchanged T-018 path. Fallback is not retry (one attempt stays
+one attempt), not alternate transport, and never local role
+execution: destination, handoff, and error are preserved
+exactly; nothing is persisted, configured, or detected. The
+failure stays transport-level — never a task, workflow,
+approval, or review decision. This completes M26 (5/5):
+manual transport independent, dispatcher transport-independent,
+adapter optional, detection read-only, failure → manual
+continuation available, automatic retry/execution/routing
+absent.
+
 ## OpenCode (required execution boundary)
 
 OpenCode (`"opencode"`) is the initial execution provider. It

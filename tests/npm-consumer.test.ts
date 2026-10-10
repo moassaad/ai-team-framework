@@ -16,7 +16,7 @@ import { join } from "node:path";
 // artifact validation.
 
 const REPO_ROOT = join(__dirname, "..", "..");
-const EXPECTED_VERSION = "0.2.0";
+const EXPECTED_VERSION = "0.3.0";
 const TARBALL_NAME = `moassaad-ai-team-framework-${EXPECTED_VERSION}.tgz`;
 
 function npm(args: readonly string[], cwd: string): string {

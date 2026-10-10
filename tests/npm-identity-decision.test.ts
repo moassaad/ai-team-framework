@@ -7,7 +7,7 @@ import { join } from "node:path";
 // Release identity decision (M21 release): the owner
 // explicitly supplied `@moassaad/ai-team-framework`, the
 // session is authenticated as `moassaad`, and the manifest
-// now carries the approved scoped identity at 0.2.0. These
+// now carries the approved scoped identity at 0.3.0. These
 // tests pin the approved state: exact identity, no
 // alternative generated, version and binary stable,
 // workflow flagged for scoped public publication. The
@@ -103,11 +103,11 @@ describe("npm release identity decision", () => {
       bin?: unknown;
     };
     assert.equal(pkg.name, "@moassaad/ai-team-framework", "approved package identity");
-    assert.equal(pkg.version, "0.2.0", "first public release version");
+    assert.equal(pkg.version, "0.3.0", "first public release version");
     assert.deepEqual(pkg.bin, { "ai-team": "dist/index.js" }, "CLI binary independent of package identity");
     const dryRun = readOnly(["pack", "--dry-run"]);
     assert.ok(dryRun.ok, "pack dry-run succeeds");
-    assert.ok(/moassaad-ai-team-framework-0\.2\.0\.tgz/.test(dryRun.output), "tarball name follows the approved identity");
+    assert.ok(/moassaad-ai-team-framework-0\.3\.0\.tgz/.test(dryRun.output), "tarball name follows the approved identity");
   });
 
   it("flags the workflow for scoped public publication", () => {
@@ -117,13 +117,12 @@ describe("npm release identity decision", () => {
     assert.ok(/id-token:\s*write/.test(workflow) && /contents:\s*read/.test(workflow), "permissions intact");
   });
 
-  it("performs no npm writes and prints no credential material", () => {
+  it("configures no npm write command", () => {
     const pkg = JSON.parse(readFileSync(join(REPO_ROOT, "package.json"), "utf8")) as {
       scripts?: Record<string, string>;
     };
     assert.ok(!/publish|dist-tag|deprecate|access/i.test(Object.values(pkg.scripts ?? {}).join(" ")), "no write command configured");
-    const whoami = readOnly(["whoami"]);
-    assert.ok(whoami.ok, "session authenticated");
-    assert.ok(whoami.output.includes("moassaad"), "authenticated publisher verified read-only");
+    // Local-session authentication lives in
+    // tests/npm-session-auth.ts (`npm run test:npm-session`).
   });
 });

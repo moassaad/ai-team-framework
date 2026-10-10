@@ -24,6 +24,7 @@ Usage:
   ai-team run --role implementer --specialty <specialty>
   ai-team run "<prompt text>"
   ai-team run "/<slash command>"
+  ai-team role <role> [role inputs]
   ai-team sprint [--review-decision ...] [--tl-decision ...] [--pm-decision ...] [--final-decision ...]
   ai-team status
   ai-team setup <integration> [--yes]
@@ -60,6 +61,17 @@ Commands:
                         decision fail safely. Never retries, never
                         re-enters: reenterable outcomes exit
                         non-success for an explicit later call.
+   role               Execute exactly one role directly, with no
+                        orchestration, modes, delegation, or
+                        persistence: coordinator, project-manager,
+                        technical-lead, implementer, senior-reviewer.
+                        Role inputs are explicit flags; run
+                        "ai-team role" without a role for usage.
+                        Exactly one underlying role execution, never
+                        a second role. Append --show-handoff to print
+                        the canonical handoff carried by the result
+                        for manual copying; paste it back with
+                        --handoff-stdin to resume into a role.
   status               Show integration status (read-only).
                        Reports desired state separately from fresh
                        detection. Never installs, configures, or
