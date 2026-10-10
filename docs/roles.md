@@ -937,6 +937,24 @@ orchestration framework. STANDARD (T-040) and FAST (T-041)
 lifecycles, parity (T-042), and checkpoints (T-043) remain
 deferred.
 
+## STANDARD Feature Lifecycle (M29 T-040, dedicated entry point)
+
+`runStandardFeatureLifecycle`
+(`src/runtime/standard-feature-lifecycle.ts`) runs one
+feature through the established STANDARD lifecycle by
+delegating to the `runStandard` engine with the mode fixed
+to `standard` — Coordinator Planning (PM-bound handoff kept
+as provenance, never consumed), Technical Lead evidence
+review over caller-supplied evidence, Implementer over the
+caller ticket, Senior Reviewer plus the explicit decision —
+with the same `StandardResult` union returned verbatim. Any
+caller mode field is rejected rather than replaced. No
+second pipeline, no direct Coordinator→TL handoff invented,
+no PM planning, approvals, sprints, persistence, acceptance,
+re-entry, delegation, CLI, or orchestration framework. FAST
+bug lifecycle (T-041), parity (T-042), and checkpoints
+(T-043) remain deferred.
+
 Direct role execution uses the existing command surface only:
 
 ```text
