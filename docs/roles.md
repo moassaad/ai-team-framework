@@ -971,6 +971,30 @@ planning, approvals, persistence, correction dispatch,
 re-entry, delegation, CLI, or orchestration framework. T-042
 parity, T-043 checkpoints, and M30 remain deferred.
 
+## Manual/Delegate End-to-End Parity (M29 T-042, proven scope)
+
+The same canonical correction handoff works through manual
+copy/paste and through delegate dispatch with equivalent
+meaning — proven at two levels, neither overstated.
+**Handoff-level:** the identical validated handoff survives
+manual render → parse → validate and delegate
+`dispatchHandoff` with every semantic field intact
+(from/to/objective/notes/artifacts; formatting differs by
+design and is never byte-compared). **Destination-level:**
+the implementer — the only supported delegate destination —
+receives equivalent ticket inputs and produces equivalent
+structured outcomes under controlled stub providers on both
+paths, including matching failure reports. Transport
+failures keep their kind/message and expose the explicit
+manual fallback (returned data for caller review, never
+auto-execution); unsupported destinations fail explicitly
+on delegate while manual transfer still works; shared
+lifecycle rejections stop both scenarios identically. NOT
+proven: whole-team workflow parity — lifecycles never route
+through the dispatcher, and delegate transport cannot run
+other roles. Manual mode stays fully usable with delegate
+down. Checkpoints (T-043) remain deferred.
+
 Direct role execution uses the existing command surface only:
 
 ```text
