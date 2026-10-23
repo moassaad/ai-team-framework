@@ -49,51 +49,90 @@ npm test        # full suite; expect a green run
 Verify the installation:
 
 ```bash
+ai-team --help
+ai-team --version
+```
+
+If you installed the package globally, `ai-team` is available in
+`PATH`. From a built repository checkout, use `node dist/index.js`
+instead:
+
+```bash
 node dist/index.js --help
 node dist/index.js --version
 ```
 
-Bare `node dist/index.js run` executes one production
-Coordinator ticket against managed GitHub issues (it needs
-`providers.github` with `owner`, `repo`, `managedLabel`, and
-`specialty` in `.ai-team/config.yaml`, plus the GitHub token
-on stdin) — so meet the Coordinator through role selection
-first:
+Both forms are equivalent when the binary is on `PATH`; from a
+checkout, `node dist/index.js` is the direct alternative. Do not
+assume both are interchangeable in an environment where the binary
+is not on `PATH`. See `docs/installation.md` for installation
+details.
+
+Bare `ai-team run` executes one production Coordinator ticket
+against managed GitHub issues (it needs `providers.github` with
+`owner`, `repo`, `managedLabel`, and `specialty` in
+`.ai-team/config.yaml`, plus the GitHub token on stdin):
 
 ```bash
-node dist/index.js run --role technical-lead
+printf '%s' "$GITHUB_TOKEN" | ai-team run
 ```
 
-prints the Technical Lead contract. Role selection only presents
-contracts (`Role execution is not implemented yet` there); single
-roles execute via `ai-team role <role>`, and only bare
-`ai-team run` executes, via the production GitHub runtime.
+These are four distinct CLI entry points with different
+responsibilities. `run` and `sprint` execute their respective
+production workflows; `role` executes one role, while
+`run --role` only presents a role contract:
 
-`ai-team sprint` executes one production sprint traversal
-through the same configuration and stdin token: it reads the
-managed issues once, runs the sprint workflow once
-(Coordinator, then Technical Lead, PM/User Testing, and final
-Coordinator approval reviews), and synchronizes explicitly
-approved tickets once. Each review stage needs its own explicit
-decision — `--review-decision` (same meaning as `run`),
-`--tl-decision`, `--pm-decision`, `--final-decision` — or an
-interactive TTY prompt per stage when the flags are absent:
+- `ai-team run` (bare, or with `--review-decision`):
+  Executes one production Coordinator ticket (reads managed issues
+  once, runs at most one ticket, synchronizes once). Requires
+  GitHub configuration and token on stdin.
+
+- `ai-team run --role <role>` / prompt text / slash command:
+  Presents the selected role contract only; prints
+  `Role execution is not implemented yet.` No execution occurs.
+
+- `ai-team role <role>` [role inputs]:
+  Executes exactly one role directly (coordinator, project-manager,
+  technical-lead, implementer, senior-reviewer) with explicit
+  flags. See `ai-team role` for usage.
+
+- `ai-team sprint` [per-stage decisions]:
+  Executes one production sprint traversal (reads managed issues
+  once, runs the sprint workflow once through Coordinator,
+  Technical Lead, PM/User Testing, and final Coordinator approval,
+  then synchronizes explicitly approved tickets once). Same GitHub
+  configuration and stdin token as `run`; each review stage needs
+  its own explicit decision flag or interactive TTY prompt.
+
+A complete copyable sprint example:
 
 ```bash
-echo "$GITHUB_TOKEN" | node dist/index.js sprint --review-decision approved --tl-decision approved --pm-decision approved --final-decision approved
+printf '%s' "$GITHUB_TOKEN" | ai-team sprint \
+  --review-decision approved \
+  --tl-decision approved \
+  --pm-decision approved \
+  --final-decision approved
 ```
+
+Prerequisites for this command:
+
+- The `ai-team` binary must be available in `PATH`, for example
+  after a global npm installation.
+- From a built repository checkout, run the equivalent command
+  as `node dist/index.js sprint` with the same flags.
+- The current directory must be the configured project root.
+- `.ai-team/config.yaml` must contain valid GitHub provider
+  configuration including `owner`, `repo`, `managedLabel`, and
+  `specialty` (see `docs/configuration.md`).
+- `GITHUB_TOKEN` must contain a valid GitHub token with
+  appropriate repository permissions. Never put an actual
+  credential in documentation.
 
 Exit `0` means final synchronization succeeded; any other exit
 means the sprint stopped (work remaining, corrections created,
 changes required, or a failure) with a bounded message. The
-command never retries or re-enters: invoke it again explicitly
-when the follow-up work has landed.
-
-The last line is honest scoping: `run --role` presents role
-contracts and resolves role selection. Single-role execution runs
-through `ai-team role <role>`; full team orchestration stays an
-explicit, human-driven sequence of such steps, never autonomous
-CLI orchestration.
+command never retries or re-enters the workflow automatically;
+invoke it again explicitly when follow-up work has landed.
 
 ## Your first task
 
