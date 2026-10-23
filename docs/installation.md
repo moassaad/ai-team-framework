@@ -29,15 +29,23 @@ check for the released version.
   history: `docs/release-0.3.0.md`. Publication now goes through
   the release workflow below.
 
-The release workflow (`.github/workflows/publish.yml`) is prepared for
-npm Trusted Publishing over OIDC — no tokens in the
-repository, `id-token: write` plus `contents: read`, Node
-22.14.0 with npm 11.5.1+, build → test → artifact check →
-explicit `npm publish --access public` on release publication.
-The first release goes out by direct authenticated
-publication (`moassaad` session); the workflow remains the
-Trusted Publishing path for future releases once the
-matching trusted publisher is configured on npmjs.com.
+The release workflow (`.github/workflows/publish.yml`) is the
+production path for npm publication. It triggers only on a
+version-tag push (`v*`); the tag is public on GitHub and exists
+before the npm artifact is published. The workflow uses npm Trusted
+Publishing over OIDC — no tokens in the repository, `id-token:
+write` plus `contents: read`, Node 22.14.0 with npm 11.5.1+,
+clean install, build, deterministic test suite, artifact
+verification, then explicit `npm publish --access public`.
+Registry verification runs after publication (up to 10 retries
+with 10-second intervals), followed by a smoke test of the
+installed CLI. The workflow never creates a GitHub Release (no
+`contents: write`); the owner creates the GitHub Release manually
+only after registry verification succeeds. Version 0.3.0 was
+published through this workflow; history:
+`docs/release-0.3.0.md`. The pre-publish blocker (owner two-factor
+authentication on the first publish attempt) was resolved during
+the 0.3.0 release.
 
 ## Prerequisites
 
